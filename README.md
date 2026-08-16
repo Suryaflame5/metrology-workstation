@@ -1,83 +1,84 @@
-# METROLOGY — Evidence-First Local Calibration System (v0.3.0)
+# METROLOGY WORKSTATION
 
-A local-first calculation and evidence system that turns calibration measurements into reproducible uncertainty analysis, conformity decisions, and machine-verifiable evidence packages.
-
----
-
-## Zero-Cost Local-First Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           PRODUCT LAYER                                 │
-│                                                                         │
-│  [Screen 1] Dashboard          [Screen 2] Setup                         │
-│  [Screen 3] Measurements       [Screen 4] Uncertainty Budget            │
-│  [Screen 5] Decision           [Screen 6] Evidence & Verification       │
-├─────────────────────────────────────────────────────────────────────────┤
-│                     EVIDENCE & PROVENANCE ENGINE                        │
-│                                                                         │
-│  • SQLite Local Database (`metrology_data.db`)                          │
-│  • Machine-Verifiable JSON Evidence Bundles                             │
-│  • Canonical SHA-256 Tamper-Evident Receipts                            │
-│  • Standalone HTML / PDF Certificate Generator                          │
-│  • Independent Local Evidence Verifier CLI                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│                 CALCULATION ENGINE (metrology-core)                     │
-│                                                                         │
-│  • JCGM 100:2008 (GUM) Law of Propagation                               │
-│  • JCGM 101:2008 Monte Carlo Distribution Propagation                   │
-│  • Welch-Satterthwaite Effective Degrees of Freedom                     │
-│  • Exact Decimal Cholesky PSD Matrix Verification                       │
-│  • ANSI/NCSL Z540.3 Method 5 & Method 6 Guardbanding                    │
-│  • ISO 14253-1:2017 Decision Rules                                      │
-│  • GUM 7.2.6 & ISO 80000-1 Metrological Rounding                       │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+**Commercial Precision Metrology, Measurement Uncertainty, and Conformity Assessment Platform.**  
+**Studio / Company**: NovyraX  
+**Official Website**: [https://novyrax.vercel.app](https://novyrax.vercel.app)  
+**Support Contact**: `novyrax04@gmail.com`  
+**Current Release**: `v1.0.0` (Windows x64)  
 
 ---
 
-## Quick Start
+## 1. Overview
 
-### 1. Run Complete Automated Test Suite (53 Tests):
-```powershell
-python -m pytest -v
-```
+**Metrology Workstation** is a sovereign, local-first Windows desktop platform engineered for accredited calibration laboratories (ISO/IEC 17025), aerospace/defense quality teams, and precision manufacturing inspectors.
 
-### 2. Run Demo Micrometer Calculation CLI:
-```powershell
-python -m metrology_app.cli demo
-```
-
-### 3. Independently Verify Calculation Provenance:
-```powershell
-python -m metrology_app.cli verify MC-00001042
-```
-
-### 4. Export Machine-Verifiable Evidence Package:
-```powershell
-python -m metrology_app.cli export MC-00001042
-```
-Output files created under `evidence_packages/MC-00001042/`:
-- `calculation.json`
-- `measurements.json`
-- `uncertainty_budget.json`
-- `decision.json`
-- `provenance.json`
-- `verification.json`
-
-### 5. Launch Local Web Application:
-```powershell
-python -m metrology_app.cli serve --port 8000
-```
-Open **`http://127.0.0.1:8000`** in your browser.
+### Key Capabilities
+- **Exact 50-Digit Decimal Mathematics**: JCGM 100:2008 (GUM) uncertainty propagation, Welch-Satterthwaite effective degrees of freedom, and t-distribution coverage factors ($k$).
+- **ANSI/NCSL Z540.3 Method 6 Decisions**: Dynamic Test Uncertainty Ratio (TUR) curve evaluation with exact root guardband calculation ensuring consumer risk ($P_{\text{CR}} \le 2.0\%$).
+- **12-Stage Mathematical Replay**: Step-by-step cryptographic audit playback verifying every formula, sensitivity coefficient, and intermediate result from raw readings to final certificate.
+- **7 Pre-Loaded Instrument Catalogs**: Outside Micrometers, Vernier Calipers, Dial Indicators, Height Gauges, Gauge Block Comparators, Digital Multimeters (DCV), and RTD Digital Thermometers.
+- **100% Local-First & Air-Gapped**: Runtime data strictly isolated in `%LOCALAPPDATA%\MetrologyWorkstation\`. Zero cloud telemetry, zero recurring network requirement.
 
 ---
 
-## The 6 Screens Vertical Slice (Micrometer 0–25 mm)
+## 2. Download & Installation
 
-1. **Dashboard**: Metrics summary (Total, Validated, Needs Review) and list of cryptographically tracked calibration records.
-2. **Setup**: Instrument selection, procedure selection (`Micrometer Calibration v1`), nominal checkpoint, tolerance limits ($\pm 0.002\text{ mm}$), confidence level, and target decision rule.
-3. **Measurement Input**: Reference standard calibration data ($25.00000\text{ mm}$, $U = 0.00040\text{ mm}$, $k=2$), 5 repeated Type A runs ($25.0012, 25.0010, 25.0014, 25.0011, 25.0013\text{ mm}$), resolution, and thermal expansion parameters.
-4. **Uncertainty Budget (The Centerpiece)**: Full breakdown table with component types (A/B), distributions, divisors, $u_i$, sensitivities $c_i$, variance contributions, $\%$ share, effective degrees of freedom $\nu_{\text{eff}}$, coverage factor $k$, combined $u_c$, and expanded uncertainty $U_{95}$.
-5. **Conformity Decision**: Visual decision diagram displaying tolerance zone vs acceptance zone, measured error, guardband $w$, TUR ($\approx 3.21$), and verdict (**PASS**).
-6. **Evidence & Verification**: Canonical SHA-256 input and calculation digests, one-click export of the machine-verifiable JSON bundle and printable calibration certificate, plus an interactive independent local verification button.
+### Windows 10 / 11 (64-bit) Installer:
+Download the latest verified setup executable from [GitHub Releases](https://github.com/novyrax/metrology-workstation/releases/latest) or the [NovyraX Download Page](https://novyrax.vercel.app/download):
+- **Installer**: `Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe`
+- **SHA-256 Checksum**: `a78fdb7f675192eed455d26bac5448ba383de765dd8b6cf61764a6282eedfa74`
+
+### Checksum Verification in PowerShell:
+```powershell
+Get-FileHash .\Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe -Algorithm SHA256
+```
+
+### Silent Laboratory IT Deployment:
+```powershell
+.\Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe --silent --no-launch
+```
+
+---
+
+## 3. Commercial Plans & Licensing
+
+| Plan | Pricing | Target Audience | Key Capabilities |
+| :--- | :---: | :--- | :--- |
+| **Community** | **$0** (Free) | Evaluation & Students | Exact GUM math, Micrometer catalog, 10 records, 100% offline |
+| **Professional** | **$49/mo** or **$490/yr** | Single Workstation | All 7 instrument catalogs, Multi-point studio, Evidence ZIPs, PDF certificates, Backups |
+| **Business / Team**| **$1,490/yr** | Laboratory Teams | 5 seats included, Custom lab branding, Peer review audit trails, Priority 24h SLA |
+| **Enterprise** | **$4,900/yr** | Site License | 25+ seats, Air-gapped token provisioning, Custom transfer equations, 4h SLA |
+
+*Includes a 14-day Professional trial with no credit card required.*
+
+---
+
+## 4. Development & Testing
+
+```powershell
+# Clone repository
+git clone https://github.com/novyrax/metrology-workstation.git
+cd metrology-workstation
+
+# Run the 74-test regression suite
+python -m pytest -q
+
+# Run mathematical self-test
+python -m metrology_app.cli selftest
+```
+
+---
+
+## 5. Security & Privacy Policy
+
+- **Zero Telemetry**: We do not collect, transmit, or monitor telemetry or analytics data.
+- **Local Data Storage**: All databases and evidence packages reside exclusively on your local machine.
+- **PCI-DSS Compliance**: Hosted checkout managed by PCI-DSS Level 1 compliant Merchant of Record partners. NovyraX never stores payment card data.
+
+---
+
+## 6. Support & Contact
+
+- **Email**: [novyrax04@gmail.com](mailto:novyrax04@gmail.com)
+- **Website**: [https://novyrax.vercel.app](https://novyrax.vercel.app)
+- **Documentation**: [https://novyrax.vercel.app/docs](https://novyrax.vercel.app/docs)

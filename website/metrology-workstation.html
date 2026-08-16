@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metrology Workstation — Sovereign Precision Engineering Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">
+        <span class="brand-badge">NOVYRAX</span>
+        <span class="brand-sub">METROLOGY WORKSTATION</span>
+      </a>
+      <nav class="nav-links">
+        <a href="metrology-workstation.html" style="color: var(--accent);">Product</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html">Documentation</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="download.html" class="btn btn-primary btn-sm">Download v1.0.0</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top: 60px;">
+    <div class="container">
+      <div class="pill-badge">● ARCHITECTURE SPECIFICATION</div>
+      <h1 style="font-size: 40px; font-weight: 800; margin-bottom: 16px;">Precision Metrology Desktop Workstation</h1>
+      <p class="lead-text">
+        An evidence-first calculation and measurement uncertainty platform engineered from first principles for calibration laboratories, standards organizations, and high-reliability aerospace/defense quality teams.
+      </p>
+
+      <!-- 4 Core Pillars -->
+      <div class="grid-2" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; margin-top: 40px;">
+        
+        <div class="feature-box">
+          <div class="section-tag">01 · MATHEMATICAL RIGOR</div>
+          <h3>50-Digit Exact Decimal Context</h3>
+          <p>Standard IEEE 754 floating-point arithmetic introduces catastrophic precision loss and representation errors in recursive metrological calculations. Metrology Workstation enforces an exact 50-digit decimal arithmetic context across all Type A/B standard uncertainty evaluations and covariance matrix transformations.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="section-tag">02 · STANDARDS CONCORDANCE</div>
+          <h3>JCGM 100/106 &amp; ANSI Z540.3</h3>
+          <p>Complete concordance with international standards: GUM uncertainty propagation (JCGM 100:2008 §5), Welch-Satterthwaite effective degrees of freedom (Annex G), and ANSI/NCSL Z540.3-2006 Method 5 and Method 6 guardbanding curves enforcing consumer risk ($P_{\text{CR}} \le 2.0\%$).</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="section-tag">03 · AUDITABILITY</div>
+          <h3>12-Stage Mathematical Replay</h3>
+          <p>Every saved calibration record generates an immutable 12-stage derivation trace. Auditors can independently replay, step-by-step, every raw measurement, standard deviation, sensitivity coefficient, degrees of freedom, coverage factor, and guardband boundary.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="section-tag">04 · LOCAL-FIRST SECURITY</div>
+          <h3>Zero-Cloud Air-Gapped Operation</h3>
+          <p>Engineered for secure, isolated metrology laboratories. All SQLite databases, audit ledgers, and evidence archives reside strictly in <code>%LOCALAPPDATA%\MetrologyWorkstation\</code>. Operates 100% offline with zero cloud telemetry or external network dependencies.</p>
+        </div>
+
+      </div>
+
+      <!-- Instrument Families -->
+      <div class="card" style="margin-top: 48px; padding: 32px;">
+        <div class="section-tag">PRE-CONFIGURED PROCEDURES</div>
+        <h2 style="font-size: 24px; margin-bottom: 16px;">7 Supported Standard Instrument Catalogs</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Pre-loaded with Type A and Type B component models, environmental temperature compensation, and scale resolution uncertainties:</p>
+        <div class="grid-4">
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Outside Micrometers</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">0–25 mm, 0.001 mm resolution, anvil parallelism, thermal expansion.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Vernier Calipers</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">0–150 mm, Abbe error, jaw deflection, scale resolution.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Dial Indicators</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">0–10 mm, cosine error, hysteresis, repeatability.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Height Gauges</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">0–300 mm, column perpendicularity, scriber deflection.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Gauge Blocks</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Comparison calibration via dual probe comparator.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Digital Multimeters</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">DC Voltage 10V range, lead resistance, thermal EMF.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">RTD Thermometers</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Pt100 comparison in stirred liquid calibration bath.</p>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">Custom Procedures</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Parameterized JSON procedure templates for bespoke laboratory tooling.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <div class="footer-brand">NOVYRAX</div>
+        <p class="footer-copy">© 2026 NovyraX. All rights reserved. Sovereign engineering tools.</p>
+        <p class="footer-contact">Contact: <a href="mailto:novyrax04@gmail.com">novyrax04@gmail.com</a></p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Product</h4>
+          <a href="metrology-workstation.html">Overview</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="download.html">Download</a>
+          <a href="docs.html">Docs</a>
+        </div>
+        <div>
+          <h4>Legal &amp; Trust</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="eula.html">EULA</a>
+          <a href="refund.html">Refund Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
