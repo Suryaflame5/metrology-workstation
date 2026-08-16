@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <Identity Name="MetrologyWorkstation.Commercial"
+            Publisher="CN=MetrologyWorkstation"
+            Version="0.9.9.0"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Metrology Workstation</DisplayName>
+    <PublisherDisplayName>Metrology Workstation Engineering</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Evidence-First Calibration, Measurement Uncertainty, and Conformity Assessment Platform.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="MetrologyWorkstation" Executable="MetrologyWorkstation.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Metrology Workstation"
+                          Description="Evidence-First Calibration &amp; Measurement Uncertainty Platform"
+                          BackgroundColor="#0f172a"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile ShortName="Metrology" Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+</Package>

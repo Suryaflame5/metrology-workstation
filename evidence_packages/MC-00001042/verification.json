@@ -1,0 +1,6 @@
+{
+  "verifier_command": "python -m metrology_app.cli verify MC-00001042",
+  "expected_input_sha256": "5482770ff3486a304e2e8f7d19d4799c4b1b10bfa32f8de0911fa11651c6b24f",
+  "expected_calculation_sha256": "de0110bad9b36d7e49333b605b11d0e12d59ed9f664af37e1a1e9f030433afcb",
+  "verdict": "PASS"
+}

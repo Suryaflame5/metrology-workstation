@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "calculation_id": "MC-00001042",
+  "created_at": "2026-08-16T09:06:06.662289+00:00",
+  "engine_version": "metrology-core 0.3.0 (metrology-app 0.3.0)",
+  "instrument_name": "Micrometer",
+  "instrument_model": "0\u201325 mm Outside Micrometer",
+  "procedure_name": "Micrometer Calibration v1",
+  "procedure_version": "1.0.0",
+  "unit": "mm",
+  "status": "VALIDATED",
+  "conformity_verdict": "PASS",
+  "input_sha256": "5482770ff3486a304e2e8f7d19d4799c4b1b10bfa32f8de0911fa11651c6b24f",
+  "calculation_sha256": "de0110bad9b36d7e49333b605b11d0e12d59ed9f664af37e1a1e9f030433afcb"
+}

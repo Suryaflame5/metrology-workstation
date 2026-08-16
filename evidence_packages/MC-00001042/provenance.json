@@ -1,0 +1,15 @@
+{
+  "calculation_id": "MC-00001042",
+  "timestamp": "2026-08-16T09:06:06.662289+00:00",
+  "input_sha256": "5482770ff3486a304e2e8f7d19d4799c4b1b10bfa32f8de0911fa11651c6b24f",
+  "calculation_sha256": "de0110bad9b36d7e49333b605b11d0e12d59ed9f664af37e1a1e9f030433afcb",
+  "algorithm_sequence": [
+    "1. Type A Repeatability Statistical Evaluation (GUM 4.2)",
+    "2. Type B Reference Standard, Resolution, and Temperature Evaluation (GUM 4.3)",
+    "3. Law of Propagation of Uncertainty (GUM 5.1)",
+    "4. Welch-Satterthwaite Effective Degrees of Freedom (GUM Annex G)",
+    "5. Student's t Coverage Factor Derivation (k=95.45%)",
+    "6. Guardbanding & Acceptance Limits Derivation (ANSI/NCSL Z540.3 / ISO 14253-1)",
+    "7. Binary Conformity Decision & Resolution Matching (GUM 7.2.6)"
+  ]
+}

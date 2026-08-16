@@ -1,0 +1,14 @@
+{
+  "id": "digital_thermometer_rtd",
+  "name": "Digital RTD Thermometer (-50 to +250 °C)",
+  "instrument_family": "Thermal / Temperature",
+  "standard_reference": "EURAMET cg-13 v4.0 / ASTM E1137",
+  "unit": "°C",
+  "range_min": -50.0,
+  "range_max": 250.0,
+  "default_tolerance": 0.050,
+  "default_resolution": 0.010,
+  "default_checkpoints": [0.0, 50.0, 100.0, 150.0, 200.0],
+  "cte_ppm_k": 0.0,
+  "decision_rules": ["ANSI/NCSL Z540.3 Method 6", "ISO 14253-1:2017"]
+}

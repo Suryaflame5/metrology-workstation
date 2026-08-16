@@ -1,0 +1,14 @@
+{
+  "id": "dial_indicator_0_10",
+  "name": "Dial / Digital Indicator (0–10 mm)",
+  "instrument_family": "Dimensional",
+  "standard_reference": "ISO 13102:2012 / ASME B89.1.10M",
+  "unit": "mm",
+  "range_min": 0.0,
+  "range_max": 10.0,
+  "default_tolerance": 0.0050,
+  "default_resolution": 0.0010,
+  "default_checkpoints": [0.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+  "cte_ppm_k": 11.5,
+  "decision_rules": ["ANSI/NCSL Z540.3 Method 6", "ANSI/NCSL Z540.3 Method 5", "ISO 14253-1:2017"]
+}

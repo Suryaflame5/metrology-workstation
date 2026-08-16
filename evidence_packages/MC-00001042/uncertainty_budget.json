@@ -1,0 +1,54 @@
+{
+  "methodology": "JCGM 100:2008 (GUM Law of Propagation of Uncertainty)",
+  "combined_standard_uncertainty_mm": "0.000398",
+  "effective_degrees_of_freedom": "655.4",
+  "coverage_factor_k": "1.9600",
+  "expanded_uncertainty_U95_mm": "0.000780",
+  "formatted_result": "(25.00120 \u00b1 0.00078) mm",
+  "budget_table": [
+    {
+      "label": "Repeatability (Type A)",
+      "component_type": "A",
+      "distribution": "Statistical (Normal)",
+      "divisor": "sqrt(5)",
+      "standard_uncertainty_mm": "0.000071",
+      "sensitivity_coefficient": "1.0",
+      "variance_contribution": "0.00000001",
+      "percentage_contribution": "3.16%",
+      "degrees_of_freedom": "4.0"
+    },
+    {
+      "label": "Reference Standard (Type B)",
+      "component_type": "B",
+      "distribution": "Normal (k=2)",
+      "divisor": "2.0",
+      "standard_uncertainty_mm": "0.000200",
+      "sensitivity_coefficient": "1.0",
+      "variance_contribution": "0.00000004",
+      "percentage_contribution": "25.26%",
+      "degrees_of_freedom": "50.0"
+    },
+    {
+      "label": "Resolution (Type B)",
+      "component_type": "B",
+      "distribution": "Rectangular",
+      "divisor": "sqrt(3)",
+      "standard_uncertainty_mm": "0.000289",
+      "sensitivity_coefficient": "1.0",
+      "variance_contribution": "0.00000008",
+      "percentage_contribution": "52.63%",
+      "degrees_of_freedom": "inf"
+    },
+    {
+      "label": "Temperature Effect (Type B)",
+      "component_type": "B",
+      "distribution": "Rectangular",
+      "divisor": "sqrt(3)",
+      "standard_uncertainty_mm": "0.000173",
+      "sensitivity_coefficient": "1.0",
+      "variance_contribution": "0.00000003",
+      "percentage_contribution": "18.95%",
+      "degrees_of_freedom": "inf"
+    }
+  ]
+}

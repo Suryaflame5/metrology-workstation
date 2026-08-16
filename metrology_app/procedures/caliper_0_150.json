@@ -1,0 +1,14 @@
+{
+  "id": "caliper_0_150",
+  "name": "Digital / Vernier Caliper (0–150 mm)",
+  "instrument_family": "Dimensional",
+  "standard_reference": "ISO 13385-1:2019 / EURAMET cg-14 v3.0",
+  "unit": "mm",
+  "range_min": 0.0,
+  "range_max": 150.0,
+  "default_tolerance": 0.0200,
+  "default_resolution": 0.010,
+  "default_checkpoints": [0.0, 20.0, 50.0, 100.0, 150.0],
+  "cte_ppm_k": 11.5,
+  "decision_rules": ["ANSI/NCSL Z540.3 Method 6", "ANSI/NCSL Z540.3 Method 5", "ISO 14253-1:2017"]
+}

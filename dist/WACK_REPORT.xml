@@ -1,0 +1,338 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type='text/xsl' href='C:\ProgramData\Windows App Certification Kit\results.xsl'?>
+<REPORT xml:lang="en-IN" OVERALL_RESULT="PASS" VERSION="10.0.28000.2526" LATEST_VERSION="TRUE" UPDATE_DOWNLOAD_URL="" TOOLSET_ARCHITECTURE="x64" SecureBoot="FALSE" APP_TYPE="Centennial" PUBLISHER_DISPLAY_NAME="CN=MetrologyWorkstation" APP_NAME="MetrologyWorkstation.Commercial" APP_VERSION="0.9.9.0" OSVERSION="10.0.26200.0" OS="Microsoft Windows 11 Home Single Language" PER_USER_APPLICATION="" PARTIAL_RUN="FALSE" LCID="16393" X64_ONLY="TRUE" VALIDATION_TYPE="UI" ReportGenerationTime="16-08-2026 18:47:58" ID="876e7f541c0fd8547802f1ff2d3ccc58">
+  <REQUIREMENTS>
+    <REQUIREMENT NUMBER="3" TITLE="Digitally signed file test" RATIONALE="An Authenticode digital signature allows users to be sure that the software is genuine. It also allows detection if a file has been tampered with e.g. infected by a virus.">
+      <TEST INDEX="2" NAME="Install signed driver and executable files" DESCRIPTION="Install signed driver and executable files." EXECUTIONTIME="00h:00m:00s.93ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="6" TITLE="User account control (UAC) test" RATIONALE="Most applications do not require administrator privileges at run time, and should be just fine running as a standard-user. Windows applications must have a manifest (embedded or external) to define its execution level that tells OS the privileges needed to run the application.">
+      <TEST INDEX="11" NAME="User account control run level" DESCRIPTION="Windows® applications must have a manifest (embedded or external) to define its execution level that tells OS the privileges needed to run the application." EXECUTIONTIME="00h:00m:00s.82ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="12" TITLE="Package compliance test" RATIONALE="The package does not satisfy Store compliance rules.">
+      <TEST INDEX="77" NAME="Application count" DESCRIPTION="One package should not define more than one app in the manifest." EXECUTIONTIME="00h:00m:00s.86ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="31" NAME="App manifest" DESCRIPTION="App manifest must include valid entries for all required fields." EXECUTIONTIME="00h:00m:00s.91ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="87" NAME="File association verbs" DESCRIPTION="Registry validation that no registered file association verbs are installed." EXECUTIONTIME="00h:00m:00s.80ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="86" NAME="Registry checks" DESCRIPTION="Registry validation that drivers are not installed and NT Services are not installed." EXECUTIONTIME="00h:00m:00s.78ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="91" NAME="Enterprise Features" DESCRIPTION="Check if any enterprise-only features are in the package." EXECUTIONTIME="00h:00m:00s.82ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="90" NAME="Resource Packages" DESCRIPTION="Check if any resource packages contain PE files." EXECUTIONTIME="00h:00m:00s.82ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="14" TITLE="Windows security features test" RATIONALE="Applications must opt-into Windows security features.">
+      <TEST INDEX="70" NAME="Banned file analyzer" DESCRIPTION="Analysis of application to detect known insecure files" EXECUTIONTIME="00h:00m:00s.81ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="62" NAME="Private code signing" DESCRIPTION="App should not package private code signing key files." EXECUTIONTIME="00h:00m:00s.85ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="19" TITLE="App manifest resources tests" RATIONALE="The App Package Manifest should have valid resources defined in the resources.pri file, as per the App Packaging Specification and App Manifest Schema.">
+      <TEST INDEX="45" NAME="App resources" DESCRIPTION="The package should have valid resources defined in the resources.pri file." EXECUTIONTIME="00h:00m:00s.76ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="61" NAME="Branding" DESCRIPTION="App should not use the default images packed by windows SDK samples or Visual Studio." EXECUTIONTIME="00h:00m:00s.96ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="20" TITLE="Debug configuration test" RATIONALE="The App should not install any debug binaries.">
+      <TEST INDEX="46" NAME="Debug configuration" DESCRIPTION="The App should not install any debug binaries." EXECUTIONTIME="00h:00m:00s.88ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="23" TITLE="App Capabilities test" RATIONALE="Packages declaring special-use capabilities will have to provide justifications during the onboarding process.">
+      <TEST INDEX="52" NAME="Special use capabilities" DESCRIPTION="Packages declaring special-use capabilities will have to provide justifications during the onboarding process." EXECUTIONTIME="00h:00m:00s.83ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="24" TITLE="Windows Runtime metadata validation" RATIONALE="Metadata needs to be conformant and consistent across all generation sources.">
+      <TEST INDEX="56" NAME="ExclusiveTo attribute" DESCRIPTION="A class must not implement an interface that is marked ExclusiveTo another class." EXECUTIONTIME="00h:00m:06s.29ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="57" NAME="Type location" DESCRIPTION="Types must be defined in the metadata file with the longest matching namespace." EXECUTIONTIME="00h:00m:00s.82ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="55" NAME="Type name case-sensitivity" DESCRIPTION="Namespace and type names must not vary only by casing." EXECUTIONTIME="00h:00m:00s.78ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="54" NAME="Type name correctness" DESCRIPTION="Only system types can be in the Windows namespace and no types can be in the global namespace." EXECUTIONTIME="00h:00m:00s.80ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="58" NAME="General metadata correctness" DESCRIPTION="Metadata files must meet various requirements in order to be valid and correct." EXECUTIONTIME="00h:00m:06s.46ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="53" NAME="Properties" DESCRIPTION="Write-only and indexer properties may not be used. Corresponding getter and setter methods must match in type." EXECUTIONTIME="00h:00m:00s.79ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="25" TITLE="Package sanity test" RATIONALE="Validation of the app package contents to ensure correctness.">
+      <TEST INDEX="89" NAME="Archive files usage" DESCRIPTION="Packages should not contain PE files inside archive files." EXECUTIONTIME="00h:00m:00s.84ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+      <TEST INDEX="88" NAME="Blocked executables" DESCRIPTION="Detects if there are references to process launch APIs and blocked executables" EXECUTIONTIME="00h:00m:02s.31ms" OPTIONAL="TRUE">
+        <MESSAGES>
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a reference to a &quot;Launch Process&quot; related API kernel32.dll!CreateProcessW" />
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a blocked executable reference to &quot;CdB&quot;." />
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a blocked executable reference to &quot;DNx&quot;." />
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a blocked executable reference to &quot;ReG&quot;." />
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a blocked executable reference to &quot;cMd&quot;." />
+          <MESSAGE TEXT="File MetrologyWorkstation.exe contains a blocked executable reference to &quot;CSi&quot;." />
+        </MESSAGES>
+        <RESULT><![CDATA[FAIL]]></RESULT>
+      </TEST>
+      <TEST INDEX="63" NAME="Platform appropriate files" DESCRIPTION="App should not install files that do not match the target processor architecture." EXECUTIONTIME="00h:00m:00s.82ms" OPTIONAL="TRUE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+    <REQUIREMENT NUMBER="26" TITLE="High-DPI support" RATIONALE="The application needs to set DPI-aware to make the UI look consistently good across a wide variety of high-DPI display settings.">
+      <TEST INDEX="92" NAME="DPIAwarenessValidation" DESCRIPTION="Applications should set DPI-aware to make its UI look consistently good across a wide variety of high-DPI display settings." EXECUTIONTIME="00h:00m:00s.87ms" OPTIONAL="FALSE">
+        <MESSAGES />
+        <RESULT><![CDATA[PASS]]></RESULT>
+      </TEST>
+    </REQUIREMENT>
+  </REQUIREMENTS>
+  <APPLICATIONS>
+    <Installed_Programs>
+      <Program Name="MetrologyWorkstation.Commercial" Type="Application" Source="AppxPackage" Publisher="CN=MetrologyWorkstation" Version="0.9.9.0" Language="16393" InstallDate="" RootDirPath="C:\WINDOWS\temp\appcert_5E6C\MetrologyWorkstation.Commercial_0.9.9.0_x64__fbmtvskkw0na4" Id="00004092a390ac49a81c5c696d4bcd5ded1900000940" HiddenArp="false">
+        <Indicators>
+          <WindowsStoreAppManifestIndicators>
+            <PackageManifest PackageFullName="MetrologyWorkstation.Commercial_0.9.9.0_x64__fbmtvskkw0na4">
+              <Package>
+                <Identity Name="MetrologyWorkstation.Commercial" Publisher="CN=MetrologyWorkstation" Version="0.9.9.0" ProcessorArchitecture="x64"></Identity>
+                <Properties>
+                  <DisplayName>Metrology Workstation</DisplayName>
+                  <PublisherDisplayName>Metrology Workstation Engineering</PublisherDisplayName>
+                  <Logo>Assets\StoreLogo.png</Logo>
+                  <Description>Evidence-First Calibration, Measurement Uncertainty, and Conformity Assessment Platform.</Description>
+                </Properties>
+                <Dependencies>
+                  <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0"></TargetDeviceFamily>
+                </Dependencies>
+                <Capabilities>
+                  <Capability Name="runFullTrust"></Capability>
+                </Capabilities>
+                <Applications>
+                  <Application Id="MetrologyWorkstation" Executable="MetrologyWorkstation.exe" EntryPoint="Windows.FullTrustApplication">
+                    <VisualElements DisplayName="Metrology Workstation" Description="Evidence-First Calibration &amp; Measurement Uncertainty Platform" BackgroundColor="#0f172a" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" ForegroundText="light">
+                      <DefaultTile ShortName="Metrology" Wide310x150Logo="Assets\Wide310x150Logo.png"></DefaultTile>
+                    </VisualElements>
+                  </Application>
+                </Applications>
+              </Package>
+            </PackageManifest>
+          </WindowsStoreAppManifestIndicators>
+        </Indicators>
+        <StaticProperties>
+          <Files Id="">
+            <File Id="000071b85ec57ff57f89e14ca387ba91454502a55609" Name="MetrologyWorkstation.exe" ProductName="" CompanyName="" ProductVersion="" VerLanguage="0" SwitchBackContext="0" FileVersion="" OriginalFileName="" InternalName="" Size="52166808" SizeOfImage="380928" PeHeaderHash="010164242d62ed8ba42f0f0de66c605339e58821dd48" PeChecksum="52205282" CrcChecksum="952453666" BinProductVersion="" BinFileVersion="" FileDescription="" LegalCopyright="" LinkDate="08/16/2026 13:13:42" BinaryType="pe64_amd64" LowerCaseLongPath="c:\windows\temp\appcert_5e6c\metrologyworkstation.commercial_0.9.9.0_x64__fbmtvskkw0na4\metrologyworkstation.exe" SigPublisherName="" PeSubsystem="3" PeCharacteristics="34" Sha256="d06b00457f2f3c6f61c62de5c2cddf72e30ae016eacd6855ec6e9d020b1f7abc" />
+          </Files>
+        </StaticProperties>
+      </Program>
+    </Installed_Programs>
+  </APPLICATIONS>
+  <DEPENDENCY_INFORMATION>
+    <AitStaticAnalysis ProgramId="0000da39a3ee5e6b4b0d3255bfef95601890afd80709" AnalysisVersion="1.80" DictionaryVersion="3.7" Type="Max" Id="C:\WINDOWS\temp\appcert_5E6C\MetrologyWorkstation.Commercial_0.9.9.0_x64__fbmtvskkw0na4">
+      <AitFile ErrorCode="0" Name="MetrologyWorkstation.exe" Id="000071b85ec57ff57f89e14ca387ba91454502a55609">
+        <AitCategory Id="Com">
+          <AitFeature Name="{00000000-0000-0000-0000-000000000002}" />
+          <AitFeature Name="{00000000-0000-0000-0000-000000000006}" />
+          <AitFeature Name="{00000000-0000-0000-0000-000000000009}" />
+        </AitCategory>
+        <AitCategory Id="ApiStatic">
+          <AitFeature Name="advapi32.dll!ConvertSidToStringSidW" />
+          <AitFeature Name="advapi32.dll!ConvertStringSecurityDescriptorToSecurityDescriptorW" />
+          <AitFeature Name="advapi32.dll!GetTokenInformation" />
+          <AitFeature Name="advapi32.dll!OpenProcessToken" />
+          <AitFeature Name="kernel32.dll!CloseHandle" />
+          <AitFeature Name="kernel32.dll!CompareStringW" />
+          <AitFeature Name="kernel32.dll!CreateDirectoryW" />
+          <AitFeature Name="kernel32.dll!CreateFileW" />
+          <AitFeature Name="kernel32.dll!CreateProcessW" />
+          <AitFeature Name="kernel32.dll!CreateSymbolicLinkW" />
+          <AitFeature Name="kernel32.dll!CreateToolhelp32Snapshot" />
+          <AitFeature Name="kernel32.dll!DeleteCriticalSection" />
+          <AitFeature Name="kernel32.dll!DeleteFileW" />
+          <AitFeature Name="kernel32.dll!EncodePointer" />
+          <AitFeature Name="kernel32.dll!EnterCriticalSection" />
+          <AitFeature Name="kernel32.dll!ExitProcess" />
+          <AitFeature Name="kernel32.dll!ExpandEnvironmentStringsW" />
+          <AitFeature Name="kernel32.dll!FileTimeToSystemTime" />
+          <AitFeature Name="kernel32.dll!FindClose" />
+          <AitFeature Name="kernel32.dll!FindFirstFileExW" />
+          <AitFeature Name="kernel32.dll!FindFirstFileW" />
+          <AitFeature Name="kernel32.dll!FindNextFileW" />
+          <AitFeature Name="kernel32.dll!FlsAlloc" />
+          <AitFeature Name="kernel32.dll!FlsFree" />
+          <AitFeature Name="kernel32.dll!FlsGetValue" />
+          <AitFeature Name="kernel32.dll!FlsSetValue" />
+          <AitFeature Name="kernel32.dll!FlushFileBuffers" />
+          <AitFeature Name="kernel32.dll!FormatMessageW" />
+          <AitFeature Name="kernel32.dll!FreeEnvironmentStringsW" />
+          <AitFeature Name="kernel32.dll!FreeLibrary" />
+          <AitFeature Name="kernel32.dll!GetACP" />
+          <AitFeature Name="kernel32.dll!GetCPInfo" />
+          <AitFeature Name="kernel32.dll!GetCommandLineA" />
+          <AitFeature Name="kernel32.dll!GetCommandLineW" />
+          <AitFeature Name="kernel32.dll!GetConsoleMode" />
+          <AitFeature Name="kernel32.dll!GetConsoleOutputCP" />
+          <AitFeature Name="kernel32.dll!GetConsoleWindow" />
+          <AitFeature Name="kernel32.dll!GetCurrentDirectoryW" />
+          <AitFeature Name="kernel32.dll!GetCurrentProcess" />
+          <AitFeature Name="kernel32.dll!GetCurrentProcessId" />
+          <AitFeature Name="kernel32.dll!GetCurrentThreadId" />
+          <AitFeature Name="kernel32.dll!GetDriveTypeW" />
+          <AitFeature Name="kernel32.dll!GetEnvironmentStringsW" />
+          <AitFeature Name="kernel32.dll!GetEnvironmentVariableW" />
+          <AitFeature Name="kernel32.dll!GetExitCodeProcess" />
+          <AitFeature Name="kernel32.dll!GetFileAttributesExW" />
+          <AitFeature Name="kernel32.dll!GetFileInformationByHandle" />
+          <AitFeature Name="kernel32.dll!GetFileSizeEx" />
+          <AitFeature Name="kernel32.dll!GetFileType" />
+          <AitFeature Name="kernel32.dll!GetFinalPathNameByHandleW" />
+          <AitFeature Name="kernel32.dll!GetFullPathNameW" />
+          <AitFeature Name="kernel32.dll!GetLastError" />
+          <AitFeature Name="kernel32.dll!GetModuleFileNameW" />
+          <AitFeature Name="kernel32.dll!GetModuleHandleExW" />
+          <AitFeature Name="kernel32.dll!GetModuleHandleW" />
+          <AitFeature Name="kernel32.dll!GetOEMCP" />
+          <AitFeature Name="kernel32.dll!GetProcAddress" />
+          <AitFeature Name="kernel32.dll!GetProcessHeap" />
+          <AitFeature Name="kernel32.dll!GetStartupInfoW" />
+          <AitFeature Name="kernel32.dll!GetStdHandle" />
+          <AitFeature Name="kernel32.dll!GetStringTypeW" />
+          <AitFeature Name="kernel32.dll!GetSystemTimeAsFileTime" />
+          <AitFeature Name="kernel32.dll!GetTempPathW" />
+          <AitFeature Name="kernel32.dll!GetTimeZoneInformation" />
+          <AitFeature Name="kernel32.dll!HeapAlloc" />
+          <AitFeature Name="kernel32.dll!HeapFree" />
+          <AitFeature Name="kernel32.dll!HeapReAlloc" />
+          <AitFeature Name="kernel32.dll!HeapSize" />
+          <AitFeature Name="kernel32.dll!InitializeCriticalSectionEx" />
+          <AitFeature Name="kernel32.dll!InitializeSListHead" />
+          <AitFeature Name="kernel32.dll!IsDebuggerPresent" />
+          <AitFeature Name="kernel32.dll!IsProcessorFeaturePresent" />
+          <AitFeature Name="kernel32.dll!IsValidCodePage" />
+          <AitFeature Name="kernel32.dll!K32EnumProcessModules" />
+          <AitFeature Name="kernel32.dll!K32GetModuleFileNameExW" />
+          <AitFeature Name="kernel32.dll!LCMapStringW" />
+          <AitFeature Name="kernel32.dll!LeaveCriticalSection" />
+          <AitFeature Name="kernel32.dll!LoadLibraryExW" />
+          <AitFeature Name="kernel32.dll!LocalFree" />
+          <AitFeature Name="kernel32.dll!MultiByteToWideChar" />
+          <AitFeature Name="kernel32.dll!OpenProcess" />
+          <AitFeature Name="kernel32.dll!PeekNamedPipe" />
+          <AitFeature Name="kernel32.dll!Process32FirstW" />
+          <AitFeature Name="kernel32.dll!Process32NextW" />
+          <AitFeature Name="kernel32.dll!QueryFullProcessImageNameW" />
+          <AitFeature Name="kernel32.dll!QueryPerformanceCounter" />
+          <AitFeature Name="kernel32.dll!QueryPerformanceFrequency" />
+          <AitFeature Name="kernel32.dll!RaiseException" />
+          <AitFeature Name="kernel32.dll!ReadConsoleW" />
+          <AitFeature Name="kernel32.dll!ReadFile" />
+          <AitFeature Name="kernel32.dll!RemoveDirectoryW" />
+          <AitFeature Name="kernel32.dll!RtlCaptureContext" />
+          <AitFeature Name="kernel32.dll!RtlLookupFunctionEntry" />
+          <AitFeature Name="kernel32.dll!RtlPcToFileHeader" />
+          <AitFeature Name="kernel32.dll!RtlUnwindEx" />
+          <AitFeature Name="kernel32.dll!RtlVirtualUnwind" />
+          <AitFeature Name="kernel32.dll!SetConsoleCtrlHandler" />
+          <AitFeature Name="kernel32.dll!SetDllDirectoryW" />
+          <AitFeature Name="kernel32.dll!SetEndOfFile" />
+          <AitFeature Name="kernel32.dll!SetEnvironmentVariableW" />
+          <AitFeature Name="kernel32.dll!SetErrorMode" />
+          <AitFeature Name="kernel32.dll!SetFilePointerEx" />
+          <AitFeature Name="kernel32.dll!SetLastError" />
+          <AitFeature Name="kernel32.dll!SetStdHandle" />
+          <AitFeature Name="kernel32.dll!SetUnhandledExceptionFilter" />
+          <AitFeature Name="kernel32.dll!Sleep" />
+          <AitFeature Name="kernel32.dll!SystemTimeToTzSpecificLocalTime" />
+          <AitFeature Name="kernel32.dll!TerminateProcess" />
+          <AitFeature Name="kernel32.dll!UnhandledExceptionFilter" />
+          <AitFeature Name="kernel32.dll!VirtualProtect" />
+          <AitFeature Name="kernel32.dll!WaitForSingleObject" />
+          <AitFeature Name="kernel32.dll!WideCharToMultiByte" />
+          <AitFeature Name="kernel32.dll!WriteConsoleW" />
+          <AitFeature Name="kernel32.dll!WriteFile" />
+          <AitFeature Name="user32.dll!CreateWindowExW" />
+          <AitFeature Name="user32.dll!DefWindowProcW" />
+          <AitFeature Name="user32.dll!DestroyWindow" />
+          <AitFeature Name="user32.dll!DispatchMessageW" />
+          <AitFeature Name="user32.dll!GetCursorPos" />
+          <AitFeature Name="user32.dll!GetMessageW" />
+          <AitFeature Name="user32.dll!GetMonitorInfoW" />
+          <AitFeature Name="user32.dll!GetSystemMetrics" />
+          <AitFeature Name="user32.dll!GetWindowLongPtrW" />
+          <AitFeature Name="user32.dll!GetWindowThreadProcessId" />
+          <AitFeature Name="user32.dll!MonitorFromPoint" />
+          <AitFeature Name="user32.dll!MsgWaitForMultipleObjects" />
+          <AitFeature Name="user32.dll!PeekMessageW" />
+          <AitFeature Name="user32.dll!RegisterClassW" />
+          <AitFeature Name="user32.dll!SetWindowLongPtrW" />
+          <AitFeature Name="user32.dll!ShowWindow" />
+          <AitFeature Name="user32.dll!ShutdownBlockReasonCreate" />
+          <AitFeature Name="user32.dll!TranslateMessage" />
+        </AitCategory>
+        <AitCategory Id="ApiDynamic">
+          <AitFeature Name="kernel32.dll!AppPolicyGetProcessTerminationMethod" />
+          <AitFeature Name="kernel32.dll!AreFileApisANSI" />
+          <AitFeature Name="kernel32.dll!CompareStringEx" />
+          <AitFeature Name="kernel32.dll!FlsGetValue2" />
+          <AitFeature Name="kernel32.dll!LCMapStringEx" />
+          <AitFeature Name="kernel32.dll!LocaleNameToLCID" />
+          <AitFeature Name="mscoree.dll!CorExitProcess" />
+          <AitFeature Name="kernelbase.dll!AppPolicyGetProcessTerminationMethod" />
+          <AitFeature Name="kernelbase.dll!AreFileApisANSI" />
+          <AitFeature Name="kernelbase.dll!CompareStringEx" />
+          <AitFeature Name="kernelbase.dll!FlsGetValue2" />
+          <AitFeature Name="kernelbase.dll!LCMapStringEx" />
+          <AitFeature Name="kernelbase.dll!LocaleNameToLCID" />
+          <AitFeature Name="kernelbase.dll!exit" />
+          <AitFeature Name="ucrtbase.dll!calloc" />
+          <AitFeature Name="ucrtbase.dll!exit" />
+          <AitFeature Name="ucrtbase.dll!fopen" />
+          <AitFeature Name="ucrtbase.dll!fread" />
+          <AitFeature Name="ucrtbase.dll!fseek" />
+          <AitFeature Name="ucrtbase.dll!fwrite" />
+          <AitFeature Name="ucrtbase.dll!log10" />
+          <AitFeature Name="ucrtbase.dll!malloc" />
+          <AitFeature Name="ucrtbase.dll!nan" />
+        </AitCategory>
+      </AitFile>
+    </AitStaticAnalysis>
+  </DEPENDENCY_INFORMATION>
+</REPORT>

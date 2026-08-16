@@ -1,0 +1,31 @@
+{
+  "nominal_checkpoint_mm": 25.0,
+  "reference_standard": {
+    "nominal_value": 25.0,
+    "uncertainty": 0.0004,
+    "distribution": "normal",
+    "coverage_factor_k": 2.0,
+    "degrees_of_freedom": 50.0
+  },
+  "repeatability_observations": [
+    25.0012,
+    25.001,
+    25.0014,
+    25.0011,
+    25.0013
+  ],
+  "resolution_spec": {
+    "resolution": 0.001,
+    "distribution": "rectangular"
+  },
+  "temperature_spec": {
+    "delta_temperature_c": 1.0,
+    "expansion_coefficient_ppm_k": 11.5,
+    "half_width_mm": 0.0003,
+    "distribution": "rectangular"
+  },
+  "tolerance_limits": {
+    "lower_mm": -0.002,
+    "upper_mm": 0.002
+  }
+}

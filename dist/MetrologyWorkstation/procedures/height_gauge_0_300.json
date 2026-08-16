@@ -1,0 +1,14 @@
+{
+  "id": "height_gauge_0_300",
+  "name": "Digital Height Gauge (0–300 mm)",
+  "instrument_family": "Dimensional",
+  "standard_reference": "ISO 13225:2012 / VDI/VDE/DGQ 2618",
+  "unit": "mm",
+  "range_min": 0.0,
+  "range_max": 300.0,
+  "default_tolerance": 0.0300,
+  "default_resolution": 0.010,
+  "default_checkpoints": [0.0, 50.0, 100.0, 200.0, 300.0],
+  "cte_ppm_k": 11.5,
+  "decision_rules": ["ANSI/NCSL Z540.3 Method 6", "ANSI/NCSL Z540.3 Method 5", "ISO 14253-1:2017"]
+}

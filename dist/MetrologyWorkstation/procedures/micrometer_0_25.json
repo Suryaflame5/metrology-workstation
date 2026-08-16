@@ -1,0 +1,14 @@
+{
+  "id": "micrometer_0_25",
+  "name": "Outside Micrometer (0–25 mm)",
+  "instrument_family": "Dimensional",
+  "standard_reference": "ISO 3611:2023 / EURAMET cg-10 v5.0",
+  "unit": "mm",
+  "range_min": 0.0,
+  "range_max": 25.0,
+  "default_tolerance": 0.00200,
+  "default_resolution": 0.0010,
+  "default_checkpoints": [0.0, 5.12, 10.24, 15.36, 20.48, 25.0],
+  "cte_ppm_k": 11.5,
+  "decision_rules": ["ANSI/NCSL Z540.3 Method 6", "ANSI/NCSL Z540.3 Method 5", "ISO 14253-1:2017"]
+}

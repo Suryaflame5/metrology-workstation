@@ -1,0 +1,9 @@
+{
+  "app_name": "Metrology Workstation",
+  "version": "0.9.9",
+  "release_tag": "V0.9.9-RC-FINAL",
+  "build_date": "2026-08-16T13:44:06.575387",
+  "target_os": "Windows 10 / Windows 11 (x64)",
+  "offline_capable": true,
+  "math_kernel": "metrology-core (Exact 50-digit context)"
+}

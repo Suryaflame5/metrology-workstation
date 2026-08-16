@@ -1,0 +1,32 @@
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# Build & Dist Artifacts
+build/
+*.spec
+
+# Local Runtime Databases & Caches
+*.db-journal
+*.db-wal
+scratch/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment Variables & Secrets
+.env
+.env.*
+*.pem
+*.key
+*.pfx

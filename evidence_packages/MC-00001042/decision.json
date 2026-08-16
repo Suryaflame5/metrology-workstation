@@ -1,0 +1,17 @@
+{
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6",
+  "tur": "2.564",
+  "guardband_multiplier_M": "0.1974",
+  "guardband_w_mm": "0.000154",
+  "tolerance_limits_mm": [
+    "-0.00200",
+    "0.00200"
+  ],
+  "acceptance_zone_mm": [
+    "-0.00185",
+    "0.00185"
+  ],
+  "measured_error_mm": "+0.00120",
+  "conformity_verdict": "PASS",
+  "decision_trace": "Evaluated under ANSI/NCSL Z540.3 Method 6 (2% False Accept Risk). TUR = 2.564. Guardband w = 0.000154 mm (M = 0.1974). Acceptance Zone = [-0.00185, 0.00185] mm. Measured Error = +0.00120 mm -> Verdict: PASS."
+}
