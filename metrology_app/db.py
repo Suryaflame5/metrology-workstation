@@ -8,8 +8,9 @@ import json
 import hashlib
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
+from .config import DB_PATH as CONFIG_DB_PATH
 
-DB_PATH = os.environ.get("METROLOGY_DB_PATH", "metrology_data.db")
+DB_PATH = os.environ.get("METROLOGY_DB_PATH", CONFIG_DB_PATH)
 
 
 def get_connection(db_path: str = DB_PATH) -> sqlite3.Connection:

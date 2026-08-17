@@ -2,7 +2,7 @@
 
 ```text
                     METROLOGY WORKSTATION
-                         v1.0.0 (Windows x64)
+                v1.0.0 (V4 Clean Production Release)
 
                     COMMERCIAL RELEASE GATE
 ```
@@ -11,47 +11,38 @@
 **Official Website**: `https://novyrax.vercel.app`  
 **Official Email**: `novyrax04@gmail.com`  
 **Distribution Channel**: NovyraX Direct Website + GitHub Releases + Merchant of Record Checkout  
-**Audit Date**: August 16, 2026  
+**Audit Date**: August 17, 2026  
 
 ---
 
-## 1. Commercial Release Verification Matrix
+## 1. V0 $\to$ V4 SDLC Marathon Verification Matrix
 
-| Gate | Requirement | Verification Command / Artifact | Status |
-| :--- | :--- | :--- | :---: |
-| **Core Regression Suite** | 74 automated unit & integration tests | `pytest -q` (4.86s) | ✅ **PASS** |
-| **50-Digit Decimal Kernel** | JCGM 100/101/106 exact arithmetic | `selftest` (8/8 benchmarks) | ✅ **PASS** |
-| **Z540.3 Method 6 Engine** | Root guardbanding & risk $< 2.0\%$ | `cli demo` (TUR=2.564, w=0.000154mm) | ✅ **PASS** |
-| **Standalone x64 Executable** | Self-contained single-file PE binary | `dist/MetrologyWorkstation.exe` (52.1 MB) | ✅ **PASS** |
-| **Windows Native Installer** | Setup executable with shortcuts & uninstaller | `Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe` (54.0 MB) | ✅ **PASS** |
-| **Local Data Isolation** | 100% of databases isolated in `%LOCALAPPDATA%` | `config.py` & `db.py` | ✅ **PASS** |
-| **100% Offline Operation** | Air-gapped calibration & verification | Zero network calls at runtime | ✅ **PASS** |
-| **Cryptographic Entitlement** | Canonical JSON HMAC-SHA256 tokens | `metrology_app/services/license_service.py` | ✅ **PASS** |
-| **Clock Rollback Guard** | Monotonic SQLite audit timestamp validation | `detect_clock_rollback()` | ✅ **PASS** |
-| **Payment MoR Webhook** | HMAC-SHA256 signature & idempotent processing | `metrology_app/services/webhook_service.py` | ✅ **PASS** |
-| **Commercial Pricing** | Community ($0), Pro ($490/yr), Team ($1,490/yr), Enterprise ($4,900/yr) | `website/pricing.html` | ✅ **PASS** |
-| **Official Web Portal** | 13 responsive engineering pages | `website/` (HTML5/CSS3) | ✅ **PASS** |
-| **GitHub Actions CI/CD** | Automated test & release publishing workflows | `.github/workflows/ci.yml` & `release.yml` | ✅ **PASS** |
-| **SHA-256 Manifest** | Cryptographic hash publication | `dist/SHA256SUMS.txt` | ✅ **PASS** |
-| **Production Signing Plan** | Documented Azure Trusted Signing roadmap | `PRODUCTION_SIGNING_STRATEGY.md` | ✅ **PASS** |
-| **Business & Tax Notes** | Documented Indian export & MoR compliance | `BUSINESS_COMPLIANCE_NOTES.md` | ✅ **PASS** |
-| **Support Playbook** | 24–48h SLA and ticket handling | `SUPPORT.md` | ✅ **PASS** |
-| **Security Audit** | Zero secrets, zero card data, SQLi safe | `SECURITY_AUDIT.md` | ✅ **PASS** |
+| Gate | Stage | Verification Requirement | Status |
+| :--- | :---: | :--- | :---: |
+| **V0: Mathematical Foundation** | V0 | 50-digit exact decimal context, JCGM 100/101/106, Z540.3 Method 6 | ✅ **PASS** |
+| **V1: Functional Workstation** | V1 | Single-point & multi-point calibration workflows, SQLite persistence | ✅ **PASS** |
+| **V2: Engineering Hardening** | V2 | Welch-Satterthwaite, adversarial fuzzing, PSD checking, rollback defense | ✅ **PASS** |
+| **V3: Commercial Engineering** | V3 | Standalone PE binary, native installer, offline HMAC licensing, webhooks | ✅ **PASS** |
+| **V4: Clean Production Workstation** | V4 | Deterministically empty database (0 records), clean first-run UI | ✅ **PASS** |
+| **V4: Data Preservation Guarantee** | V4 | User databases preserved during application uninstall / upgrade | ✅ **PASS** |
+| **V4: Automated Quality Suite** | V4 | 78 automated unit, integration, webhook, and clean-room tests (`pytest`) | ✅ **PASS** |
 
 ---
 
 ## 2. Release Deliverable Artifacts
 
-1. **Standalone Windows Installer**:
-   - `dist/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe` (`56,620,908 bytes`)
-   - **SHA-256**: `a78fdb7f675192eed455d26bac5448ba383de765dd8b6cf61764a6282eedfa74`
+1. **Standalone Windows Setup Installer**:
+   - `dist/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe` (`58,703,040 bytes`)
+   - **SHA-256**: `e8674ebc13c76c46e530b8196d356401ea1481b77d1fff022f1d5f73d2395029`
 2. **Inno Setup Script**:
    - `installer/setup.iss`
 3. **Checksum Manifest**:
    - `dist/SHA256SUMS.txt`
 4. **Official Website Portal**:
-   - `website/` (Ready for static deployment to Vercel / GitHub Pages)
-5. **Documentation Suite**:
+   - `website/` (13 responsive engineering pages ready for Vercel deployment)
+5. **Engineering & Documentation Suite**:
+   - `docs/V4_PRODUCTION_SPECIFICATION.md`
+   - `docs/V4_CLEAN_ROOM_VERIFICATION.md`
    - `COMMERCIAL_LAUNCH_AUDIT.md`
    - `PAYMENT_PROVIDER_DECISION.md`
    - `PAYMENT_ARCHITECTURE.md`
@@ -66,4 +57,4 @@
 
 ## 3. Final Signoff
 
-Metrology Workstation v1.0.0 is **fully verified, packaged, documented, and ready for commercial distribution** under the NovyraX brand.
+Metrology Workstation v1.0.0 (V4 Clean Production Release) is **fully hardened, verified, packaged with zero demo artifacts, and customer-ready** for immediate commercial distribution.

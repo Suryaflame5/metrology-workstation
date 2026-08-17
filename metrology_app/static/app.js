@@ -100,11 +100,21 @@ async function loadDashboard() {
     document.getElementById("stat-failed").innerText = stats.failed_count;
     document.getElementById("stat-review").innerText = (stats.guard_band_count || 0) + (stats.needs_review_count || 0);
 
+    const emptyCard = document.getElementById("empty-workspace-card");
+    const featCard = document.getElementById("featured-calibration-card");
     const tbody = document.getElementById("calibrations-table-body");
+
     if (calcs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 20px;">No production calibrations recorded yet. Click "+ New Calibration" to start.</td></tr>`;
+      if (emptyCard) emptyCard.classList.remove("hidden");
+      if (featCard) featCard.classList.add("hidden");
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 32px 16px;">No production calibrations recorded yet. Click <strong>"+ New Calibration"</strong> to start.</td></tr>`;
+      activeCalculationId = null;
+      currentCalculation = null;
       return;
     }
+
+    if (emptyCard) emptyCard.classList.add("hidden");
+    if (featCard) featCard.classList.remove("hidden");
 
     const first = calcs[0];
     activeCalculationId = first.id;
@@ -605,9 +615,23 @@ async function restoreBackup(fname) {
 // 8. 12-Stage Mathematical Replay
 async function loadReplay(calcId) {
   const targetId = calcId || activeCalculationId;
-  if (!targetId) return;
-
   const container = document.getElementById("replay-stages-container");
+  if (!container) return;
+
+  if (!targetId) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 48px 24px; color: var(--text-muted);">
+        <div style="font-size: 36px; margin-bottom: 12px;">🔄</div>
+        <h3 style="font-size: 16px; margin-bottom: 6px; color: #334155;">No Calculation Selected for Replay</h3>
+        <p style="font-size: 13px; max-width: 440px; margin: 0 auto 16px;">
+          Perform a calibration in the Studio or select a record from the Dashboard to inspect its 12-stage mathematical derivation.
+        </p>
+        <button class="btn btn-primary" onclick="startNewCalibration()">+ Launch Calibration Studio</button>
+      </div>
+    `;
+    return;
+  }
+
   container.innerHTML = `<p style="color: var(--text-muted);">Replaying mathematical derivation for ${targetId}...</p>`;
 
   try {

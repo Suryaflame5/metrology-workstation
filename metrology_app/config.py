@@ -51,15 +51,15 @@ def ensure_app_directories() -> None:
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "laboratory_name": "Precision Metrology Reference Laboratory",
-    "laboratory_code": "LAB-REF-01",
-    "accreditation_body": "ISO/IEC 17025 Ready / National Standard Calibration",
-    "certificate_prefix": "CERT-2026-",
-    "default_technician": "Metrology Specialist",
+    "laboratory_code": "LAB-01",
+    "accreditation_body": "ISO/IEC 17025 Conformant Laboratory",
+    "certificate_prefix": "CERT-",
+    "default_technician": "Lead Metrologist",
     "auto_backup_enabled": True,
     "auto_backup_interval_calibrations": 5,
     "rounding_significant_digits": 2,
     "temperature_nominal_c": 20.0,
-    "first_run_completed": True,
+    "first_run_completed": False,
 }
 
 

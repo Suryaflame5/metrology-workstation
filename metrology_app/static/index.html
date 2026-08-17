@@ -103,13 +103,27 @@
           </div>
         </div>
 
-        <!-- Featured Active Calibration Telemetry Card -->
-        <div class="card" id="featured-calibration-card" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+        <!-- Empty Workspace First-Run Banner (Shown when 0 calibrations exist) -->
+        <div class="card" id="empty-workspace-card" style="text-align: center; padding: 40px 24px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+          <div style="font-size: 36px; margin-bottom: 10px;">📐</div>
+          <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Welcome to Metrology Workstation</h2>
+          <p style="color: var(--text-muted); font-size: 13px; max-width: 540px; margin: 0 auto 20px;">
+            Your sovereign measurement workspace is initialized and ready. Perform a single-point calibration, run multi-point testing, or browse ISO/GUM compliant procedure catalogs.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="startNewCalibration()">+ Start New Calibration</button>
+            <button class="btn btn-secondary" onclick="switchView('multipoint')">Multi-Point Studio</button>
+            <button class="btn btn-secondary" onclick="switchView('procedures')">Browse Procedures</button>
+          </div>
+        </div>
+
+        <!-- Featured Active Calibration Telemetry Card (Shown when calibrations exist) -->
+        <div class="card hidden" id="featured-calibration-card" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
           <div class="card-header">
             <div>
               <span class="badge badge-integrity" style="margin-bottom: 4px;">ACTIVE CALIBRATION TELEMETRY</span>
-              <h2 id="feat-title">Outside Micrometer (0–25 mm)</h2>
-              <p id="feat-id-label" style="font-family: monospace;">MC-00001042 • Revision 1</p>
+              <h2 id="feat-title">—</h2>
+              <p id="feat-id-label" style="font-family: monospace;">—</p>
             </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-secondary" onclick="openReplayForActive()">Replay Math</button>
@@ -120,15 +134,15 @@
           <div class="grid-4" style="background: #f1f5f9; padding: 14px; border-radius: var(--radius); margin-bottom: 14px;">
             <div>
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">NOMINAL / MEASURED</div>
-              <div style="font-size: 14px; font-weight: 700;" id="feat-meas">25.00120 mm</div>
+              <div style="font-size: 14px; font-weight: 700;" id="feat-meas">—</div>
             </div>
             <div>
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">EXPANDED UNCERTAINTY (U₉₅)</div>
-              <div style="font-size: 14px; font-weight: 700; color: var(--accent);" id="feat-u95">±0.00078 mm</div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--accent);" id="feat-u95">—</div>
             </div>
             <div>
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">TEST UNCERTAINTY RATIO</div>
-              <div style="font-size: 14px; font-weight: 700;" id="feat-tur">TUR = 2.564</div>
+              <div style="font-size: 14px; font-weight: 700;" id="feat-tur">—</div>
             </div>
             <div>
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">STATUS DIMENSIONS</div>
@@ -481,7 +495,7 @@
           <div class="grid-2">
             <div class="card" style="margin-bottom: 0; background: #f8fafc;">
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">CALCULATION ID</div>
-              <div style="font-family: monospace; font-size: 15px; font-weight: 700;" id="ev-cid">MC-00001042</div>
+              <div style="font-family: monospace; font-size: 15px; font-weight: 700;" id="ev-cid">—</div>
               <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
                 SHA-256 Input: <span id="ev-in-hash" style="font-family: monospace; color: #0284c7;">...</span>
               </div>
@@ -492,7 +506,7 @@
 
             <div class="card" style="margin-bottom: 0; background: #f8fafc;">
               <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">INDEPENDENT LOCAL VERIFIER</div>
-              <div style="font-size: 18px; font-weight: 900; color: var(--success); margin-top: 2px;" id="ev-status">VERIFIED</div>
+              <div style="font-size: 18px; font-weight: 900; color: var(--success); margin-top: 2px;" id="ev-status">READY</div>
               <button class="btn btn-outline" style="width: 100%; margin-top: 8px;" onclick="runVerificationOnCurrent()">
                 Re-verify Math &amp; Cryptographic Trace
               </button>
@@ -522,7 +536,7 @@
             <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
             <h3 style="font-size: 16px;">Calibration Certificate Ready</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-              Document is cryptographically bound to Calculation Trace <strong id="cert-calc-id">MC-00001042</strong>
+              Document is cryptographically bound to Calculation Trace <strong id="cert-calc-id">—</strong>
             </p>
             <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
               <a id="btn-view-report" target="_blank" class="btn btn-primary">Open Printable Certificate</a>

@@ -33,11 +33,13 @@ class EvidenceVerificationResult(NamedTuple):
     diagnostics: str
 
 
-def verify_calculation_by_id(calc_id: str) -> EvidenceVerificationResult:
+def verify_calculation_by_id(calc_id: str, db_path: Optional[str] = None) -> EvidenceVerificationResult:
     """
     Perform independent local verification of a calculation stored in the database.
     """
-    record = get_calculation(calc_id)
+    from ..config import DB_PATH
+    target_db = db_path or DB_PATH
+    record = get_calculation(calc_id, db_path=target_db)
     if not record:
         return EvidenceVerificationResult(
             calculation_id=calc_id,
@@ -154,11 +156,13 @@ def verify_calculation_record(calc_data: Dict[str, Any]) -> EvidenceVerification
     )
 
 
-def replay_calculation(calc_id: str) -> Dict[str, Any]:
+def replay_calculation(calc_id: str, db_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Execute step-by-step mathematical calculation replay, reconstructing all 12 derivation stages.
     """
-    record = get_calculation(calc_id)
+    from ..config import DB_PATH
+    target_db = db_path or DB_PATH
+    record = get_calculation(calc_id, db_path=target_db)
     if not record:
         raise ValueError(f"Calculation '{calc_id}' not found")
 
