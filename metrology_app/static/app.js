@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // View Navigation Controller
 function switchView(viewName) {
   const views = [
-    "dashboard", "workflow", "multipoint", "calibrations",
+    "dashboard", "workflow", "multipoint", "intelligence", "calibrations",
     "procedures", "replay", "tamper", "audit", "backups", "standards", "settings", "license"
   ];
   views.forEach(v => {
@@ -40,6 +40,7 @@ function switchView(viewName) {
       dashboard: "Dashboard",
       workflow: "Single-Point Calibration Studio",
       multipoint: "Multi-Point Calibration Studio",
+      intelligence: "Measurement Reliability Intelligence",
       calibrations: "Production Calibrations Log",
       procedures: "Procedures Catalog",
       replay: "12-Stage Mathematical Replay",
@@ -53,7 +54,9 @@ function switchView(viewName) {
     topTitle.innerText = titles[viewName] || "Workstation";
   }
 
-  if (viewName === "replay" && activeCalculationId) {
+  if (viewName === "intelligence") {
+    loadMeasurementIntelligence();
+  } else if (viewName === "replay" && activeCalculationId) {
     loadReplay(activeCalculationId);
   } else if (viewName === "audit") {
     loadAuditLedger();
@@ -141,7 +144,8 @@ async function loadDashboard() {
           <td><span class="badge ${vBadge}">${v}</span></td>
           <td><span class="badge badge-verified">VERIFIED</span></td>
           <td><span class="badge badge-integrity">INTEGRITY OK</span></td>
-          <td style="text-align: right;">
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-outline" style="padding: 3px 8px; font-size: 10px; margin-right: 4px; color: #4338ca; border-color: #c7d2fe;" onclick="event.stopPropagation(); openExplainForCalc('${item.id}')">🧠 Why?</button>
             <button class="btn btn-outline" style="padding: 3px 8px; font-size: 10px;" onclick="event.stopPropagation(); inspectCalculation('${item.id}')">Inspect &rarr;</button>
           </td>
         </tr>
@@ -856,4 +860,243 @@ async function resetToFreePlan() {
     alert("Reset Error: " + err.message);
   }
 }
+
+// -------------------------------------------------------------
+// V5 Measurement Reliability Intelligence Controllers
+// -------------------------------------------------------------
+
+async function loadMeasurementIntelligence() {
+  try {
+    // Populate instrument dropdown from existing calibrations
+    const calcs = await fetch("/api/calculations?record_class=CALIBRATION&limit=50").then(r => r.json());
+    const instSelect = document.getElementById("intel-inst-select");
+    const calcSelect = document.getElementById("intel-calc-select");
+
+    if (instSelect) {
+      const uniqueInsts = Array.from(new Set(calcs.map(c => c.instrument_name)));
+      if (uniqueInsts.length > 0) {
+        instSelect.innerHTML = uniqueInsts.map(name => `<option value="${name}">${name}</option>`).join("");
+      } else {
+        instSelect.innerHTML = `<option value="Digital Micrometer">Digital Micrometer (Default)</option>`;
+      }
+    }
+
+    if (calcSelect) {
+      if (calcs.length > 0) {
+        calcSelect.innerHTML = calcs.map(c => `<option value="${c.id}">${c.id} (${c.instrument_name})</option>`).join("");
+      } else {
+        calcSelect.innerHTML = `<option value="">No Calibrations Recorded</option>`;
+      }
+    }
+
+    await loadIntelligenceForSelectedInstrument();
+  } catch (err) {
+    console.error("Failed to load measurement intelligence hub:", err);
+  }
+}
+
+async function loadIntelligenceForSelectedInstrument() {
+  const instSelect = document.getElementById("intel-inst-select");
+  const instName = instSelect ? instSelect.value : "Digital Micrometer";
+
+  try {
+    // 1. Fetch Reliability Profile (Health Score & Sub-indices)
+    const profile = await fetch(`/api/intelligence/reliability/${encodeURIComponent(instName)}`).then(r => r.json());
+    
+    document.getElementById("intel-overall-score").innerText = profile.overall_reliability_score;
+    document.getElementById("intel-profile-title").innerText = profile.instrument_name;
+    document.getElementById("intel-profile-summary").innerText = profile.summary;
+    document.getElementById("intel-rec-interval-txt").innerText = `Optimal Interval: ${profile.recommended_interval_months} Months`;
+    document.getElementById("intel-oot-risk-txt").innerText = `${profile.predicted_risk_oot_pct}%`;
+
+    const statusPill = document.getElementById("intel-status-pill");
+    if (statusPill) {
+      statusPill.innerText = profile.reliability_status;
+      statusPill.className = `badge ${profile.reliability_status === 'HEALTHY' || profile.reliability_status === 'PRISTINE' ? 'badge-pass' : (profile.reliability_status === 'FAIR' ? 'badge-guard' : 'badge-fail')}`;
+    }
+
+    // Sub-indices bars
+    document.getElementById("sub-conformity-val").innerText = `${profile.conformity_health_index}%`;
+    document.getElementById("sub-conformity-bar").style.width = `${profile.conformity_health_index}%`;
+
+    document.getElementById("sub-drift-val").innerText = `${profile.drift_stability_index}%`;
+    document.getElementById("sub-drift-bar").style.width = `${profile.drift_stability_index}%`;
+
+    document.getElementById("sub-rep-val").innerText = `${profile.repeatability_stability_index}%`;
+    document.getElementById("sub-rep-bar").style.width = `${profile.repeatability_stability_index}%`;
+
+    document.getElementById("sub-ref-val").innerText = `${profile.reference_assurance_index}%`;
+    document.getElementById("sub-ref-bar").style.width = `${profile.reference_assurance_index}%`;
+
+    // 2. Fetch Explanations & Diff for selected/latest calculation
+    const calcSelect = document.getElementById("intel-calc-select");
+    const targetCalcId = calcSelect ? calcSelect.value : activeCalculationId;
+    if (targetCalcId) {
+      await loadExplanationForSelectedCalc(targetCalcId);
+      await loadDiffForSelectedCalc(targetCalcId);
+    } else {
+      document.getElementById("why-summary-txt").innerText = "Perform a calibration to inspect explainable engineering derivation.";
+      document.getElementById("why-contributions-list").innerHTML = "<p style='color: var(--text-muted); font-size: 11px;'>No active uncertainty budget to decompose.</p>";
+      document.getElementById("why-sensitivity-txt").innerText = "Awaiting calibration records for sensitivity analysis.";
+    }
+
+    // 3. Fetch Drift Forecast
+    await loadForecastData();
+
+    // 4. Fetch Recommendations
+    const recs = await fetch(`/api/intelligence/recommendations/${encodeURIComponent(instName)}`).then(r => r.json());
+    const recsContainer = document.getElementById("intel-recommendations-container");
+    if (recsContainer) {
+      if (recs.length === 0) {
+        recsContainer.innerHTML = "<p style='color: var(--text-muted); font-size: 12px;'>No critical actions required. Asset operates within target reliability parameters.</p>";
+      } else {
+        recsContainer.innerHTML = recs.map(r => `
+          <div class="rec-card priority-${r.priority.toLowerCase()}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 10px; font-weight: 800; color: ${r.priority === 'HIGH' ? '#dc2626' : (r.priority === 'MEDIUM' ? '#d97706' : '#16a34a')}; text-transform: uppercase;">
+                ${r.category.replace(/_/g, " ")} (${r.priority})
+              </span>
+            </div>
+            <h4 style="font-size: 13px; margin: 4px 0 2px 0;">${r.title}</h4>
+            <p style="font-size: 11px; color: #334155; margin: 0 0 6px 0; line-height: 1.4;">${r.description}</p>
+            <div style="font-size: 10px; font-family: monospace; color: var(--text-muted); background: #f8fafc; padding: 4px 8px; border-radius: 4px;">
+              Evidence: ${r.evidence}
+            </div>
+          </div>
+        `).join("");
+      }
+    }
+
+  } catch (err) {
+    console.error("Error loading intelligence for instrument:", err);
+  }
+}
+
+async function loadExplanationForSelectedCalc(calcId) {
+  const targetId = calcId || document.getElementById("intel-calc-select")?.value || activeCalculationId;
+  if (!targetId) return;
+
+  try {
+    const data = await fetch(`/api/intelligence/explain/${targetId}`).then(r => r.json());
+    document.getElementById("why-summary-txt").innerText = data.explanation_summary;
+    document.getElementById("why-sensitivity-txt").innerText = `🔍 Sensitivity Insight: ${data.sensitivity_insight}`;
+
+    // Render uncertainty contribution progress waterfall
+    const contList = document.getElementById("why-contributions-list");
+    if (contList && data.uncertainty_contributions) {
+      contList.innerHTML = data.uncertainty_contributions.map(c => `
+        <div style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span><strong>${c.component}</strong> <span style="color: var(--text-muted); font-size: 10px;">(${c.distribution})</span></span>
+            <span style="font-weight: 700; color: #1e3a8a;">${c.percentage_contribution}%</span>
+          </div>
+          <div class="contrib-bar-container">
+            <div class="contrib-bar-fill" style="width: ${c.percentage_contribution}%; background: ${c.percentage_contribution > 35 ? '#3b82f6' : '#93c5fd'};"></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    const citBox = document.getElementById("why-citations-box");
+    if (citBox && data.evidence_citations) {
+      citBox.innerHTML = `<strong>Evidence Provenance:</strong> ${data.evidence_citations.join(" • ")}`;
+    }
+  } catch (err) {
+    console.error("Explanation error:", err);
+  }
+}
+
+async function loadDiffForSelectedCalc(calcId) {
+  const targetId = calcId || document.getElementById("intel-calc-select")?.value || activeCalculationId;
+  if (!targetId) return;
+
+  try {
+    const diff = await fetch(`/api/intelligence/diff/${targetId}`).then(r => r.json());
+    const badge = document.getElementById("diff-alert-badge");
+    const summary = document.getElementById("diff-summary-txt");
+    const tbody = document.getElementById("diff-table-body");
+    const insights = document.getElementById("diff-insights-list");
+
+    if (!diff.comparison_available) {
+      if (summary) summary.innerText = diff.message;
+      if (badge) { badge.innerText = "BASELINE"; badge.className = "badge badge-verified"; }
+      if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 16px;">Baseline calibration record. Prior calibration cycles will be compared automatically upon subsequent calibrations.</td></tr>`;
+      if (insights) insights.innerHTML = "";
+      return;
+    }
+
+    if (summary) summary.innerText = diff.summary;
+    if (badge) {
+      badge.innerText = diff.alert_level;
+      badge.className = `badge ${diff.alert_level === 'NORMAL' ? 'badge-pass' : (diff.alert_level === 'ATTENTION' ? 'badge-guard' : 'badge-fail')}`;
+    }
+
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td><strong>Accuracy Error</strong></td>
+          <td>${diff.delta_error_mm >= 0 ? '+' : ''}${diff.delta_error_mm.toFixed(5)} mm</td>
+          <td style="font-family: monospace; font-weight: 700; color: ${Math.abs(diff.delta_error_mm) > 0.0003 ? '#dc2626' : '#16a34a'};">
+            ${diff.delta_error_mm >= 0 ? '+' : ''}${diff.delta_error_mm.toFixed(5)} mm
+          </td>
+          <td><span class="badge ${Math.abs(diff.delta_error_mm) > 0.0003 ? 'badge-guard' : 'badge-pass'}">OK</span></td>
+        </tr>
+        <tr>
+          <td><strong>Expanded Uncertainty (U95)</strong></td>
+          <td>±${diff.delta_u95_mm >= 0 ? '+' : ''}${diff.delta_u95_mm.toFixed(5)} mm</td>
+          <td style="font-family: monospace; font-weight: 700;">${diff.pct_u95_change >= 0 ? '+' : ''}${diff.pct_u95_change}%</td>
+          <td><span class="badge ${Math.abs(diff.pct_u95_change) > 10 ? 'badge-guard' : 'badge-pass'}">${Math.abs(diff.pct_u95_change) > 10 ? 'SHIFT' : 'STABLE'}</span></td>
+        </tr>
+        <tr>
+          <td><strong>Repeatability Dispersion</strong></td>
+          <td>Type A Variance</td>
+          <td style="font-family: monospace; font-weight: 700;">${diff.pct_repeatability_change >= 0 ? '+' : ''}${diff.pct_repeatability_change}%</td>
+          <td><span class="badge ${Math.abs(diff.pct_repeatability_change) > 15 ? 'badge-fail' : 'badge-pass'}">${Math.abs(diff.pct_repeatability_change) > 15 ? 'DEGRADED' : 'STABLE'}</span></td>
+        </tr>
+        <tr>
+          <td><strong>Annual Drift Velocity</strong></td>
+          <td colspan="2" style="font-family: monospace; font-weight: 700; color: #1d4ed8;">${diff.annual_drift_rate_mm_year >= 0 ? '+' : ''}${diff.annual_drift_rate_mm_year.toFixed(6)} mm/year</td>
+          <td><span class="badge badge-verified">TRACKED</span></td>
+        </tr>
+      `;
+    }
+
+    if (insights && diff.insights) {
+      insights.innerHTML = `<strong>Longitudinal Insights:</strong><ul>${diff.insights.map(i => `<li>${i}</li>`).join("")}</ul>`;
+    }
+  } catch (err) {
+    console.error("Diff error:", err);
+  }
+}
+
+async function loadForecastData() {
+  const instName = document.getElementById("intel-inst-select")?.value || "Digital Micrometer";
+  const horizon = parseInt(document.getElementById("forecast-horizon-select")?.value || "12");
+
+  try {
+    const data = await fetch(`/api/intelligence/forecast/${encodeURIComponent(instName)}?forecast_months=${horizon}`).then(r => r.json());
+    document.getElementById("fc-expected-drift").innerText = `${data.expected_drift_mm >= 0 ? '+' : ''}${data.expected_drift_mm.toFixed(5)} mm`;
+    document.getElementById("fc-pred-interval").innerText = `[${data.prediction_interval_95_mm[0].toFixed(5)}, ${data.prediction_interval_95_mm[1].toFixed(5)}] mm`;
+    
+    const ootEl = document.getElementById("fc-oot-prob");
+    if (ootEl) {
+      ootEl.innerText = `${data.probability_out_of_tolerance_pct}% (${data.risk_level})`;
+      ootEl.style.color = data.risk_level === "LOW" ? "var(--success)" : (data.risk_level === "ELEVATED" ? "var(--warning)" : "var(--danger)");
+    }
+    document.getElementById("fc-statistical-basis").innerText = `${data.statistical_basis} Confidence: ${data.confidence_level}.`;
+  } catch (err) {
+    console.error("Forecast error:", err);
+  }
+}
+
+function openExplainForCalc(calcId) {
+  switchView("intelligence");
+  const calcSelect = document.getElementById("intel-calc-select");
+  if (calcSelect) {
+    calcSelect.value = calcId;
+  }
+  loadExplanationForSelectedCalc(calcId);
+  loadDiffForSelectedCalc(calcId);
+}
+
 

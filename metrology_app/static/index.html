@@ -20,6 +20,7 @@
       <li id="nav-dashboard" class="active"><a href="#" onclick="switchView('dashboard')"><span>📊</span> Dashboard</a></li>
       <li id="nav-workflow"><a href="#" onclick="startNewCalibration()"><span>⚡</span> Single-Point Studio</a></li>
       <li id="nav-multipoint"><a href="#" onclick="switchView('multipoint')"><span>📏</span> Multi-Point Studio</a></li>
+      <li id="nav-intelligence"><a href="#" onclick="switchView('intelligence')"><span>🧠</span> Measurement Intelligence</a></li>
       <li id="nav-calibrations"><a href="#" onclick="switchView('calibrations')"><span>📋</span> Calibrations Log</a></li>
       <li id="nav-procedures"><a href="#" onclick="switchView('procedures')"><span>🧰</span> Procedures Catalog</a></li>
     </ul>
@@ -650,6 +651,203 @@
             </div>
           </div>
           <div class="grid-2" id="procedures-catalog-grid"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: MEASUREMENT RELIABILITY INTELLIGENCE (V5) -->
+      <section id="view-intelligence" class="hidden">
+        <!-- Controls & Asset Selector Bar -->
+        <div class="card" style="margin-bottom: 16px; padding: 16px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div>
+              <div class="section-tag">MEASUREMENT INTELLIGENCE ENGINE</div>
+              <h2 style="font-size: 18px; margin-top: 2px;">Instrument Asset Intelligence Hub</h2>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <select id="intel-inst-select" class="form-control" style="font-size: 12px; width: 220px;" onchange="loadIntelligenceForSelectedInstrument()">
+                <option value="Digital Micrometer">Digital Micrometer (Mitutoyo 293)</option>
+              </select>
+              <select id="intel-calc-select" class="form-control" style="font-size: 12px; width: 180px;" onchange="loadExplanationForSelectedCalc()">
+                <option value="">Latest Calibration</option>
+              </select>
+              <button class="btn btn-outline" onclick="loadMeasurementIntelligence()">🔄 Refresh Intelligence</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. Measurement Reliability Profile & Health Score -->
+        <div class="intel-health-gauge">
+          <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <div class="intel-health-score-circle" id="intel-score-circle">
+              <span style="font-size: 24px; font-weight: 900; color: #10b981;" id="intel-overall-score">91</span>
+              <span style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">HEALTH</span>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">RELIABILITY STATUS: <span id="intel-status-pill" class="badge badge-pass">HEALTHY</span></div>
+              <h3 style="font-size: 18px; color: #fff; margin-top: 4px;" id="intel-profile-title">Digital Micrometer</h3>
+              <p style="font-size: 12px; color: #cbd5e1; max-width: 500px; margin-top: 4px;" id="intel-profile-summary">
+                Analyzing historical telemetry and drift trajectories...
+              </p>
+            </div>
+          </div>
+          <div style="min-width: 240px; background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">RECOMMENDED ACTION:</div>
+            <div style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-top: 2px;" id="intel-rec-interval-txt">Optimal Interval: 12 Months</div>
+            <div style="font-size: 11px; color: #e2e8f0; margin-top: 4px;">Predicted OOT Risk: <strong id="intel-oot-risk-txt">1.2%</strong></div>
+          </div>
+        </div>
+
+        <!-- 5 Sub-Indices Progress Grid -->
+        <div class="grid-4" style="margin-bottom: 16px;">
+          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
+              <span>Conformity Margin</span>
+              <span id="sub-conformity-val">95%</span>
+            </div>
+            <div class="intel-subindex-bar"><div id="sub-conformity-bar" class="intel-subindex-fill" style="width: 95%;"></div></div>
+          </div>
+          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
+              <span>Drift Stability</span>
+              <span id="sub-drift-val">90%</span>
+            </div>
+            <div class="intel-subindex-bar"><div id="sub-drift-bar" class="intel-subindex-fill" style="width: 90%;"></div></div>
+          </div>
+          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
+              <span>Repeatability Stability</span>
+              <span id="sub-rep-val">92%</span>
+            </div>
+            <div class="intel-subindex-bar"><div id="sub-rep-bar" class="intel-subindex-fill" style="width: 92%;"></div></div>
+          </div>
+          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
+              <span>Reference Assurance</span>
+              <span id="sub-ref-val">94%</span>
+            </div>
+            <div class="intel-subindex-bar"><div id="sub-ref-bar" class="intel-subindex-fill" style="width: 94%;"></div></div>
+          </div>
+        </div>
+
+        <!-- 2-Column Experience Grid -->
+        <div class="grid-2">
+          <!-- Experience 1: WHY? (Explain This Result) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge-intel">EXPERIENCE ①</span>
+                <h3 style="font-size: 15px; margin-top: 4px;">WHY DID THIS RESULT PASS / FAIL?</h3>
+                <p style="font-size: 11px; color: var(--text-muted);">Explainable engineering derivation &amp; uncertainty breakdown</p>
+              </div>
+            </div>
+            <div id="intel-why-container">
+              <div style="background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 12px;">
+                <div style="font-size: 11px; font-weight: 800; color: #1e3a8a; text-transform: uppercase;">ENGINEERING SUMMARY:</div>
+                <p style="font-size: 12px; color: #1e293b; margin-top: 4px; line-height: 1.5;" id="why-summary-txt">Loading explanation...</p>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                  Uncertainty Contribution Waterfall:
+                </div>
+                <div id="why-contributions-list"></div>
+              </div>
+
+              <div style="font-size: 11px; background: #eff6ff; padding: 10px 14px; border-radius: 6px; border: 1px solid #bfdbfe; color: #1e40af;" id="why-sensitivity-txt">
+                Sensitivity analysis insight...
+              </div>
+
+              <div style="margin-top: 10px; font-size: 10px; color: var(--text-muted);" id="why-citations-box"></div>
+            </div>
+          </div>
+
+          <!-- Experience 2: WHAT CHANGED? (Longitudinal Difference Engine) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge-intel">EXPERIENCE ②</span>
+                <h3 style="font-size: 15px; margin-top: 4px;">WHAT CHANGED SINCE LAST CALIBRATION?</h3>
+                <p style="font-size: 11px; color: var(--text-muted);">Longitudinal stability, drift rates, and variance shifts</p>
+              </div>
+              <span class="badge badge-pass" id="diff-alert-badge">STABLE</span>
+            </div>
+            <div id="intel-diff-container">
+              <p style="font-size: 12px; color: #334155; margin-bottom: 12px; line-height: 1.5;" id="diff-summary-txt">
+                Comparing against historical calibration records...
+              </p>
+              <table class="data-table" style="margin-bottom: 12px;">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Current Value</th>
+                    <th>Δ Shift</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="diff-table-body">
+                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Awaiting calibration comparison...</td></tr>
+                </tbody>
+              </table>
+              <div id="diff-insights-list" style="font-size: 11px; color: #475569;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: WHAT HAPPENS NEXT? & WHAT SHOULD I DO? -->
+        <div class="grid-2" style="margin-top: 16px;">
+          <!-- Experience 4: WHAT HAPPENS NEXT? (Drift & Risk Forecaster) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge-intel">EXPERIENCE ④</span>
+                <h3 style="font-size: 15px; margin-top: 4px;">WHAT HAPPENS NEXT? (DRIFT &amp; RISK FORECAST)</h3>
+                <p style="font-size: 11px; color: var(--text-muted);">Statistical trajectory with 95% calibrated prediction intervals</p>
+              </div>
+              <select id="forecast-horizon-select" class="form-control" style="font-size: 11px; width: 120px;" onchange="loadForecastData()">
+                <option value="6">6 Months</option>
+                <option value="8">8 Months</option>
+                <option value="12" selected>12 Months</option>
+                <option value="18">18 Months</option>
+              </select>
+            </div>
+            <div id="intel-forecast-container">
+              <div class="grid-3" style="margin-bottom: 12px;">
+                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Expected Drift</div>
+                  <div style="font-size: 16px; font-weight: 800; color: #0284c7;" id="fc-expected-drift">+0.00042 mm</div>
+                </div>
+                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">95% Prediction Interval</div>
+                  <div style="font-size: 13px; font-weight: 800; font-family: monospace;" id="fc-pred-interval">[+0.0001, +0.0007]</div>
+                </div>
+                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Predicted OOT Risk</div>
+                  <div style="font-size: 16px; font-weight: 800; color: #10b981;" id="fc-oot-prob">1.2% (LOW)</div>
+                </div>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted);" id="fc-statistical-basis">
+                Grounded in empirical calibration cycles and JCGM 100 uncertainty bounds.
+              </p>
+            </div>
+          </div>
+
+          <!-- Experience 5: WHAT SHOULD I DO? (Action Recommender) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge-intel">EXPERIENCE ⑤</span>
+                <h3 style="font-size: 15px; margin-top: 4px;">WHAT SHOULD I DO? (ACTION RECOMMENDATIONS)</h3>
+                <p style="font-size: 11px; color: var(--text-muted);">Defensible engineering actions for laboratory quality managers</p>
+              </div>
+            </div>
+            <div id="intel-recommendations-container">
+              <div class="rec-card priority-info">
+                <div style="font-size: 10px; font-weight: 800; color: #10b981; text-transform: uppercase;">INTERVAL OPTIMIZATION (INFO)</div>
+                <h4 style="font-size: 13px; margin: 2px 0;">Maintain Standard 12-Month Interval</h4>
+                <p style="font-size: 11px; color: #475569; margin-top: 2px;">Predicted out-of-tolerance risk (1.2%) is well below the laboratory's 2.0% threshold.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

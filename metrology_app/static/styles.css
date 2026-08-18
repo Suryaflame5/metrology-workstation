@@ -419,6 +419,95 @@ table.data-table tr.clickable-row:hover td {
   margin-bottom: 12px;
 }
 
+/* Measurement Intelligence UI (V5) */
+.intel-health-gauge {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.intel-health-score-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 5px solid #10b981;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.intel-subindex-bar {
+  background: #334155;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.intel-subindex-fill {
+  background: #38bdf8;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.contrib-bar-container {
+  background: #f1f5f9;
+  border-radius: 4px;
+  height: 12px;
+  overflow: hidden;
+  margin: 6px 0;
+  display: flex;
+}
+
+.contrib-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.rec-card {
+  border-left: 4px solid #3b82f6;
+  background: #ffffff;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.rec-card.priority-high {
+  border-left-color: #ef4444;
+}
+
+.rec-card.priority-medium {
+  border-left-color: #f59e0b;
+}
+
+.rec-card.priority-info {
+  border-left-color: #10b981;
+}
+
+.badge-intel {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+
 .replay-step-card.active-step {
   border-color: #3b82f6;
   background: #eff6ff;

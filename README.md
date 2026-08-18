@@ -26,7 +26,7 @@
 ### Windows 10 / 11 (64-bit) Installer:
 Download the latest verified setup executable from [GitHub Releases](https://github.com/novyrax/metrology-workstation/releases/latest) or the [NovyraX Download Page](https://novyrax.vercel.app/download):
 - **Installer**: `Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe`
-- **SHA-256 Checksum**: `e8674ebc13c76c46e530b8196d356401ea1481b77d1fff022f1d5f73d2395029`
+- **SHA-256 Checksum**: `5275c1b26accdda867e1e9aa1222e7a45901d4b09a2231c508a6afd1758d8c67`
 
 ### Checksum Verification in PowerShell:
 ```powershell

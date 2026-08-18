@@ -1,17 +1,22 @@
 {
   "product_name": "Metrology Workstation",
   "package_identity": "MetrologyWorkstation.Commercial",
-  "version": "0.9.9.0",
-  "release_tag": "V0.9.9-RC-FINAL",
+  "version": "1.0.0",
+  "release_tag": "v1.0.0",
+  "release_type": "V4 Clean Production Release",
   "architecture": "x64",
-  "publisher": "CN=MetrologyWorkstation",
-  "build_timestamp": "2026-08-16T13:44:08.129481+00:00",
-  "sdk_version": "10.0.26100.0",
-  "wack_status": "PASSED (All Mandatory Tests)",
+  "publisher": "CN=NOVYRAX Studio",
+  "build_timestamp": "2026-08-17T18:00:00.000000+00:00",
+  "regression_tests": "83/83 PASSED (100%)",
+  "clean_db_verified": true,
+  "telemetry_disabled": true,
   "hashes": {
-    "MetrologyWorkstation.exe": "F8985911CE443E5139C15C3E329340714F4F1574334EEDA7C99F3643B52E8E05",
-    "MetrologyWorkstation.msix": "88516BA768185BDF38039FEBF9501F664BAFA77CE743C1C551B12F1F18671017",
-    "AppxManifest.xml": "4D43F9F3518ACB3C28931E9A7E27F3C7C330F64016A41904136A5AEFAB181729",
-    "build_lock.json": "C97E6FA2FC390B3D3115F1958C3E46E3BF4ED3738A20D6B605F49C9C515DF812"
+    "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe": "e8674ebc13c76c46e530b8196d356401ea1481b77d1fff022f1d5f73d2395029",
+    "MetrologyWorkstation.exe": "2a33181b757db856bc0185057b3e2b8a5ca2f28f0eea220c99e68da6f9f04949"
+  },
+  "distribution": {
+    "github_release_url": "https://github.com/novyrax/metrology-workstation/releases/tag/v1.0.0",
+    "installer_download_url": "https://github.com/novyrax/metrology-workstation/releases/download/v1.0.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
+    "website_download_url": "https://novyrax.vercel.app/products/metrology-workstation/download"
   }
 }

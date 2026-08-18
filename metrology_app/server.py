@@ -333,6 +333,65 @@ def api_get_standard_doc(name: str):
         return {"filename": name, "content": f.read()}
 
 
+# --- V5 Measurement Intelligence Endpoints ---
+from .services.intelligence_service import (
+    explain_calculation,
+    compare_calibrations,
+    compute_instrument_reliability_profile,
+    predict_drift_and_risk,
+    generate_action_recommendations,
+)
+
+
+@app.get("/api/intelligence/explain/{calc_id}")
+def api_explain_calculation(calc_id: str):
+    """V5 Experience 1: 'WHY?' — Explain This Result Engine."""
+    try:
+        return explain_calculation(calc_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/intelligence/diff/{calc_id}")
+def api_diff_calculation(calc_id: str, previous_id: Optional[str] = None):
+    """V5 Experience 2: 'WHAT CHANGED?' — Longitudinal Difference Engine."""
+    try:
+        return compare_calibrations(calc_id, previous_id=previous_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/intelligence/reliability/{instrument_name}")
+def api_instrument_reliability(instrument_name: str):
+    """V5 Experience 3: 'WHAT CAUSED IT?' — Reliability Profile & Health Score."""
+    try:
+        return compute_instrument_reliability_profile(instrument_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/intelligence/forecast/{instrument_name}")
+def api_drift_forecast(instrument_name: str, forecast_months: int = 12):
+    """V5 Experience 4: 'WHAT HAPPENS NEXT?' — Drift & OOT Risk Forecaster."""
+    try:
+        return predict_drift_and_risk(instrument_name, forecast_months=forecast_months)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/intelligence/recommendations/{instrument_name}")
+def api_action_recommendations(instrument_name: str):
+    """V5 Experience 5: 'WHAT SHOULD I DO?' — Evidence-Based Action Recommender."""
+    try:
+        return generate_action_recommendations(instrument_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Mount static web UI assets
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 if os.path.exists(STATIC_DIR):
