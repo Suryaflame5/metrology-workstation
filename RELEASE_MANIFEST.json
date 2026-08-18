@@ -1,22 +1,30 @@
 {
   "product_name": "Metrology Workstation",
   "package_identity": "MetrologyWorkstation.Commercial",
-  "version": "1.0.0",
-  "release_tag": "v1.0.0",
-  "release_type": "V4 Clean Production Release",
+  "version": "1.1.0",
+  "release_tag": "v1.1.0",
+  "release_type": "V5 Measurement Intelligence Production Release",
   "architecture": "x64",
   "publisher": "CN=NOVYRAX Studio",
-  "build_timestamp": "2026-08-17T18:00:00.000000+00:00",
-  "regression_tests": "83/83 PASSED (100%)",
+  "build_timestamp": "2026-08-18T20:00:00.000000+00:00",
+  "regression_tests": "89/89 PASSED (100%)",
   "clean_db_verified": true,
   "telemetry_disabled": true,
+  "system_requirements": {
+    "os": "Windows 10 / Windows 11 (64-bit)",
+    "processor": "x86-64 Dual Core or higher",
+    "ram_mb": 4096,
+    "disk_space_mb": 200
+  },
   "hashes": {
-    "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe": "e8674ebc13c76c46e530b8196d356401ea1481b77d1fff022f1d5f73d2395029",
-    "MetrologyWorkstation.exe": "2a33181b757db856bc0185057b3e2b8a5ca2f28f0eea220c99e68da6f9f04949"
+    "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe": "5275c1b26accdda867e1e9aa1222e7a45901d4b09a2231c508a6afd1758d8c67",
+    "MetrologyWorkstation.exe": "891be6b0ca25ef80ed22eaf7cf74f81aa1444a013f9aff9e5d47ae76ceb39ca5"
   },
   "distribution": {
-    "github_release_url": "https://github.com/novyrax/metrology-workstation/releases/tag/v1.0.0",
-    "installer_download_url": "https://github.com/novyrax/metrology-workstation/releases/download/v1.0.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
-    "website_download_url": "https://novyrax.vercel.app/products/metrology-workstation/download"
+    "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
+    "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v1.1.0",
+    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
+    "website_url": "https://novyrax.vercel.app",
+    "mirror_url": "https://novyrax.netlify.app"
   }
 }
