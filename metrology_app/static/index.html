@@ -26,6 +26,9 @@
       <li id="nav-conformity-wb"><a href="#" onclick="switchView('conformity-wb')"><span>⚖️</span> Conformity Workbench</a></li>
       <li id="nav-sandbox"><a href="#" onclick="switchView('sandbox')"><span>🧪</span> Engineering Sandbox</a></li>
       <li id="nav-intelligence"><a href="#" onclick="switchView('intelligence')"><span>🧠</span> Intelligence Hub</a></li>
+      <li id="nav-fleet"><a href="#" onclick="switchView('fleet')"><span>🚢</span> Fleet Intelligence</a></li>
+      <li id="nav-rag"><a href="#" onclick="switchView('rag')"><span>📚</span> Engineering RAG</a></li>
+      <li id="nav-copilot"><a href="#" onclick="switchView('copilot')"><span>🤖</span> Engineering Copilot</a></li>
     </ul>
 
     <div class="sidebar-section">Calibration Studios</div>
@@ -707,6 +710,83 @@
             </p>
             <div id="mbom-content-container" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
               <div style="font-size: 11px; color: var(--text-muted);">Select a calibration record to generate its full MBOM specification tree.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8C: FLEET INTELLIGENCE -->
+        <section id="view-fleet" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🚢 Multi-Instrument Fleet Intelligence &amp; Maintenance</h2>
+              <span class="badge badge-integrity">COHORT ANOMALY ENGINE</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Cross-instrument health scoring, bay-level environmental drift cohorts, and predictive calibration queues.
+            </p>
+            <div class="grid-3" style="margin-bottom: 14px;">
+              <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Fleet Health Score</div>
+                <div style="font-size: 24px; font-weight: 900; color: var(--primary);" id="fleet-health-score">--</div>
+              </div>
+              <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Active Assets</div>
+                <div style="font-size: 24px; font-weight: 900; color: #0f172a;" id="fleet-total-count">--</div>
+              </div>
+              <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Instruments at Risk</div>
+                <div style="font-size: 24px; font-weight: 900; color: var(--danger);" id="fleet-at-risk-count">--</div>
+              </div>
+            </div>
+            <div id="fleet-content-container">
+              <button class="btn btn-primary" onclick="loadFleetIntelligenceLive()">Refresh Fleet Analytics</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8D: ENGINEERING RAG -->
+        <section id="view-rag" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📚 Engineering RAG Knowledge Base</h2>
+              <span class="badge badge-integrity">HYBRID BM25 + VECTOR RETRIEVAL</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Authoritative standards (ISO/IEC 17025, ANSI Z540.3, GUM JCGM 100, ISO 14253-1) and laboratory SOPs.
+            </p>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+              <input type="text" id="rag-search-input" class="form-control" placeholder="Search standard clauses, guardband requirements, thermal limits..." value="guardband 2% risk Z540.3">
+              <button class="btn btn-primary" onclick="executeRagSearchLive()">Search RAG</button>
+            </div>
+            <div id="rag-results-container" style="background: #f8fafc; padding: 12px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Enter query to retrieve cited clauses with section-level grounding.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8E: ENGINEERING COPILOT -->
+        <section id="view-copilot" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🤖 Engineering Copilot &amp; Multi-Agent Hub</h2>
+              <span class="badge badge-integrity">TOOL-BOUND INVESTIGATION</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px;">
+              <div><strong>Active Mode:</strong> <span id="copilot-mode-badge" class="badge badge-pass">Mode A: Sovereign Deterministic (Offline)</span></div>
+              <div style="color: var(--text-muted);">Data Residency: <strong>100% LOCAL (0% Cloud)</strong></div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+              <button class="btn btn-outline" style="font-size: 10px;" onclick="setCopilotPrompt('Why did this instrument fail conformity?')">🔍 Why did it fail?</button>
+              <button class="btn btn-outline" style="font-size: 10px;" onclick="setCopilotPrompt('What changed from the previous calibration?')">📊 What changed?</button>
+              <button class="btn btn-outline" style="font-size: 10px;" onclick="setCopilotPrompt('What is the applicable guardband procedure and standard?')">📜 Applicable Standard?</button>
+              <button class="btn btn-outline" style="font-size: 10px;" onclick="setCopilotPrompt('Is there an environmental temperature correlation?')">🌡️ Thermal Correlation?</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input type="text" id="copilot-input" class="form-control" placeholder="Ask Copilot to investigate drift, explain decision, or retrieve evidence..." value="Why did this instrument fail conformity?">
+              <button class="btn btn-primary" onclick="submitCopilotQueryLive()">Execute Investigation &rarr;</button>
+            </div>
+            <div id="copilot-output-container" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Enter query and click 'Execute Investigation' to run multi-agent tool execution.</div>
             </div>
           </div>
         </section>

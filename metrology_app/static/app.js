@@ -29,7 +29,7 @@ function switchView(viewName) {
 
   const views = [
     "dashboard", "projects", "instruments", "plans", "acquisition",
-    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "mbom", "workflow",
+    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "fleet", "rag", "copilot", "mbom", "workflow",
     "multipoint", "calibrations", "procedures", "replay", "tamper",
     "audit", "backups", "standards", "settings", "license"
   ];
@@ -921,9 +921,177 @@ async function loadMbomForId(id) {
   }
 }
 
+// ==========================================
+// 13. V6 FLEET, RAG & COPILOT CONTROLLERS
+// ==========================================
+
+async function loadFleetIntelligenceLive() {
+  try {
+    const res = await fetch("/api/v6/fleet/intelligence");
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById("fleet-health-score").innerText = data.fleet_health_score ?? "--";
+    document.getElementById("fleet-total-count").innerText = data.total_fleet_instruments ?? "--";
+    document.getElementById("fleet-at-risk-count").innerText = data.instruments_at_risk_count ?? "0";
+
+    const c = document.getElementById("fleet-content-container");
+    if (!c) return;
+
+    let cohortHtml = "";
+    if (data.cohort_anomalies && data.cohort_anomalies.length > 0) {
+      cohortHtml = `
+        <div class="card" style="background: #fff1f2; border-color: #fecdd3; margin-bottom: 12px;">
+          <h4 style="color: var(--danger); margin-bottom: 6px;">⚠️ Cohort Anomaly Detected: ${escapeHtml(data.cohort_anomalies[0].cohort_type)}</h4>
+          <div style="font-size: 11px; color: #9f1239;">${escapeHtml(data.cohort_anomalies[0].finding)}</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"><strong>Hypothesis:</strong> ${escapeHtml(data.cohort_anomalies[0].hypothesis)}</div>
+        </div>
+      `;
+    }
+
+    let queueRows = (data.maintenance_queue || []).map(item => `
+      <tr>
+        <td><strong>${escapeHtml(item.name)}</strong></td>
+        <td>${escapeHtml(item.serial_number)}</td>
+        <td>${escapeHtml(item.location)}</td>
+        <td><span class="badge badge-${item.risk_level.toLowerCase().replace('_', '-')}">${item.risk_level} (${item.risk_score})</span></td>
+        <td>${escapeHtml(item.drift_trend)}</td>
+        <td>${escapeHtml(item.next_due)}</td>
+      </tr>
+    `).join("");
+
+    c.innerHTML = `
+      ${cohortHtml}
+      <h3 style="font-size: 12px; margin-bottom: 8px;">Predictive Recalibration Queue</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>Risk Level</th>
+            <th>Drift Trend</th>
+            <th>Next Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${queueRows || "<tr><td colspan='6' style='text-align: center;'>No instruments registered.</td></tr>"}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    console.error("Error loading fleet intelligence:", e);
+  }
+}
+
+async function executeRagSearchLive() {
+  const query = document.getElementById("rag-search-input")?.value || "guardband Z540.3";
+  try {
+    const res = await fetch(`/api/v6/rag/search?q=${encodeURIComponent(query)}&top_k=3`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const c = document.getElementById("rag-results-container");
+    if (!c) return;
+
+    if (!data.documents || data.documents.length === 0) {
+      c.innerHTML = "<div style='font-size: 11px; color: var(--text-muted);'>No matching standards or SOPs found.</div>";
+      return;
+    }
+
+    c.innerHTML = data.documents.map(d => `
+      <div style="background: #ffffff; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <strong style="color: var(--primary); font-size: 12px;">${escapeHtml(d.title)} §${escapeHtml(d.section)}</strong>
+          <span class="badge badge-integrity">Relevance: ${d.relevance_score}</span>
+        </div>
+        <div style="font-size: 11px; color: #334155; margin-bottom: 6px;">${escapeHtml(d.content)}</div>
+        <div style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(d.citation)}</div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error("Error executing RAG search:", e);
+  }
+}
+
+function setCopilotPrompt(text) {
+  const el = document.getElementById("copilot-input");
+  if (el) el.value = text;
+}
+
+async function submitCopilotQueryLive() {
+  const q = document.getElementById("copilot-input")?.value || "Why did this instrument fail?";
+  const c = document.getElementById("copilot-output-container");
+  if (!c) return;
+
+  c.innerHTML = "<div style='font-size: 11px; color: var(--text-muted);'>⚡ Multi-Agent Orchestrator executing tool-bound investigation...</div>";
+
+  try {
+    const res = await fetch("/api/v6/copilot/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: q, calculation_id: activeCalculationId }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    let citationsHtml = (data.evidence_citations || []).map(cit => `
+      <li style="margin-bottom: 2px;">${escapeHtml(cit)}</li>
+    `).join("");
+
+    let traceHtml = (data.activity_trace || []).map(st => `
+      <div style="font-size: 10px; font-family: var(--font-mono); color: #475569; margin-bottom: 2px;">
+        ✓ [${escapeHtml(st.step)}] ${escapeHtml(st.detail)}
+      </div>
+    `).join("");
+
+    c.innerHTML = `
+      <div style="background: #ffffff; padding: 12px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 13px; color: var(--primary);">Copilot Investigation Synthesis</h3>
+          <span class="badge badge-pass">${escapeHtml(data.confidence_assessment?.decision_authority)}</span>
+        </div>
+        <p style="font-size: 12px; color: #1e293b; line-height: 1.5; margin-bottom: 10px;">${escapeHtml(data.finding)}</p>
+
+        <div class="grid-2" style="font-size: 11px; margin-bottom: 10px;">
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">Confidence &amp; Risk Metrics</div>
+            <div><strong>Model Confidence:</strong> ${data.confidence_assessment?.model_confidence_pct}%</div>
+            <div><strong>Evidence Completeness:</strong> ${data.confidence_assessment?.evidence_completeness_pct}%</div>
+            <div><strong>Drift Trend:</strong> ${escapeHtml(data.ml_findings?.drift_trend)}</div>
+            <div><strong>Composite Risk:</strong> ${escapeHtml(data.ml_findings?.risk_classification)} (${data.ml_findings?.composite_risk_score}/100)</div>
+          </div>
+
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">Recommended Operational Action</div>
+            <div style="color: #0f172a;">${escapeHtml(data.recommended_action)}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 8px;">
+          <strong style="font-size: 11px; color: #475569;">Grounded Evidence Citations:</strong>
+          <ul style="font-size: 11px; color: var(--text-muted); padding-left: 16px; margin-top: 4px;">
+            ${citationsHtml}
+          </ul>
+        </div>
+
+        <details style="border-top: 1px solid var(--border); padding-top: 6px;">
+          <summary style="font-size: 10px; color: var(--text-muted); cursor: pointer;">🔍 View Tool Execution Trace (Execution &rarr; Proof)</summary>
+          <div style="margin-top: 6px; padding: 6px; background: #f1f5f9; border-radius: 4px;">
+            ${traceHtml}
+          </div>
+        </details>
+      </div>
+    `;
+  } catch (e) {
+    console.error("Error executing Copilot query:", e);
+    c.innerHTML = "<div style='font-size: 11px; color: var(--danger);'>Error executing Copilot query.</div>";
+  }
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
 
 

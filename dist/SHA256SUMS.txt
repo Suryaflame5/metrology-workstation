@@ -1,2 +1,2 @@
-16d5072adadec1575c91560c98abd7049a7adc2a17e8d019ce6b0ef769ec1414  Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe
-b0549e05e94f327d28663b2d40d6f9b3dc66e7b458ff366433c43cd04418dba6  MetrologyWorkstation.exe
+730e9653b4c3b229a4488fe4e7803000321c1fb047e074e1274079727c95af50  Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe
+7d5b815359d653f4e1e20291301d964852cb8d7714110df0e9b21605d760d7e5  MetrologyWorkstation.exe

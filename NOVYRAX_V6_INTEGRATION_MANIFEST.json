@@ -1,0 +1,29 @@
+{
+  "integration_target": "NovyraX Website & Cloud Portal",
+  "product_name": "Metrology Workstation 6",
+  "product_slug": "metrology-workstation-6",
+  "version": "6.0.0",
+  "release_tag": "v6.0.0",
+  "release_channel": "Production Stable",
+  "download_artifact": {
+    "installer_name": "Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
+    "direct_download_path": "/downloads/Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
+    "sha256": "730e9653b4c3b229a4488fe4e7803000321c1fb047e074e1274079727c95af50",
+    "size_mb": 56.05,
+    "os_requirements": "Windows 10 / Windows 11 (64-bit Architecture)"
+  },
+  "key_differentiators_v6": [
+    "50-Digit Exact Decimal GUM / ISO 17025 / Z540.3 Mathematical Kernel",
+    "Real Machine Learning (MAD / Modified Z-Score Anomaly Engine, OLS Drift Modeling with 95% Conformal Coverage)",
+    "Engineering RAG with Clause-Level Citation Grounding across ISO 17025, ANSI Z540.3, and GUM JCGM 100",
+    "Multi-Agent Copilot Hub operating via sandboxed Tool Execution Bus with Execution->Proof Trace",
+    "Fleet-Wide Health Scoring and Bay-Level Cohort Anomaly Detection",
+    "HMAC-SHA256 Cryptographic Attestation and Measurement Bill of Materials (MBOM)"
+  ],
+  "verification_seal": {
+    "test_count": 119,
+    "test_pass_rate": "100%",
+    "zero_ai_verified": true,
+    "anti_hallucination_verified": true
+  }
+}

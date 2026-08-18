@@ -1,30 +1,71 @@
 {
-  "product_name": "Metrology Workstation 5",
-  "package_identity": "MetrologyWorkstation.Engineering",
-  "product_generation": "V5",
-  "generation_title": "Adaptive Measurement Intelligence & Sovereign Engineering Workstation",
-  "commercial_version": "5.0.0",
-  "file_version": "5.0.0.0",
-  "release_tag": "v5.0.0",
-  "architecture": "x64",
-  "publisher": "CN=NOVYRAX Engineering Studio",
-  "build_timestamp": "2026-08-18T22:10:00.000000+00:00",
-  "automated_tests": "106/106 PASSED (100%)",
-  "clean_db_verified": true,
-  "telemetry_disabled": true,
-  "system_requirements": {
-    "os": "Windows 10 / Windows 11 (64-bit)",
-    "processor": "x86-64 Dual Core or higher",
-    "ram_mb": 4096,
-    "disk_space_mb": 200
+  "product_name": "Metrology Workstation 6",
+  "product_family": "NovyraX Dimensional & Electrical Metrology Suites",
+  "commercial_version": "v6.0.0",
+  "file_version": "6.0.0.0",
+  "build_timestamp_utc": "2026-08-18T17:10:00Z",
+  "target_platform": "Windows x64 (Windows 10 / Windows 11 / Windows Server 2022+)",
+  "mathematical_kernel": {
+    "engine": "metrology_core (Frozen Decimal Architecture)",
+    "arithmetic_precision": "50-Digit Exact Decimal Arithmetic (Fixed Context)",
+    "compliance_standards": [
+      "ISO/IEC 17025:2017 §7.6 & §7.8.6",
+      "ANSI/NCSL Z540.3-2006 (Method 6 & Method 5 RSS)",
+      "JCGM 100:2008 (GUM / Welch-Satterthwaite)",
+      "ISO 14253-1:2017 (Complete Conformance Guardbanding)"
+    ],
+    "monte_carlo_support": "Independent & Correlated Gaussian/Uniform/Triangular Distributions"
   },
-  "hashes": {
-    "Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe": "16d5072adadec1575c91560c98abd7049a7adc2a17e8d019ce6b0ef769ec1414",
-    "MetrologyWorkstation.exe": "b0549e05e94f327d28663b2d40d6f9b3dc66e7b458ff366433c43cd04418dba6"
+  "v6_intelligence_subsystems": {
+    "real_machine_learning": {
+      "anomaly_detection": "Boris Iglewicz & David Hoaglin Robust Modified Z-Score with MAD Normalization",
+      "drift_regression": "OLS Historical Linear Regression with 95% Residual Conformal Coverage Interval",
+      "environmental_correlation": "Multi-Variate Pearson / Spearman Thermal & Humidity Error Modeling",
+      "risk_engine": "Multi-Factor Composite Metrological Risk Scoring (0-100)"
+    },
+    "engineering_rag": {
+      "retrieval_architecture": "Hybrid BM25 + Semantic Token Ranking",
+      "corpus": "ISO/IEC 17025, ANSI Z540.3, JCGM 100 (GUM), ISO 14253-1, Micrometer & DMM SOPs",
+      "security": "XML-Isolated Document Enclosure with Prompt-Injection Filter"
+    },
+    "tool_execution_bus": {
+      "execution_model": "Sandboxed Dispatch with SHA-256 Audit Trace",
+      "registered_tools_count": 9
+    },
+    "multi_agent_orchestrator": {
+      "architecture": "Execution -> Observation -> Verification -> Proof",
+      "operating_modes": ["Mode A (Deterministic Offline)", "Mode B (Ollama Local)", "Mode C (Cloud BYOK)"],
+      "authority_contract": "DETERMINISTIC METROLOGY KERNEL (AUTHORITATIVE)",
+      "anti_cheating_guarantee": "Zero-hallucination policy with mandatory document citation"
+    },
+    "fleet_intelligence": {
+      "capabilities": ["Cross-Instrument Health Index", "Common-Bay Thermal Cohort Anomaly Detection", "Predictive Maintenance Queue"]
+    },
+    "cryptographic_attestation": {
+      "token_format": "ATTEST-v6-{calc_id}-{payload_hash_16}-{sig_16}",
+      "signing_algorithm": "HMAC-SHA256 Canonical JSON Evidence Package"
+    }
   },
-  "distribution": {
-    "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
-    "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v5.0.0",
-    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v5.0.0/Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe"
+  "binaries": {
+    "installer": {
+      "filename": "Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
+      "relative_path": "dist/Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
+      "sha256": "730e9653b4c3b229a4488fe4e7803000321c1fb047e074e1274079727c95af50",
+      "size_bytes": 58775623
+    },
+    "standalone_executable": {
+      "filename": "MetrologyWorkstation.exe",
+      "relative_path": "dist/MetrologyWorkstation.exe",
+      "sha256": "7d5b815359d653f4e1e20291301d964852cb8d7714110df0e9b21605d760d7e5",
+      "size_bytes": 53299723
+    }
+  },
+  "verification": {
+    "test_suite": "pytest",
+    "total_tests": 119,
+    "tests_passed": 119,
+    "pass_rate_pct": 100.0,
+    "zero_ai_test_status": "PASSED (Deterministic arithmetic verified offline)",
+    "ai_cannot_cheat_test_status": "PASSED (Missing evidence rejected and isolated)"
   }
 }

@@ -4,7 +4,8 @@ FastAPI Server for Metrology Workstation and REST API (v0.9.0 Release Candidate)
 
 import os
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Response, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -831,6 +832,88 @@ def api_uncertainty_what_if(req: UncertaintyWorkbenchRequest, target_component: 
     """Deterministically simulate the impact of reducing a specific uncertainty source."""
     from .services.uncertainty_intelligence import simulate_what_if_uncertainty_reduction
     return simulate_what_if_uncertainty_reduction(req.components, target_component, reduction_pct)
+
+
+# ==============================================================================
+# V6 METROLOGY WORKSTATION ENDPOINTS (Copilot, RAG, ML, Fleet, Attestation)
+# ==============================================================================
+
+class V6CopilotQueryRequest(BaseModel):
+    query: str = Field(..., description="Engineering query or investigation prompt")
+    instrument_id: Optional[str] = Field(default=None, description="Target instrument identifier")
+    calculation_id: Optional[str] = Field(default=None, description="Target calculation ID")
+
+
+@app.post("/api/v6/copilot/chat")
+def api_v6_copilot_chat(req: V6CopilotQueryRequest):
+    """Process engineering query through Multi-Agent Orchestrator & Tool Execution Bus."""
+    from .agents.orchestrator import COPILOT_ORCHESTRATOR
+    return COPILOT_ORCHESTRATOR.process_engineering_query(
+        query=req.query,
+        instrument_id=req.instrument_id,
+        calculation_id=req.calculation_id,
+    )
+
+
+@app.get("/api/v6/rag/search")
+def api_v6_rag_search(q: str = Query(..., description="Search query"), top_k: int = Query(3, ge=1, le=10)):
+    """Hybrid RAG retrieval across ISO standards, laboratory SOPs, and calibration manuals."""
+    from .rag.retriever import search_engineering_knowledge
+    results = search_engineering_knowledge(query=q, top_k=top_k)
+    return {"query": q, "results_count": len(results), "documents": results}
+
+
+@app.get("/api/v6/ml/models")
+def api_v6_ml_models():
+    """Retrieve active ML model registry with hyperparameters and lineage."""
+    from .ml.registry import list_registered_models
+    return {"registered_models": list_registered_models()}
+
+
+@app.get("/api/v6/ml/drift/{instrument_id}")
+def api_v6_ml_drift(instrument_id: str, tolerance_limit: float = Query(0.0020)):
+    """Execute historical drift regression and 30/60/90-day conformal projections."""
+    from .tools.metrology_tools import tool_predict_drift
+    return tool_predict_drift(instrument_id, tolerance_limit=tolerance_limit)
+
+
+@app.get("/api/v6/ml/risk/{instrument_id}")
+def api_v6_ml_risk(instrument_id: str, current_tur: float = Query(4.0), tolerance_limit: float = Query(0.0020)):
+    """Compute composite multi-factor metrological risk score (0-100)."""
+    from .tools.metrology_tools import tool_calculate_risk
+    return tool_calculate_risk(instrument_id, current_tur=current_tur, tolerance_limit=tolerance_limit)
+
+
+@app.get("/api/v6/ml/correlation/{instrument_id}")
+def api_v6_ml_correlation(instrument_id: str):
+    """Evaluate Pearson correlations between ambient environmental conditions and measurement errors."""
+    from .tools.metrology_tools import tool_get_environment_correlation
+    return tool_get_environment_correlation(instrument_id)
+
+
+@app.get("/api/v6/fleet/intelligence")
+def api_v6_fleet_intelligence():
+    """Retrieve multi-instrument fleet health scores, cohort anomalies, and maintenance queue."""
+    from .fleet.analytics import generate_fleet_intelligence
+    return generate_fleet_intelligence()
+
+
+@app.post("/api/v6/attestation/{calculation_id}")
+def api_v6_generate_attestation(calculation_id: str):
+    """Generate signed cryptographic attestation token and canonical evidence package."""
+    from .attestation.signer import generate_attestation_package
+    res = generate_attestation_package(calculation_id)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+
+@app.post("/api/v6/attestation/verify")
+def api_v6_verify_attestation(pkg: Dict[str, Any]):
+    """Verify cryptographic signature and hash integrity of an attestation package."""
+    from .attestation.signer import verify_attestation_token
+    return verify_attestation_token(pkg)
+
 
 
 
