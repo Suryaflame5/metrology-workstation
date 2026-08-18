@@ -16,6 +16,12 @@ from .models import (
     CalculationResponse,
     MultiPointCalculationCreateRequest,
     MultiPointCalculationResponse,
+    ProjectCreateRequest,
+    InstrumentCreateRequest,
+    MeasurementPlanCreateRequest,
+    MeasurementAcquisitionRequest,
+    UncertaintyWorkbenchRequest,
+    ConformityWorkbenchRequest,
 )
 from .db import (
     init_db,
@@ -24,7 +30,24 @@ from .db import (
     get_revision_history,
     get_dashboard_stats,
     list_audit_events,
+    save_project,
+    get_project,
+    list_projects,
+    delete_project,
+    save_instrument,
+    get_instrument,
+    list_instruments,
+    delete_instrument,
+    save_measurement_plan,
+    get_measurement_plan,
+    list_measurement_plans,
+    save_measurement,
+    get_measurement,
+    list_measurements,
+    get_v5_dashboard_stats,
 )
+from .services.workbench_service import compute_uncertainty_workbench, compute_conformity_workbench
+from .services.acquisition_service import analyze_measurement_series
 from .services.procedure_service import get_available_procedures, get_procedure_by_id
 from .services.calculation_service import compute_micrometer_calibration, compute_multi_point_calibration
 from .services.evidence_service import export_evidence_package_zip_bytes
@@ -392,7 +415,172 @@ def api_action_recommendations(instrument_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ==========================================
+# V5 REST API ENDPOINTS
+# ==========================================
+
+# --- Projects ---
+@app.post("/api/projects")
+def api_create_project(req: ProjectCreateRequest):
+    """Create or update an engineering project workspace."""
+    try:
+        record = save_project(req.model_dump())
+        record_audit_event("CREATE_PROJECT", record["id"], "SYSTEM", {"name": record["name"]})
+        return record
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/projects")
+def api_list_projects(status: Optional[str] = None):
+    """List all project workspaces."""
+    return list_projects(status=status)
+
+
+@app.get("/api/projects/{project_id}")
+def api_get_project(project_id: str):
+    """Retrieve an engineering project."""
+    record = get_project(project_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return record
+
+
+@app.delete("/api/projects/{project_id}")
+def api_delete_project(project_id: str):
+    """Delete an engineering project."""
+    success = delete_project(project_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found")
+    record_audit_event("DELETE_PROJECT", project_id, "SYSTEM", {})
+    return {"status": "DELETED", "id": project_id}
+
+
+# --- Instruments ---
+@app.post("/api/instruments")
+def api_create_instrument(req: InstrumentCreateRequest):
+    """Create or update an instrument in the asset registry."""
+    try:
+        record = save_instrument(req.model_dump())
+        record_audit_event("CREATE_INSTRUMENT", record["id"], "SYSTEM", {"model": record["model"]})
+        return record
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/instruments")
+def api_list_instruments(project_id: Optional[str] = None, status: Optional[str] = None):
+    """List registered instruments."""
+    return list_instruments(project_id=project_id, status=status)
+
+
+@app.get("/api/instruments/{instrument_id}")
+def api_get_instrument(instrument_id: str):
+    """Retrieve a specific instrument."""
+    record = get_instrument(instrument_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Instrument not found")
+    return record
+
+
+@app.delete("/api/instruments/{instrument_id}")
+def api_delete_instrument(instrument_id: str):
+    """Delete an instrument from registry."""
+    success = delete_instrument(instrument_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Instrument not found")
+    record_audit_event("DELETE_INSTRUMENT", instrument_id, "SYSTEM", {})
+    return {"status": "DELETED", "id": instrument_id}
+
+
+# --- Measurement Plans ---
+@app.post("/api/plans")
+def api_create_measurement_plan(req: MeasurementPlanCreateRequest):
+    """Create or update a structured measurement plan."""
+    try:
+        record = save_measurement_plan(req.model_dump())
+        record_audit_event("CREATE_PLAN", record["id"], "SYSTEM", {"plan_name": record["plan_name"]})
+        return record
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/plans")
+def api_list_measurement_plans(project_id: Optional[str] = None, instrument_id: Optional[str] = None):
+    """List measurement plans."""
+    return list_measurement_plans(project_id=project_id, instrument_id=instrument_id)
+
+
+@app.get("/api/plans/{plan_id}")
+def api_get_measurement_plan(plan_id: str):
+    """Retrieve a measurement plan."""
+    record = get_measurement_plan(plan_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return record
+
+
+# --- Measurement Acquisition ---
+@app.post("/api/measurements")
+def api_acquire_measurements(req: MeasurementAcquisitionRequest):
+    """Acquire and process repeated measurement series."""
+    try:
+        mean_val, s_dev, u_rep, outliers = analyze_measurement_series(req.raw_values)
+        data = req.model_dump()
+        data["mean_value"] = mean_val
+        data["sample_std_dev"] = s_dev
+        data["repeatability_uncertainty"] = u_rep
+        data["outliers"] = outliers
+        record = save_measurement(data)
+        record_audit_event("ACQUIRE_MEASUREMENTS", record["id"], req.operator or "OPERATOR", {"n": len(req.raw_values), "mean": mean_val})
+        return record
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/measurements")
+def api_list_measurements(plan_id: Optional[str] = None, instrument_id: Optional[str] = None):
+    """List acquired measurements."""
+    return list_measurements(plan_id=plan_id, instrument_id=instrument_id)
+
+
+@app.get("/api/measurements/{measurement_id}")
+def api_get_measurement(measurement_id: str):
+    """Retrieve an acquired measurement dataset."""
+    record = get_measurement(measurement_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Measurement dataset not found")
+    return record
+
+
+# --- Interactive Workbenches ---
+@app.post("/api/workbench/uncertainty")
+def api_workbench_uncertainty(req: UncertaintyWorkbenchRequest):
+    """Evaluate interactive GUM uncertainty budget in real time."""
+    try:
+        return compute_uncertainty_workbench(req.components, confidence_level=req.confidence_level)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/workbench/conformity")
+def api_workbench_conformity(req: ConformityWorkbenchRequest):
+    """Evaluate interactive guardbanded conformity in real time."""
+    try:
+        return compute_conformity_workbench(req)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# --- V5 Workstation Stats ---
+@app.get("/api/v5/stats")
+def api_v5_stats():
+    """Retrieve dynamic V5 workstation dashboard summary metrics."""
+    return get_v5_dashboard_stats()
+
+
 # Mount static web UI assets
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 if os.path.exists(STATIC_DIR):
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+

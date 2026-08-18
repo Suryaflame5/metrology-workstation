@@ -1,0 +1,28 @@
+{
+  "product_name": "Metrology Workstation",
+  "package_identity": "MetrologyWorkstation.Engineering",
+  "version": "5.0.0",
+  "release_tag": "v5.0.0",
+  "release_generation": "V5 Production Engineering Workstation",
+  "architecture": "x64",
+  "publisher": "CN=NOVYRAX Studio",
+  "build_timestamp": "2026-08-18T21:00:00.000000+00:00",
+  "automated_tests": "97/97 PASSED (100%)",
+  "clean_db_verified": true,
+  "telemetry_disabled": true,
+  "system_requirements": {
+    "os": "Windows 10 / Windows 11 (64-bit)",
+    "processor": "x86-64 Dual Core or higher",
+    "ram_mb": 4096,
+    "disk_space_mb": 200
+  },
+  "hashes": {
+    "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe": "bb4d077fa55bc7195d2b277fa8dd04eba20eae18ef40bdd30aaf74cf61398b75",
+    "MetrologyWorkstation.exe": "a007ff711762b23f84bca0ea0ec5ac7197aca3af59fa7c281e1c0b4e96f31b83"
+  },
+  "distribution": {
+    "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
+    "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v5.0.0",
+    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v5.0.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe"
+  }
+}

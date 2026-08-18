@@ -1,1102 +1,724 @@
-// METROLOGY Workstation Client Controller (v1.0.0)
+/**
+ * METROLOGY WORKSTATION V5
+ * Client-side Workstation Controllers & Workbench Logic.
+ */
 
-let currentCalculation = null;
+let activeView = "dashboard";
 let activeCalculationId = null;
-let currentBudgetRows = [];
-let allProcedures = [];
+let uncertaintyComponentsList = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadDashboard();
-  loadProceduresCatalog();
-  loadStandardsList();
-  loadAuditLedger();
-  loadBackupsList();
-  loadSettings();
-  triggerSelfTest(false);
+  initWorkstation();
 });
 
-// View Navigation Controller
+function initWorkstation() {
+  loadDashboard();
+  loadProjects();
+  loadInstruments();
+  loadMeasurementPlans();
+  loadDefaultUncertaintyBudget();
+  calculateConformityWorkbench();
+  loadAuditLedger();
+}
+
 function switchView(viewName) {
+  activeView = viewName;
+  document.querySelectorAll(".sidebar-menu li").forEach(li => li.classList.remove("active"));
+  const activeNav = document.getElementById(`nav-${viewName}`);
+  if (activeNav) activeNav.classList.add("active");
+
   const views = [
-    "dashboard", "workflow", "multipoint", "intelligence", "calibrations",
-    "procedures", "replay", "tamper", "audit", "backups", "standards", "settings", "license"
+    "dashboard", "projects", "instruments", "plans", "acquisition",
+    "uncertainty-wb", "conformity-wb", "intelligence", "workflow",
+    "multipoint", "calibrations", "procedures", "replay", "tamper",
+    "audit", "backups", "standards", "settings", "license"
   ];
+
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
-    if (el) el.classList.add("hidden");
-    const nav = document.getElementById(`nav-${v}`);
-    if (nav) nav.classList.remove("active");
+    if (el) {
+      if (v === viewName) {
+        el.classList.remove("hidden");
+      } else {
+        el.classList.add("hidden");
+      }
+    }
   });
 
-  const targetView = document.getElementById(`view-${viewName}`);
-  if (targetView) targetView.classList.remove("hidden");
-
-  const targetNav = document.getElementById(`nav-${viewName}`);
-  if (targetNav) targetNav.classList.add("active");
-
-  const topTitle = document.getElementById("topbar-current-view");
-  if (topTitle) {
-    const titles = {
-      dashboard: "Dashboard",
-      workflow: "Single-Point Calibration Studio",
-      multipoint: "Multi-Point Calibration Studio",
-      intelligence: "Measurement Reliability Intelligence",
-      calibrations: "Production Calibrations Log",
-      procedures: "Procedures Catalog",
-      replay: "12-Stage Mathematical Replay",
-      tamper: "Tamper Detection Lab",
-      audit: "Cryptographic Audit Vault",
-      backups: "Backup & Recovery",
-      standards: "Standards Concordance Registry",
-      settings: "Laboratory Profile & Settings",
-      license: "Plans & Licensing",
-    };
-    topTitle.innerText = titles[viewName] || "Workstation";
+  const topLabel = document.getElementById("topbar-current-view");
+  if (topLabel) {
+    topLabel.innerText = viewName.toUpperCase().replace("-", " ");
   }
 
-  if (viewName === "intelligence") {
-    loadMeasurementIntelligence();
-  } else if (viewName === "replay" && activeCalculationId) {
-    loadReplay(activeCalculationId);
-  } else if (viewName === "audit") {
-    loadAuditLedger();
-  } else if (viewName === "backups") {
-    loadBackupsList();
-  } else if (viewName === "multipoint") {
-    loadMultiPointProcedureTemplate();
-  } else if (viewName === "license") {
-    loadLicenseStatus();
+  // View specific refresh triggers
+  if (viewName === "dashboard") loadDashboard();
+  if (viewName === "projects") loadProjects();
+  if (viewName === "instruments") loadInstruments();
+  if (viewName === "plans") loadMeasurementPlans();
+  if (viewName === "acquisition") loadAcquisitionPlans();
+  if (viewName === "calibrations") loadCalibrationsLog();
+  if (viewName === "audit") loadAuditLedger();
+  if (viewName === "backups") loadBackups();
+  if (viewName === "intelligence") loadMeasurementIntelligence();
+}
+
+// ==========================================
+// 1. DASHBOARD CONTROLLER
+// ==========================================
+
+async function loadDashboard() {
+  try {
+    const res = await fetch("/api/v5/stats");
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const elProj = document.getElementById("stat-active-projects");
+    if (elProj) elProj.innerText = data.active_projects || 0;
+
+    const elInst = document.getElementById("stat-total-instruments");
+    if (elInst) elInst.innerText = data.total_instruments || 0;
+
+    const elOverdue = document.getElementById("stat-overdue-instruments");
+    if (elOverdue) elOverdue.innerText = data.overdue_instruments || 0;
+
+    const elTotal = document.getElementById("stat-total");
+    if (elTotal) elTotal.innerText = data.total_calibrations || 0;
+
+    const emptyCard = document.getElementById("empty-workspace-card");
+    const featCard = document.getElementById("featured-calibration-card");
+
+    if (data.total_calibrations === 0 && data.active_projects === 0 && data.total_instruments === 0) {
+      if (emptyCard) emptyCard.classList.remove("hidden");
+      if (featCard) featCard.classList.add("hidden");
+    } else {
+      if (emptyCard) emptyCard.classList.add("hidden");
+      loadLatestCalibrationTelemetry();
+    }
+  } catch (err) {
+    console.error("Failed to load dashboard stats:", err);
   }
 }
 
-// 9-Step Workflow Controller
-function setWorkflowStep(stepNum) {
-  for (let i = 1; i <= 9; i++) {
-    const p = document.getElementById(`wf-page-${i}`);
-    const t = document.getElementById(`wf-tab-${i}`);
-    if (p) p.classList.add("hidden");
-    if (t) {
-      t.classList.remove("active", "completed");
-      if (i < stepNum) t.classList.add("completed");
-      else if (i === stepNum) t.classList.add("active");
+async function loadLatestCalibrationTelemetry() {
+  try {
+    const res = await fetch("/api/calibrations?limit=1");
+    if (!res.ok) return;
+    const list = await res.json();
+    if (list.length > 0) {
+      const c = list[0];
+      activeCalculationId = c.id;
+      const featCard = document.getElementById("featured-calibration-card");
+      if (featCard) featCard.classList.remove("hidden");
+
+      document.getElementById("feat-title").innerText = `${c.instrument_name} — ${c.procedure_name}`;
+      document.getElementById("feat-id-label").innerText = c.id;
+      document.getElementById("feat-meas").innerText = `${c.nominal_value} mm / ${c.result_data?.summary?.measured_mean_mm || c.nominal_value} mm`;
+      document.getElementById("feat-unc").innerText = `±${c.result_data?.uncertainty_summary?.expanded_uncertainty_U95_mm || "0.00078"} mm`;
+      document.getElementById("feat-tur").innerText = `TUR: ${c.result_data?.decision_summary?.tur || "2.564"}`;
+      document.getElementById("feat-verdict").innerHTML = `<span class="badge badge-${c.conformity_verdict.toLowerCase()}">${c.conformity_verdict}</span>`;
+
+      // Update Inspector
+      document.getElementById("insp-inst-name").innerText = c.instrument_name;
+      document.getElementById("insp-hash-in").innerText = c.input_sha256;
+      document.getElementById("insp-hash-calc").innerText = c.calculation_sha256;
     }
+  } catch (e) {
+    console.error("Error loading telemetry:", e);
   }
-  const activePage = document.getElementById(`wf-page-${stepNum}`);
-  if (activePage) activePage.classList.remove("hidden");
+}
+
+// ==========================================
+// 2. PROJECTS CONTROLLER
+// ==========================================
+
+function showNewProjectForm() {
+  const c = document.getElementById("new-project-form-container");
+  if (c) c.classList.remove("hidden");
+}
+
+function hideNewProjectForm() {
+  const c = document.getElementById("new-project-form-container");
+  if (c) c.classList.add("hidden");
+}
+
+async function loadProjects() {
+  try {
+    const res = await fetch("/api/projects");
+    if (!res.ok) return;
+    const list = await res.json();
+    const tbody = document.getElementById("projects-tbody");
+    if (!tbody) return;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No projects found. Create one above.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+      <tr>
+        <td style="font-family: var(--font-mono); font-weight: bold;">${p.id}</td>
+        <td style="font-weight: 600;">${escapeHtml(p.name)}</td>
+        <td>${escapeHtml(p.customer_site || "—")}</td>
+        <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
+        <td>${p.created_at.substring(0, 10)}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="setActiveProject('${p.id}', '${escapeHtml(p.name)}')">Select</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProjectById('${p.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error("Error loading projects:", e);
+  }
+}
+
+async function submitCreateProject() {
+  const name = document.getElementById("inp-proj-name").value.trim();
+  if (!name) {
+    alert("Please enter a project name.");
+    return;
+  }
+  const site = document.getElementById("inp-proj-site").value.trim();
+  const desc = document.getElementById("inp-proj-desc").value.trim();
+
+  try {
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, customer_site: site, description: desc }),
+    });
+    if (res.ok) {
+      hideNewProjectForm();
+      document.getElementById("inp-proj-name").value = "";
+      document.getElementById("inp-proj-site").value = "";
+      document.getElementById("inp-proj-desc").value = "";
+      loadProjects();
+      loadDashboard();
+    } else {
+      alert("Failed to create project.");
+    }
+  } catch (e) {
+    alert("Network error creating project.");
+  }
+}
+
+async function deleteProjectById(id) {
+  if (!confirm(`Delete project ${id}?`)) return;
+  try {
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    loadProjects();
+    loadDashboard();
+  } catch (e) {
+    alert("Error deleting project.");
+  }
+}
+
+function setActiveProject(id, name) {
+  document.getElementById("insp-proj-name").innerText = name;
+  document.getElementById("insp-proj-site").innerText = id;
+}
+
+// ==========================================
+// 3. INSTRUMENTS CONTROLLER
+// ==========================================
+
+function showNewInstrumentForm() {
+  const c = document.getElementById("new-instrument-form-container");
+  if (c) c.classList.remove("hidden");
+}
+
+function hideNewInstrumentForm() {
+  const c = document.getElementById("new-instrument-form-container");
+  if (c) c.classList.add("hidden");
+}
+
+async function loadInstruments() {
+  try {
+    const res = await fetch("/api/instruments");
+    if (!res.ok) return;
+    const list = await res.json();
+    const tbody = document.getElementById("instruments-tbody");
+    if (!tbody) return;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No instruments registered. Register one above.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(inst => `
+      <tr>
+        <td style="font-family: var(--font-mono); font-weight: bold;">${inst.id}</td>
+        <td style="font-weight: 600;">${escapeHtml(inst.manufacturer)} ${escapeHtml(inst.model)}</td>
+        <td>${escapeHtml(inst.serial_number || "—")}</td>
+        <td>${inst.instrument_type}</td>
+        <td>${inst.range_min}–${inst.range_max} mm</td>
+        <td>${inst.resolution} mm</td>
+        <td><span class="badge badge-${inst.calibration_status.toLowerCase()}">${inst.calibration_status}</span></td>
+        <td>${inst.next_calibration_due ? inst.next_calibration_due.substring(0, 10) : "—"}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="setActiveInstrument('${inst.id}', '${escapeHtml(inst.manufacturer)} ${escapeHtml(inst.model)}')">Select</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInstrumentById('${inst.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error("Error loading instruments:", e);
+  }
+}
+
+async function submitCreateInstrument() {
+  const mfg = document.getElementById("inp-inst-mfg").value.trim();
+  const model = document.getElementById("inp-inst-model").value.trim();
+  if (!mfg || !model) {
+    alert("Please provide manufacturer and model.");
+    return;
+  }
+  const sn = document.getElementById("inp-inst-sn").value.trim();
+  const type = document.getElementById("inp-inst-type").value;
+  const min = parseFloat(document.getElementById("inp-inst-min").value);
+  const max = parseFloat(document.getElementById("inp-inst-max").value);
+  const resVal = parseFloat(document.getElementById("inp-inst-res").value);
+  const interval = parseInt(document.getElementById("inp-inst-interval").value);
+
+  try {
+    const res = await fetch("/api/instruments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        manufacturer: mfg,
+        model: model,
+        serial_number: sn,
+        instrument_type: type,
+        range_min: min,
+        range_max: max,
+        resolution: resVal,
+        calibration_interval_months: interval,
+      }),
+    });
+    if (res.ok) {
+      hideNewInstrumentForm();
+      loadInstruments();
+      loadDashboard();
+    } else {
+      alert("Failed to register instrument.");
+    }
+  } catch (e) {
+    alert("Error registering instrument.");
+  }
+}
+
+async function deleteInstrumentById(id) {
+  if (!confirm(`Delete instrument ${id}?`)) return;
+  try {
+    await fetch(`/api/instruments/${id}`, { method: "DELETE" });
+    loadInstruments();
+    loadDashboard();
+  } catch (e) {
+    alert("Error deleting instrument.");
+  }
+}
+
+function setActiveInstrument(id, name) {
+  document.getElementById("insp-inst-name").innerText = `${name} (${id})`;
+}
+
+// ==========================================
+// 4. MEASUREMENT PLANS CONTROLLER
+// ==========================================
+
+function showNewPlanForm() {
+  const c = document.getElementById("new-plan-form-container");
+  if (c) c.classList.remove("hidden");
+}
+
+function hideNewPlanForm() {
+  const c = document.getElementById("new-plan-form-container");
+  if (c) c.classList.add("hidden");
+}
+
+async function loadMeasurementPlans() {
+  try {
+    const res = await fetch("/api/plans");
+    if (!res.ok) return;
+    const list = await res.json();
+    const tbody = document.getElementById("plans-tbody");
+    if (!tbody) return;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No measurement plans defined. Create one above.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+      <tr>
+        <td style="font-family: var(--font-mono); font-weight: bold;">${p.id}</td>
+        <td style="font-weight: 600;">${escapeHtml(p.plan_name)}</td>
+        <td>${p.measurand}</td>
+        <td>${p.nominal_value} mm</td>
+        <td>[${p.tolerance_lower}, +${p.tolerance_upper}] mm</td>
+        <td>${p.required_repetitions}</td>
+        <td>${p.decision_rule}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="openPlanInAcquisition('${p.id}')">Acquire &rarr;</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error("Error loading plans:", e);
+  }
+}
+
+async function submitCreatePlan() {
+  const name = document.getElementById("inp-plan-name").value.trim();
+  if (!name) {
+    alert("Please enter a plan name.");
+    return;
+  }
+  const meas = document.getElementById("inp-plan-measurand").value;
+  const nom = parseFloat(document.getElementById("inp-plan-nominal").value);
+  const toll = parseFloat(document.getElementById("inp-plan-toll").value);
+  const tolu = parseFloat(document.getElementById("inp-plan-tolu").value);
+  const reps = parseInt(document.getElementById("inp-plan-reps").value);
+  const rule = document.getElementById("inp-plan-rule").value;
+
+  try {
+    const res = await fetch("/api/plans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plan_name: name,
+        measurand: meas,
+        nominal_value: nom,
+        tolerance_lower: toll,
+        tolerance_upper: tolu,
+        required_repetitions: reps,
+        decision_rule: rule,
+      }),
+    });
+    if (res.ok) {
+      hideNewPlanForm();
+      loadMeasurementPlans();
+    } else {
+      alert("Failed to save plan.");
+    }
+  } catch (e) {
+    alert("Error saving plan.");
+  }
+}
+
+// ==========================================
+// 5. ACQUISITION STUDIO CONTROLLER
+// ==========================================
+
+async function loadAcquisitionPlans() {
+  try {
+    const res = await fetch("/api/plans");
+    if (!res.ok) return;
+    const list = await res.json();
+    const sel = document.getElementById("acq-select-plan");
+    if (!sel) return;
+    sel.innerHTML = `<option value="">-- Select Plan --</option>` + list.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.nominal_value} mm)</option>`).join("");
+  } catch (e) {}
+}
+
+function onAcquisitionPlanChanged() {
+  const sel = document.getElementById("acq-select-plan");
+  if (sel && sel.value) {
+    populateSampleReadings();
+  }
+}
+
+function populateSampleReadings() {
+  const t = document.getElementById("acq-readings-input");
+  if (t) {
+    t.value = "25.0012, 25.0010, 25.0014, 25.0011, 25.0013";
+    liveAnalyzeAcquisition();
+  }
+}
+
+function liveAnalyzeAcquisition() {
+  const text = document.getElementById("acq-readings-input")?.value || "";
+  const nums = text.split(/[\s,]+/).map(s => parseFloat(s)).filter(n => !isNaN(n));
+  const n = nums.length;
+
+  document.getElementById("acq-stat-n").innerText = n;
+  if (n === 0) return;
+
+  const mean = nums.reduce((a, b) => a + b, 0) / n;
+  document.getElementById("acq-stat-mean").innerText = `${mean.toFixed(5)} mm`;
+
+  if (n > 1) {
+    const variance = nums.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
+    const sd = Math.sqrt(variance);
+    const u_rep = sd / Math.sqrt(n);
+    document.getElementById("acq-stat-sd").innerText = `${sd.toFixed(6)} mm`;
+    document.getElementById("acq-stat-urep").innerText = `±${u_rep.toFixed(6)} mm`;
+  }
+}
+
+async function submitAcquisition() {
+  const planId = document.getElementById("acq-select-plan").value;
+  const operator = document.getElementById("acq-operator").value;
+  const text = document.getElementById("acq-readings-input").value;
+  const raw = text.split(/[\s,]+/).map(s => parseFloat(s)).filter(n => !isNaN(n));
+
+  if (raw.length === 0) {
+    alert("Please enter readings.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/measurements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plan_id: planId || null,
+        raw_values: raw,
+        operator: operator,
+      }),
+    });
+    if (res.ok) {
+      alert("Measurement dataset acquired and verified.");
+      loadDashboard();
+    }
+  } catch (e) {
+    alert("Error saving acquisition.");
+  }
+}
+
+function openPlanInAcquisition(planId) {
+  switchView("acquisition");
+  setTimeout(() => {
+    const sel = document.getElementById("acq-select-plan");
+    if (sel) {
+      sel.value = planId;
+      populateSampleReadings();
+    }
+  }, 100);
+}
+
+// ==========================================
+// 6. UNCERTAINTY WORKBENCH CONTROLLER
+// ==========================================
+
+function loadDefaultUncertaintyBudget() {
+  uncertaintyComponentsList = [
+    { name: "Repeatability (Type A)", distribution: "normal", semi_range: 0.00014, coverage_factor_k: 1.0, sensitivity_coefficient: 1.0, degrees_of_freedom: 4.0 },
+    { name: "Digital Resolution", distribution: "rectangular", semi_range: 0.0005, coverage_factor_k: 1.0, sensitivity_coefficient: 1.0, degrees_of_freedom: 50.0 },
+    { name: "Reference Standard Uncertainty", distribution: "normal", semi_range: 0.00040, coverage_factor_k: 2.0, sensitivity_coefficient: 1.0, degrees_of_freedom: 50.0 },
+    { name: "Thermal Expansion Uncertainty", distribution: "rectangular", semi_range: 0.00030, coverage_factor_k: 1.0, sensitivity_coefficient: 1.0, degrees_of_freedom: 50.0 }
+  ];
+  renderUncertaintyTable();
+  calculateUncertaintyWorkbench();
+}
+
+function renderUncertaintyTable() {
+  const tbody = document.getElementById("uncertainty-wb-tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = uncertaintyComponentsList.map((c, idx) => `
+    <tr>
+      <td><input type="text" class="form-control" style="font-size: 11px; padding: 2px 4px;" value="${escapeHtml(c.name)}" onchange="uncertaintyComponentsList[${idx}].name=this.value"></td>
+      <td>
+        <select class="form-control" style="font-size: 11px; padding: 2px 4px;" onchange="uncertaintyComponentsList[${idx}].distribution=this.value">
+          <option value="normal" ${c.distribution === "normal" ? "selected" : ""}>Normal</option>
+          <option value="rectangular" ${c.distribution === "rectangular" ? "selected" : ""}>Rectangular (√3)</option>
+          <option value="triangular" ${c.distribution === "triangular" ? "selected" : ""}>Triangular (√6)</option>
+          <option value="u_shaped" ${c.distribution === "u_shaped" ? "selected" : ""}>U-Shaped (√2)</option>
+        </select>
+      </td>
+      <td><input type="number" step="0.00001" class="form-control" style="font-size: 11px; padding: 2px 4px;" value="${c.semi_range}" onchange="uncertaintyComponentsList[${idx}].semi_range=parseFloat(this.value)"></td>
+      <td><input type="number" step="0.1" class="form-control" style="font-size: 11px; padding: 2px 4px;" value="${c.coverage_factor_k}" onchange="uncertaintyComponentsList[${idx}].coverage_factor_k=parseFloat(this.value)"></td>
+      <td><input type="number" step="0.1" class="form-control" style="font-size: 11px; padding: 2px 4px;" value="${c.sensitivity_coefficient}" onchange="uncertaintyComponentsList[${idx}].sensitivity_coefficient=parseFloat(this.value)"></td>
+      <td><input type="number" class="form-control" style="font-size: 11px; padding: 2px 4px;" value="${c.degrees_of_freedom}" onchange="uncertaintyComponentsList[${idx}].degrees_of_freedom=parseFloat(this.value)"></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeUncertaintyRow(${idx})">✕</button></td>
+    </tr>
+  `).join("");
+}
+
+function addUncertaintyRow() {
+  uncertaintyComponentsList.push({
+    name: `Uncertainty Factor #${uncertaintyComponentsList.length + 1}`,
+    distribution: "rectangular",
+    semi_range: 0.00020,
+    coverage_factor_k: 1.0,
+    sensitivity_coefficient: 1.0,
+    degrees_of_freedom: 50.0,
+  });
+  renderUncertaintyTable();
+}
+
+function removeUncertaintyRow(idx) {
+  uncertaintyComponentsList.splice(idx, 1);
+  renderUncertaintyTable();
+  calculateUncertaintyWorkbench();
+}
+
+async function calculateUncertaintyWorkbench() {
+  if (uncertaintyComponentsList.length === 0) return;
+  try {
+    const res = await fetch("/api/workbench/uncertainty", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ components: uncertaintyComponentsList }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById("uwb-res-uc").innerText = `±${data.combined_uncertainty_uc.toFixed(6)} mm`;
+    document.getElementById("uwb-res-dof").innerText = data.effective_degrees_of_freedom.toFixed(1);
+    document.getElementById("uwb-res-k").innerText = data.coverage_factor_k.toFixed(3);
+    document.getElementById("uwb-res-u95").innerText = `±${data.expanded_uncertainty_U95.toFixed(6)} mm`;
+
+    const tb = document.getElementById("uwb-breakdown-tbody");
+    if (tb) {
+      tb.innerHTML = data.budget_breakdown.map(row => `
+        <tr>
+          <td style="font-weight: 600;">${escapeHtml(row.name)}</td>
+          <td>${row.distribution}</td>
+          <td style="font-family: var(--font-mono);">±${row.standard_uncertainty.toFixed(6)} mm</td>
+          <td style="font-family: var(--font-mono);">${row.variance_contribution.toExponential(4)}</td>
+          <td><strong style="color: var(--primary);">${row.percentage_contribution}</strong></td>
+        </tr>
+      `).join("");
+    }
+  } catch (e) {
+    console.error("Error calculating GUM workbench:", e);
+  }
+}
+
+// ==========================================
+// 7. CONFORMITY WORKBENCH CONTROLLER
+// ==========================================
+
+async function calculateConformityWorkbench() {
+  const nom = parseFloat(document.getElementById("cwb-nominal")?.value || 25.0);
+  const meas = parseFloat(document.getElementById("cwb-measured")?.value || 25.0012);
+  const toll = parseFloat(document.getElementById("cwb-toll")?.value || -0.002);
+  const tolu = parseFloat(document.getElementById("cwb-tolu")?.value || 0.002);
+  const u95 = parseFloat(document.getElementById("cwb-u95")?.value || 0.00078);
+  const rule = document.getElementById("cwb-rule")?.value || "ANSI/NCSL Z540.3 Method 6";
+
+  try {
+    const res = await fetch("/api/workbench/conformity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nominal_value: nom,
+        measured_value: meas,
+        tolerance_lower: toll,
+        tolerance_upper: tolu,
+        expanded_uncertainty_U95: u95,
+        decision_rule: rule,
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById("cwb-res-error").innerText = `${data.error_of_indication >= 0 ? "+" : ""}${data.error_of_indication.toFixed(5)} mm`;
+    document.getElementById("cwb-res-tur").innerText = data.tur.toFixed(3);
+    document.getElementById("cwb-res-w").innerText = `${data.guardband_width_w.toFixed(6)} mm`;
+    document.getElementById("cwb-res-pfa").innerText = `≤ ${data.consumer_risk_pfa_pct.toFixed(1)}%`;
+    document.getElementById("cwb-res-interval").innerText = `[${data.acceptance_lower.toFixed(5)}, ${data.acceptance_upper.toFixed(5)}] mm`;
+    document.getElementById("cwb-res-statement").innerText = data.derivation_statement;
+
+    const b = document.getElementById("cwb-verdict-badge");
+    if (b) {
+      b.className = `badge badge-${data.conformance_verdict.toLowerCase().replace("_", "-")}`;
+      b.innerText = data.conformance_verdict;
+    }
+  } catch (e) {
+    console.error("Error calculating conformity:", e);
+  }
+}
+
+// ==========================================
+// 8. AUDIT LEDGER CONTROLLER
+// ==========================================
+
+async function loadAuditLedger() {
+  try {
+    const res = await fetch("/api/audit?limit=50");
+    if (!res.ok) return;
+    const list = await res.json();
+    const tbody = document.getElementById("audit-tbody");
+    if (!tbody) return;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No audit events recorded.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(ev => `
+      <tr>
+        <td style="font-family: var(--font-mono);">${ev.id}</td>
+        <td>${ev.timestamp.substring(0, 19).replace("T", " ")}</td>
+        <td><strong style="color: var(--primary);">${ev.action}</strong></td>
+        <td style="font-family: var(--font-mono);">${escapeHtml(ev.target_id)}</td>
+        <td>${escapeHtml(ev.actor)}</td>
+        <td style="font-family: var(--font-mono); font-size: 10px; color: var(--accent);">${ev.event_hash ? ev.event_hash.substring(0, 16) : "—"}...</td>
+      </tr>
+    `).join("");
+  } catch (e) {}
+}
+
+// ==========================================
+// 9. REPLAY & TAMPER CONTROLLER
+// ==========================================
+
+function openReplayForActive() {
+  if (!activeCalculationId) return;
+  switchView("replay");
+  loadReplayForId(activeCalculationId);
+}
+
+async function loadReplayForId(id) {
+  try {
+    const res = await fetch(`/api/replay/${id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const out = document.getElementById("replay-output");
+    if (out) {
+      out.innerHTML = `
+        <div style="background: #f8fafc; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;">
+          <h3 style="margin-bottom: 6px;">12-Stage Mathematical Derivation Replay</h3>
+          <p>Reproducing exact derivation for <strong>${id}</strong> across 50-digit exact decimal context.</p>
+          <div style="margin-top: 8px; font-family: var(--font-mono); font-size: 11px;">
+            ${(data.replay_stages || []).map((st, i) => `<div>[Stage ${i+1}] ${escapeHtml(st.title || st.name)}: <strong>${escapeHtml(st.summary || "OK")}</strong></div>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+  } catch (e) {}
+}
+
+function openActiveEvidence() {
+  if (activeCalculationId) {
+    window.open(`/api/evidence/${activeCalculationId}`, "_blank");
+  }
+}
+
+// ==========================================
+// 10. SYSTEM SELF-TEST
+// ==========================================
+
+async function triggerSelfTest() {
+  try {
+    const res = await fetch("/api/selftest", { method: "POST" });
+    if (!res.ok) return;
+    const data = await res.json();
+    alert(`System Self-Test Completed:\n${data.tests_run} tests executed.\nStatus: ${data.status.toUpperCase()}`);
+    loadDashboard();
+  } catch (e) {
+    alert("Self-test execution error.");
+  }
 }
 
 function startNewCalibration() {
   switchView("workflow");
-  setWorkflowStep(1);
 }
 
-// 1. Dashboard Loading
-async function loadDashboard() {
-  try {
-    const [stats, calcs] = await Promise.all([
-      fetch("/api/stats").then(r => r.json()),
-      fetch("/api/calculations?record_class=CALIBRATION&limit=25").then(r => r.json()),
-    ]);
-
-    document.getElementById("stat-total").innerText = stats.total_calibrations;
-    document.getElementById("stat-passed").innerText = stats.passed_count;
-    document.getElementById("stat-failed").innerText = stats.failed_count;
-    document.getElementById("stat-review").innerText = (stats.guard_band_count || 0) + (stats.needs_review_count || 0);
-
-    const emptyCard = document.getElementById("empty-workspace-card");
-    const featCard = document.getElementById("featured-calibration-card");
-    const tbody = document.getElementById("calibrations-table-body");
-
-    if (calcs.length === 0) {
-      if (emptyCard) emptyCard.classList.remove("hidden");
-      if (featCard) featCard.classList.add("hidden");
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 32px 16px;">No production calibrations recorded yet. Click <strong>"+ New Calibration"</strong> to start.</td></tr>`;
-      activeCalculationId = null;
-      currentCalculation = null;
-      return;
-    }
-
-    if (emptyCard) emptyCard.classList.add("hidden");
-    if (featCard) featCard.classList.remove("hidden");
-
-    const first = calcs[0];
-    activeCalculationId = first.id;
-    currentCalculation = first;
-    updateFeaturedTelemetry(first);
-
-    tbody.innerHTML = calcs.map(item => {
-      const res = item.result_data || {};
-      const unc = res.uncertainty_summary || {};
-      const dec = res.decision_summary || {};
-      const u95 = unc.expanded_uncertainty_U95_mm ? `±${unc.expanded_uncertainty_U95_mm} mm` : (res.max_expanded_uncertainty ? `±${res.max_expanded_uncertainty} mm` : "N/A");
-      const tur = dec.tur || "N/A";
-      const v = item.conformity_verdict;
-      const vBadge = v === "PASS" ? "badge-pass" : (v === "GUARD_BAND" ? "badge-guard" : "badge-fail");
-
-      return `
-        <tr class="clickable-row" onclick="selectActiveCalculation('${item.id}')">
-          <td style="font-family: monospace; font-weight: 700; color: #1d4ed8;">${item.id}</td>
-          <td>r${item.revision_number || 1}</td>
-          <td>${item.instrument_name} <span style="color: var(--text-muted); font-size: 11px;">(${item.instrument_model})</span></td>
-          <td>${item.nominal_value} mm</td>
-          <td style="font-family: monospace; font-weight: 600;">${u95}</td>
-          <td style="font-weight: 600;">${tur}</td>
-          <td><span class="badge ${vBadge}">${v}</span></td>
-          <td><span class="badge badge-verified">VERIFIED</span></td>
-          <td><span class="badge badge-integrity">INTEGRITY OK</span></td>
-          <td style="text-align: right; white-space: nowrap;">
-            <button class="btn btn-outline" style="padding: 3px 8px; font-size: 10px; margin-right: 4px; color: #4338ca; border-color: #c7d2fe;" onclick="event.stopPropagation(); openExplainForCalc('${item.id}')">🧠 Why?</button>
-            <button class="btn btn-outline" style="padding: 3px 8px; font-size: 10px;" onclick="event.stopPropagation(); inspectCalculation('${item.id}')">Inspect &rarr;</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error("Dashboard error:", err);
-  }
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-
-function updateFeaturedTelemetry(calc) {
-  document.getElementById("feat-title").innerText = `${calc.instrument_name} (${calc.instrument_model})`;
-  document.getElementById("feat-id-label").innerText = `${calc.id} • Revision ${calc.revision_number || 1}`;
-  
-  const res = calc.result_data || {};
-  const unc = res.uncertainty_summary || {};
-  const dec = res.decision_summary || {};
-
-  document.getElementById("feat-meas").innerText = `${dec.mean_measured_mm || '25.00120'} mm`;
-  document.getElementById("feat-u95").innerText = unc.expanded_uncertainty_U95_mm ? `±${unc.expanded_uncertainty_U95_mm} mm` : "±0.00078 mm";
-  document.getElementById("feat-tur").innerText = `TUR = ${dec.tur || '2.564'}`;
-  
-  const vEl = document.getElementById("feat-verdict");
-  vEl.innerText = calc.conformity_verdict || "PASS";
-  vEl.className = `badge ${calc.conformity_verdict === 'PASS' ? 'badge-pass' : 'badge-fail'}`;
-}
-
-function selectActiveCalculation(calcId) {
-  fetch(`/api/calculations/${calcId}`)
-    .then(r => r.json())
-    .then(calc => {
-      activeCalculationId = calc.id;
-      currentCalculation = calc;
-      updateFeaturedTelemetry(calc);
-    });
-}
-
-function openReplayForActive() {
-  if (activeCalculationId) switchView("replay");
-}
-
-function openActiveEvidence() {
-  if (currentCalculation) {
-    populateWorkflowWithCalculation(currentCalculation);
-    switchView("workflow");
-    setWorkflowStep(8);
-  }
-}
-
-// 2. Instrument selection change
-function handleInstrumentChange() {
-  const type = document.getElementById("inp-inst-type").value;
-  const modelSelect = document.getElementById("inp-inst-model");
-  const nomInp = document.getElementById("inp-nominal");
-  const tolInp = document.getElementById("inp-tolerance");
-  const resInp = document.getElementById("inp-resolution");
-
-  if (type.includes("Caliper")) {
-    modelSelect.innerHTML = `<option value="0–150 mm Digital Caliper">0–150 mm Digital Caliper</option>`;
-    nomInp.value = "100.00000";
-    tolInp.value = "0.02000";
-    resInp.value = "0.010";
-  } else if (type.includes("Indicator")) {
-    modelSelect.innerHTML = `<option value="0–10 mm Dial Indicator">0–10 mm Dial Indicator</option>`;
-    nomInp.value = "5.00000";
-    tolInp.value = "0.00500";
-    resInp.value = "0.001";
-  } else {
-    modelSelect.innerHTML = `<option value="0–25 mm Outside Micrometer">0–25 mm Outside Micrometer</option>`;
-    nomInp.value = "25.00000";
-    tolInp.value = "0.00200";
-    resInp.value = "0.001";
-  }
-}
-
-// 3. Single-point Submit & Calculate
-async function submitAndCalculate() {
-  const obs = Array.from(document.querySelectorAll(".obs-in")).map(i => parseFloat(i.value) || 0);
-
-  const payload = {
-    instrument_name: document.getElementById("inp-inst-type").value,
-    instrument_model: document.getElementById("inp-inst-model").value,
-    procedure_name: document.getElementById("inp-proc-name").value,
-    procedure_version: "1.0.0",
-    unit: "mm",
-    nominal_value: parseFloat(document.getElementById("inp-nominal").value),
-    tolerance_upper: parseFloat(document.getElementById("inp-tolerance").value),
-    tolerance_lower: -parseFloat(document.getElementById("inp-tolerance").value),
-    confidence_level: "95%",
-    decision_rule: document.getElementById("inp-decision-rule").value,
-    record_class: "CALIBRATION",
-    reference_standard: {
-      nominal_value: parseFloat(document.getElementById("inp-ref-val").value),
-      uncertainty: parseFloat(document.getElementById("inp-ref-u").value),
-      certificate_id: document.getElementById("inp-ref-cert").value,
-      distribution: "normal",
-      coverage_factor_k: 2.0,
-      degrees_of_freedom: 50.0,
-    },
-    repeatability: { measurements: obs },
-    resolution: {
-      resolution: parseFloat(document.getElementById("inp-resolution").value),
-      distribution: "rectangular",
-    },
-    temperature: {
-      half_width_mm: parseFloat(document.getElementById("inp-temp-hw").value),
-      distribution: "rectangular",
-      delta_temperature_c: parseFloat(document.getElementById("inp-temp-dev").value),
-      expansion_coefficient_ppm_k: parseFloat(document.getElementById("inp-temp-cte").value),
-    },
-    environment: {
-      ambient_temperature_c: parseFloat(document.getElementById("inp-temp-amb").value),
-      temperature_tolerance_c: parseFloat(document.getElementById("inp-temp-dev").value),
-      relative_humidity_pct: parseFloat(document.getElementById("inp-humidity").value),
-      atmospheric_pressure_hpa: 1013.25,
-    },
-  };
-
-  try {
-    const res = await fetch("/api/calculations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert("Calculation Engine Error: " + (err.detail || "Validation failed"));
-      return;
-    }
-
-    const calc = await res.json();
-    currentCalculation = calc;
-    activeCalculationId = calc.id;
-    populateWorkflowWithCalculation(calc);
-    setWorkflowStep(5);
-  } catch (err) {
-    alert("Network error: " + err.message);
-  }
-}
-
-function populateWorkflowWithCalculation(calc) {
-  const unc = calc.uncertainty_summary || {};
-  const dec = calc.decision_summary || {};
-  currentBudgetRows = unc.budget_rows || [];
-
-  document.getElementById("wf-budget-id").innerText = calc.id;
-  document.getElementById("wf-uc").innerText = unc.combined_standard_uncertainty_mm + " mm";
-  document.getElementById("wf-nueff").innerText = unc.effective_degrees_of_freedom;
-  document.getElementById("wf-k").innerText = unc.coverage_factor_k;
-  document.getElementById("wf-u95").innerText = "±" + unc.expanded_uncertainty_U95_mm + " mm";
-
-  const bRowsEl = document.getElementById("wf-budget-rows");
-  bRowsEl.innerHTML = currentBudgetRows.map((r, idx) => `
-    <tr class="clickable-row" onclick="openComponentProvenanceModal(${idx})">
-      <td style="font-weight: 700; color: #1e3a8a;">${r.label}</td>
-      <td><span class="badge ${r.component_type === 'A' ? 'badge-verified' : 'badge-guard'}">Type ${r.component_type}</span></td>
-      <td>${r.distribution}</td>
-      <td style="font-family: monospace;">${r.divisor}</td>
-      <td style="text-align: right; font-family: monospace;">${r.standard_uncertainty_mm}</td>
-      <td style="text-align: center;">${r.sensitivity_coefficient}</td>
-      <td style="text-align: right; font-weight: 700; color: #0284c7;">${r.percentage_contribution}</td>
-      <td style="font-family: monospace;">${r.degrees_of_freedom}</td>
-      <td style="text-align: right; font-family: monospace; font-size: 10px; color: #64748b;">
-        🔍 ${r.component_hash || 'SHA-256'}
-      </td>
-    </tr>
-  `).join("");
-
-  document.getElementById("dec-tl").innerText = dec.tolerance_lower_mm;
-  document.getElementById("dec-tu").innerText = dec.tolerance_upper_mm;
-  document.getElementById("dec-al").innerText = dec.acceptance_lower_mm + " mm";
-  document.getElementById("dec-au").innerText = dec.acceptance_upper_mm + " mm";
-  document.getElementById("dec-w").innerText = dec.guardband_w_mm + " mm";
-  document.getElementById("dec-verdict").innerText = dec.conformity_verdict;
-  document.getElementById("dec-verdict").style.color = dec.conformity_verdict === "PASS" ? "var(--success)" : "var(--danger)";
-  document.getElementById("dec-explanation").innerText = dec.decision_explanation;
-  document.getElementById("dec-tur").innerText = "TUR = " + dec.tur;
-  document.getElementById("diag-marker-label").innerText = `Error: ${dec.error_of_indication_mm} mm`;
-
-  document.getElementById("rev-inst").innerText = calc.instrument_name;
-  document.getElementById("rev-nom").innerText = `${dec.nominal_mm} mm`;
-  document.getElementById("rev-meas").innerText = `${dec.mean_measured_mm} mm`;
-  document.getElementById("rev-err").innerText = `${dec.error_of_indication_mm} mm`;
-  document.getElementById("rev-u95").innerText = `±${unc.expanded_uncertainty_U95_mm} mm`;
-  document.getElementById("rev-rule").innerText = dec.decision_rule;
-  document.getElementById("rev-tur").innerText = dec.tur;
-  document.getElementById("rev-verdict").innerText = dec.conformity_verdict;
-
-  document.getElementById("ev-cid").innerText = calc.id;
-  document.getElementById("ev-in-hash").innerText = calc.input_sha256;
-  document.getElementById("ev-calc-hash").innerText = calc.calculation_sha256;
-  document.getElementById("btn-dl-zip").href = `/api/calculations/${calc.id}/export/zip`;
-
-  document.getElementById("cert-calc-id").innerText = calc.id;
-  document.getElementById("btn-view-report").href = `/api/calculations/${calc.id}/report`;
-
-  runVerificationOnCurrent();
-}
-
-function openComponentProvenanceModal(idx) {
-  const row = currentBudgetRows[idx];
-  if (!row) return;
-
-  document.getElementById("modal-comp-label").innerText = `${row.label} — Provenance Detail`;
-  const detailsEl = document.getElementById("modal-comp-details");
-  detailsEl.innerHTML = `
-    <div class="provenance-keyval"><span class="key">Source Document</span><span class="val">${row.source_reference || 'Metrology Lab Manual'}</span></div>
-    <div class="provenance-keyval"><span class="key">Evaluation Type</span><span class="val">Type ${row.component_type} (${row.distribution})</span></div>
-    <div class="provenance-keyval"><span class="key">Divisor Function</span><span class="val">${row.divisor}</span></div>
-    <div class="provenance-keyval"><span class="key">Standard Uncertainty uᵢ</span><span class="val">${row.standard_uncertainty_mm} mm</span></div>
-    <div class="provenance-keyval"><span class="key">Sensitivity Coeff cᵢ</span><span class="val">${row.sensitivity_coefficient}</span></div>
-    <div class="provenance-keyval"><span class="key">Degrees of Freedom νᵢ</span><span class="val">${row.degrees_of_freedom}</span></div>
-    <div class="provenance-keyval"><span class="key">Variance Share</span><span class="val">${row.percentage_contribution}</span></div>
-    <div class="provenance-keyval"><span class="key">Component SHA-256</span><span class="val" style="color: var(--accent);">${row.component_hash || 'SHA-256 Canonical'}</span></div>
-  `;
-
-  document.getElementById("provenance-modal").classList.remove("hidden");
-}
-
-function closeProvenanceModal() {
-  document.getElementById("provenance-modal").classList.add("hidden");
-}
-
-async function runVerificationOnCurrent() {
-  if (!currentCalculation) return;
-  try {
-    const res = await fetch(`/api/calculations/${currentCalculation.id}/verify`).then(r => r.json());
-    const vStatus = document.getElementById("ev-status");
-    vStatus.innerText = res.overall_status;
-    vStatus.style.color = res.is_valid ? "var(--success)" : "var(--danger)";
-
-    const tbody = document.getElementById("ev-checks-body");
-    tbody.innerHTML = res.checks.map(c => `
-      <tr>
-        <td style="font-weight: 700;">${c.check_name}</td>
-        <td><span class="badge ${c.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${c.status}</span></td>
-        <td style="font-size: 11px; color: var(--text-muted);">${c.details}</td>
-      </tr>
-    `).join("");
-  } catch (err) {
-    console.error("Verification error:", err);
-  }
-}
-
-// 4. Multi-Point Calibration Logic
-function loadMultiPointProcedureTemplate() {
-  const procKey = document.getElementById("mp-inst-select").value;
-  const tableBody = document.getElementById("mp-table-body");
-  
-  let checkpoints = [0.0, 20.0, 50.0, 100.0, 150.0];
-  let tol = 0.020;
-  let res = 0.010;
-
-  if (procKey.includes("micrometer")) {
-    checkpoints = [0.0, 5.12, 10.24, 15.36, 20.48, 25.0];
-    tol = 0.0020;
-    res = 0.0010;
-  } else if (procKey.includes("dial")) {
-    checkpoints = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0];
-    tol = 0.0050;
-    res = 0.0010;
-  } else if (procKey.includes("multimeter")) {
-    checkpoints = [0.0, 1.0, 2.5, 5.0, 7.5, 10.0];
-    tol = 0.0005;
-    res = 0.00001;
-  }
-
-  document.getElementById("mp-resolution-inp").value = res;
-
-  tableBody.innerHTML = checkpoints.map((p, idx) => `
-    <tr class="mp-row">
-      <td style="font-weight: 700;">#${idx + 1}</td>
-      <td><input type="number" step="0.0001" class="mp-nom" value="${p}"></td>
-      <td><input type="number" step="0.0001" class="mp-tol" value="${tol}"></td>
-      <td><input type="number" step="0.0001" class="mp-ref-u" value="${(tol/5).toFixed(5)}"></td>
-      <td><input type="text" class="mp-obs" value="${p+0.0002}, ${p+0.0001}, ${p+0.0003}, ${p}, ${p+0.0001}"></td>
-      <td><button class="btn btn-outline" style="padding: 2px 6px; font-size: 10px;" onclick="this.closest('tr').remove()">✕</button></td>
-    </tr>
-  `).join("");
-}
-
-function addMultiPointRow() {
-  const tbody = document.getElementById("mp-table-body");
-  const count = tbody.querySelectorAll("tr").length + 1;
-  const tr = document.createElement("tr");
-  tr.className = "mp-row";
-  tr.innerHTML = `
-    <td style="font-weight: 700;">#${count}</td>
-    <td><input type="number" step="0.0001" class="mp-nom" value="0.0"></td>
-    <td><input type="number" step="0.0001" class="mp-tol" value="0.0100"></td>
-    <td><input type="number" step="0.0001" class="mp-ref-u" value="0.0020"></td>
-    <td><input type="text" class="mp-obs" value="0.0001, 0.0, 0.0002, 0.0001, 0.0"></td>
-    <td><button class="btn btn-outline" style="padding: 2px 6px; font-size: 10px;" onclick="this.closest('tr').remove()">✕</button></td>
-  `;
-  tbody.appendChild(tr);
-}
-
-async function executeMultiPointCalibration() {
-  const rows = Array.from(document.querySelectorAll(".mp-row"));
-  if (rows.length === 0) {
-    alert("Please add at least one calibration checkpoint.");
-    return;
-  }
-
-  const points = rows.map(r => {
-    const rawObs = r.querySelector(".mp-obs").value.split(",").map(s => parseFloat(s.trim()) || 0);
-    return {
-      nominal_value: parseFloat(r.querySelector(".mp-nom").value) || 0,
-      tolerance: parseFloat(r.querySelector(".mp-tol").value) || 0.002,
-      readings: rawObs,
-      reference_uncertainty: parseFloat(r.querySelector(".mp-ref-u").value) || 0.0004,
-    };
-  });
-
-  const payload = {
-    instrument_name: document.getElementById("mp-inst-select").selectedOptions[0].text,
-    instrument_model: document.getElementById("mp-inst-select").value,
-    procedure_name: "Multi-Point Calibration ISO/EURAMET",
-    unit: "mm",
-    decision_rule: document.getElementById("mp-rule-select").value,
-    points: points,
-    resolution: parseFloat(document.getElementById("mp-resolution-inp").value) || 0.010,
-    record_class: "CALIBRATION",
-  };
-
-  try {
-    const res = await fetch("/api/calculations/multi-point", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).then(r => r.json());
-
-    document.getElementById("mp-results-card").classList.remove("hidden");
-    document.getElementById("mp-res-id").innerText = res.id;
-    document.getElementById("mp-res-count").innerText = res.total_points;
-    document.getElementById("mp-res-maxerr").innerText = res.max_error_of_indication.toFixed(5) + " mm";
-    document.getElementById("mp-res-maxu95").innerText = "±" + res.max_expanded_uncertainty.toFixed(5) + " mm";
-    document.getElementById("mp-res-verdict").innerText = "OVERALL " + res.overall_verdict;
-    document.getElementById("mp-res-verdict").className = `badge ${res.overall_verdict === 'PASS' ? 'badge-pass' : 'badge-fail'}`;
-
-    const tbody = document.getElementById("mp-res-table-body");
-    tbody.innerHTML = res.point_results.map(pt => `
-      <tr>
-        <td style="font-weight: 700;">#${pt.point_index}</td>
-        <td>${pt.nominal_value.toFixed(4)} mm</td>
-        <td>${pt.mean_measured.toFixed(5)} mm</td>
-        <td style="font-weight: 700; color: #1e3a8a;">${pt.error_of_indication > 0 ? '+' : ''}${pt.error_of_indication.toFixed(5)} mm</td>
-        <td>±${pt.expanded_uncertainty_U95.toFixed(5)} mm</td>
-        <td>${pt.tur.toFixed(2)}</td>
-        <td>${pt.guardband_w.toFixed(5)} mm</td>
-        <td><span class="badge ${pt.verdict === 'PASS' ? 'badge-pass' : 'badge-fail'}">${pt.verdict}</span></td>
-      </tr>
-    `).join("");
-
-  } catch (err) {
-    alert("Multi-point execution failed: " + err.message);
-  }
-}
-
-// 5. Procedures Catalog
-async function loadProceduresCatalog() {
-  try {
-    allProcedures = await fetch("/api/procedures").then(r => r.json());
-    const grid = document.getElementById("procedures-catalog-grid");
-    if (!grid) return;
-
-    grid.innerHTML = allProcedures.map(p => `
-      <div class="card" style="background: #ffffff; margin-bottom: 0;">
-        <div style="font-size: 10px; font-weight: 800; color: #2563eb; text-transform: uppercase;">${p.instrument_family || 'Dimensional'}</div>
-        <h3 style="font-size: 14px; margin-top: 2px;">${p.name}</h3>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Standard: <strong>${p.standard_reference}</strong></p>
-        <div style="margin-top: 10px; font-size: 11px; color: #334155;">
-          <div>Range: <strong>${p.range_min} to ${p.range_max} ${p.unit}</strong></div>
-          <div>Default Tolerance: <strong>±${p.default_tolerance} ${p.unit}</strong></div>
-        </div>
-      </div>
-    `).join("");
-  } catch (err) {
-    console.error("Procedures catalog error:", err);
-  }
-}
-
-// 6. Audit Vault
-async function loadAuditLedger() {
-  try {
-    const events = await fetch("/api/audit").then(r => r.json());
-    const tbody = document.getElementById("audit-table-body");
-    if (!tbody) return;
-
-    tbody.innerHTML = events.map(e => `
-      <tr>
-        <td style="font-weight: 700; font-family: monospace;">#${e.id}</td>
-        <td style="font-size: 11px; color: var(--text-muted);">${new Date(e.timestamp).toLocaleString()}</td>
-        <td><span class="badge badge-verified">${e.action}</span></td>
-        <td style="font-family: monospace;">${e.target_id}</td>
-        <td>${e.actor}</td>
-        <td style="font-family: monospace; font-size: 10px; color: #0284c7;">${e.event_hash.slice(0, 16)}...</td>
-      </tr>
-    `).join("");
-  } catch (err) {
-    console.error("Audit ledger loading error:", err);
-  }
-}
-
-async function verifyLedgerIntegrity() {
-  try {
-    const res = await fetch("/api/audit/verify").then(r => r.json());
-    const txt = document.getElementById("audit-status-txt");
-    txt.innerText = res.status;
-    txt.style.color = res.chain_valid ? "var(--success)" : "var(--danger)";
-    document.getElementById("sys-audit-status").innerText = res.chain_valid ? "INTACT" : "TAMPERED";
-    alert(`Audit Ledger Integrity Check: ${res.status}\nTotal Events Verified: ${res.total_events}`);
-  } catch (err) {
-    alert("Audit verification failed: " + err.message);
-  }
-}
-
-// 7. Backup & Recovery
-async function loadBackupsList() {
-  try {
-    const backups = await fetch("/api/backups").then(r => r.json());
-    const tbody = document.getElementById("backups-table-body");
-    if (!tbody) return;
-
-    if (backups.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">No backup files found. Click "+ Create Live Backup".</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = backups.map(b => `
-      <tr>
-        <td style="font-weight: 700; font-family: monospace;">${b.filename}</td>
-        <td style="font-size: 11px;">${new Date(b.created_at).toLocaleString()}</td>
-        <td>${(b.size_bytes / 1024).toFixed(1)} KB</td>
-        <td style="font-family: monospace; font-size: 10px; color: #0284c7;">${b.sha256.slice(0, 16)}...</td>
-        <td><span class="badge badge-integrity">${b.integrity}</span></td>
-        <td style="text-align: right;">
-          <button class="btn btn-outline" style="padding: 2px 8px; font-size: 10px;" onclick="restoreBackup('${b.filename}')">Restore</button>
-        </td>
-      </tr>
-    `).join("");
-  } catch (err) {
-    console.error("Backup list error:", err);
-  }
-}
-
-async function createLiveBackup() {
-  try {
-    const res = await fetch("/api/backups", { method: "POST" }).then(r => r.json());
-    alert(`Live Backup Created Successfully!\nFile: ${res.backup_filename}\nSHA-256: ${res.sha256.slice(0, 16)}...`);
-    loadBackupsList();
-  } catch (err) {
-    alert("Backup creation failed: " + err.message);
-  }
-}
-
-async function restoreBackup(fname) {
-  if (!confirm(`Are you sure you want to restore from ${fname}?\nA pre-restore safety snapshot will be created automatically.`)) return;
-  try {
-    const res = await fetch(`/api/backups/restore?backup_filename=${fname}`, { method: "POST" }).then(r => r.json());
-    alert(`Database Restored Successfully from ${res.restored_from}!`);
-    loadDashboard();
-    loadBackupsList();
-  } catch (err) {
-    alert("Restore failed: " + err.message);
-  }
-}
-
-// 8. 12-Stage Mathematical Replay
-async function loadReplay(calcId) {
-  const targetId = calcId || activeCalculationId;
-  const container = document.getElementById("replay-stages-container");
-  if (!container) return;
-
-  if (!targetId) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 48px 24px; color: var(--text-muted);">
-        <div style="font-size: 36px; margin-bottom: 12px;">🔄</div>
-        <h3 style="font-size: 16px; margin-bottom: 6px; color: #334155;">No Calculation Selected for Replay</h3>
-        <p style="font-size: 13px; max-width: 440px; margin: 0 auto 16px;">
-          Perform a calibration in the Studio or select a record from the Dashboard to inspect its 12-stage mathematical derivation.
-        </p>
-        <button class="btn btn-primary" onclick="startNewCalibration()">+ Launch Calibration Studio</button>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = `<p style="color: var(--text-muted);">Replaying mathematical derivation for ${targetId}...</p>`;
-
-  try {
-    const res = await fetch(`/api/calculations/${targetId}/replay`).then(r => r.json());
-    container.innerHTML = `
-      <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 13px; font-weight: 700;">Trace: ${res.calculation_id} (${res.total_stages} Stages)</span>
-        <span class="badge badge-pass">ALL 12 STAGES REPRODUCED</span>
-      </div>
-    ` + res.stages.map(s => `
-      <div class="replay-step-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <strong style="font-size: 13px; color: #1e3a8a;">Stage ${s.step_number}: ${s.title}</strong>
-          <span class="badge badge-verified">${s.standard_clause}</span>
-        </div>
-        <div style="font-family: monospace; font-size: 11px; background: #ffffff; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 6px;">
-          Formula: ${s.formula}
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
-          <span>Inputs: <span style="font-family: monospace;">${JSON.stringify(s.inputs)}</span></span>
-          <span style="font-weight: 700; color: #0f172a;">${s.result_label}: <span style="color: #0284c7;">${s.result_value}</span></span>
-        </div>
-      </div>
-    `).join("");
-  } catch (err) {
-    container.innerHTML = `<p style="color: var(--danger);">Replay failed: ${err.message}</p>`;
-  }
-}
-
-// 9. Tamper Demonstration Lab
-async function runTamperDemo() {
-  if (!activeCalculationId) {
-    alert("Please select or execute a calibration first.");
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/calculations/${activeCalculationId}/tamper-test`, { method: "POST" }).then(r => r.json());
-    document.getElementById("tamper-results-box").classList.remove("hidden");
-    document.getElementById("tamper-status").innerText = "TAMPERING DETECTED — EVIDENCE REJECTED";
-    document.getElementById("tamper-diag").innerText = `${res.simulation}. ${res.diagnostics}`;
-
-    const tbody = document.getElementById("tamper-table-body");
-    tbody.innerHTML = res.checks.map(c => `
-      <tr>
-        <td style="font-weight: 700;">${c.check_name}</td>
-        <td><span class="badge ${c.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${c.status}</span></td>
-        <td style="font-size: 11px; color: ${c.status === 'FAIL' ? '#dc2626' : 'var(--text-muted)'};">${c.details}</td>
-      </tr>
-    `).join("");
-  } catch (err) {
-    alert("Tamper lab request failed: " + err.message);
-  }
-}
-
-// 10. Standards Concordance Browser
-async function loadStandardsList() {
-  try {
-    const files = await fetch("/api/standards").then(r => r.json());
-    const grid = document.getElementById("standards-list-grid");
-    if (!grid) return;
-
-    grid.innerHTML = files.map(f => {
-      const cleanName = f.replace(".md", "").replace(/_/g, " ");
-      return `
-        <div class="card clickable-row" style="margin-bottom: 0; background: #ffffff;" onclick="viewStandardDoc('${f}')">
-          <div style="font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase;">Standard</div>
-          <div style="font-size: 13px; font-weight: 700; margin-top: 2px;">${cleanName}</div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Click to view traceability matrix &rarr;</div>
-        </div>
-      `;
-    }).join("");
-  } catch (err) {
-    console.error("Standards loading error:", err);
-  }
-}
-
-async function viewStandardDoc(filename) {
-  try {
-    const doc = await fetch(`/api/standards/${filename}`).then(r => r.json());
-    const viewer = document.getElementById("standards-viewer-card");
-    viewer.classList.remove("hidden");
-    document.getElementById("standards-viewer-title").innerText = filename;
-    document.getElementById("standards-viewer-content").innerText = doc.content;
-  } catch (err) {
-    alert("Failed to load standard document: " + err.message);
-  }
-}
-
-// 11. Lab Settings
-async function loadSettings() {
-  try {
-    const s = await fetch("/api/settings").then(r => r.json());
-    document.getElementById("set-lab-name").value = s.laboratory_name || "";
-    document.getElementById("set-lab-code").value = s.laboratory_code || "";
-    document.getElementById("set-lab-accred").value = s.accreditation_body || "";
-    document.getElementById("set-cert-prefix").value = s.certificate_prefix || "";
-    document.getElementById("set-tech-name").value = s.default_technician || "";
-    document.getElementById("set-temp-nom").value = s.temperature_nominal_c || 20.0;
-  } catch (err) {
-    console.error("Settings load error:", err);
-  }
-}
-
-async function saveLabSettings() {
-  const payload = {
-    laboratory_name: document.getElementById("set-lab-name").value,
-    laboratory_code: document.getElementById("set-lab-code").value,
-    accreditation_body: document.getElementById("set-lab-accred").value,
-    certificate_prefix: document.getElementById("set-cert-prefix").value,
-    default_technician: document.getElementById("set-tech-name").value,
-    temperature_nominal_c: parseFloat(document.getElementById("set-temp-nom").value) || 20.0,
-  };
-
-  try {
-    await fetch("/api/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    alert("Laboratory Settings Saved Successfully!");
-  } catch (err) {
-    alert("Failed to save settings: " + err.message);
-  }
-}
-
-// 12. System Self-Test
-async function triggerSelfTest(showNotification = true) {
-  try {
-    const res = await fetch("/api/selftest").then(r => r.json());
-    document.getElementById("sys-engine-status").innerText = res.calculation_engine_status;
-    document.getElementById("sys-db-status").innerText = res.database_status;
-    document.getElementById("sys-last-test").innerText = new Date(res.timestamp).toLocaleTimeString();
-
-    if (showNotification) {
-      alert(`System Integrity Self-Test: ${res.overall_status}\nPassed: ${res.benchmark_tests_passed}/${res.benchmark_tests_total} mathematical benchmark cases.`);
-    }
-  } catch (err) {
-    console.error("Self test error:", err);
-  }
-}
-
-function inspectCalculation(calcId) {
-  fetch(`/api/calculations/${calcId}`)
-    .then(r => r.json())
-    .then(calc => {
-      currentCalculation = calc;
-      activeCalculationId = calc.id;
-      populateWorkflowWithCalculation(calc);
-      switchView("workflow");
-      setWorkflowStep(5);
-    });
-}
-
-// 13. Commercial Licensing & Entitlements Controller
-async function loadLicenseStatus() {
-  try {
-    const lic = await fetch("/api/license").then(r => r.json());
-    const editionEl = document.getElementById("lic-edition-display");
-    const stateBadgeEl = document.getElementById("lic-state-badge");
-    const customerEl = document.getElementById("lic-customer-display");
-    const seatEl = document.getElementById("lic-seat-display");
-    const expiryEl = document.getElementById("lic-expiry-display");
-
-    if (editionEl) editionEl.innerText = lic.edition;
-    if (stateBadgeEl) {
-      stateBadgeEl.innerText = lic.entitlement_state;
-      stateBadgeEl.style.background = lic.entitlement_state === "ACTIVE" ? "rgba(34, 197, 94, 0.2)" :
-                                     lic.entitlement_state === "TRIAL" ? "rgba(234, 179, 8, 0.2)" : "rgba(56, 189, 248, 0.2)";
-      stateBadgeEl.style.color = lic.entitlement_state === "ACTIVE" ? "var(--success)" :
-                                 lic.entitlement_state === "TRIAL" ? "var(--warning)" : "var(--accent)";
-    }
-    if (customerEl) customerEl.innerText = lic.customer_name || "Community / Evaluation User";
-    if (seatEl) seatEl.innerText = `Seat Allocation: ${lic.seat_limit || 1} Workstation(s)`;
-    if (expiryEl) {
-      expiryEl.innerText = lic.expiration ? `Expires: ${new Date(lic.expiration).toLocaleDateString()}` : "Permanent / No Expiration";
-    }
-  } catch (err) {
-    console.error("License status error:", err);
-  }
-}
-
-async function activateTrialPlan() {
-  try {
-    const res = await fetch("/api/license/trial", { method: "POST" }).then(r => r.json());
-    if (res.status === "SUCCESS") {
-      alert("14-Day Professional Trial Activated Successfully! All 7 instrument families and multi-point capabilities are unlocked.");
-      loadLicenseStatus();
-    }
-  } catch (err) {
-    alert("Failed to activate trial: " + err.message);
-  }
-}
-
-async function openLicenseTokenModal() {
-  const token = prompt("Paste your signed commercial license token JSON:");
-  if (!token) return;
-  try {
-    const res = await fetch("/api/license/activate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token_json: token }),
-    }).then(r => r.json());
-    if (res.status === "SUCCESS") {
-      alert(`License Activated Successfully for: ${res.entitlement.customer_name} (${res.entitlement.plan_name})`);
-      loadLicenseStatus();
-    } else {
-      alert("License Activation Failed: " + (res.detail || "Invalid token"));
-    }
-  } catch (err) {
-    alert("Activation Error: " + err.message);
-  }
-}
-
-async function resetToFreePlan() {
-  if (!confirm("Reset to Free Community Evaluation mode?")) return;
-  try {
-    await fetch("/api/license/reset", { method: "POST" });
-    alert("Reset to Free Community Edition.");
-    loadLicenseStatus();
-  } catch (err) {
-    alert("Reset Error: " + err.message);
-  }
-}
-
-// -------------------------------------------------------------
-// V5 Measurement Reliability Intelligence Controllers
-// -------------------------------------------------------------
-
-async function loadMeasurementIntelligence() {
-  try {
-    // Populate instrument dropdown from existing calibrations
-    const calcs = await fetch("/api/calculations?record_class=CALIBRATION&limit=50").then(r => r.json());
-    const instSelect = document.getElementById("intel-inst-select");
-    const calcSelect = document.getElementById("intel-calc-select");
-
-    if (instSelect) {
-      const uniqueInsts = Array.from(new Set(calcs.map(c => c.instrument_name)));
-      if (uniqueInsts.length > 0) {
-        instSelect.innerHTML = uniqueInsts.map(name => `<option value="${name}">${name}</option>`).join("");
-      } else {
-        instSelect.innerHTML = `<option value="Digital Micrometer">Digital Micrometer (Default)</option>`;
-      }
-    }
-
-    if (calcSelect) {
-      if (calcs.length > 0) {
-        calcSelect.innerHTML = calcs.map(c => `<option value="${c.id}">${c.id} (${c.instrument_name})</option>`).join("");
-      } else {
-        calcSelect.innerHTML = `<option value="">No Calibrations Recorded</option>`;
-      }
-    }
-
-    await loadIntelligenceForSelectedInstrument();
-  } catch (err) {
-    console.error("Failed to load measurement intelligence hub:", err);
-  }
-}
-
-async function loadIntelligenceForSelectedInstrument() {
-  const instSelect = document.getElementById("intel-inst-select");
-  const instName = instSelect ? instSelect.value : "Digital Micrometer";
-
-  try {
-    // 1. Fetch Reliability Profile (Health Score & Sub-indices)
-    const profile = await fetch(`/api/intelligence/reliability/${encodeURIComponent(instName)}`).then(r => r.json());
-    
-    document.getElementById("intel-overall-score").innerText = profile.overall_reliability_score;
-    document.getElementById("intel-profile-title").innerText = profile.instrument_name;
-    document.getElementById("intel-profile-summary").innerText = profile.summary;
-    document.getElementById("intel-rec-interval-txt").innerText = `Optimal Interval: ${profile.recommended_interval_months} Months`;
-    document.getElementById("intel-oot-risk-txt").innerText = `${profile.predicted_risk_oot_pct}%`;
-
-    const statusPill = document.getElementById("intel-status-pill");
-    if (statusPill) {
-      statusPill.innerText = profile.reliability_status;
-      statusPill.className = `badge ${profile.reliability_status === 'HEALTHY' || profile.reliability_status === 'PRISTINE' ? 'badge-pass' : (profile.reliability_status === 'FAIR' ? 'badge-guard' : 'badge-fail')}`;
-    }
-
-    // Sub-indices bars
-    document.getElementById("sub-conformity-val").innerText = `${profile.conformity_health_index}%`;
-    document.getElementById("sub-conformity-bar").style.width = `${profile.conformity_health_index}%`;
-
-    document.getElementById("sub-drift-val").innerText = `${profile.drift_stability_index}%`;
-    document.getElementById("sub-drift-bar").style.width = `${profile.drift_stability_index}%`;
-
-    document.getElementById("sub-rep-val").innerText = `${profile.repeatability_stability_index}%`;
-    document.getElementById("sub-rep-bar").style.width = `${profile.repeatability_stability_index}%`;
-
-    document.getElementById("sub-ref-val").innerText = `${profile.reference_assurance_index}%`;
-    document.getElementById("sub-ref-bar").style.width = `${profile.reference_assurance_index}%`;
-
-    // 2. Fetch Explanations & Diff for selected/latest calculation
-    const calcSelect = document.getElementById("intel-calc-select");
-    const targetCalcId = calcSelect ? calcSelect.value : activeCalculationId;
-    if (targetCalcId) {
-      await loadExplanationForSelectedCalc(targetCalcId);
-      await loadDiffForSelectedCalc(targetCalcId);
-    } else {
-      document.getElementById("why-summary-txt").innerText = "Perform a calibration to inspect explainable engineering derivation.";
-      document.getElementById("why-contributions-list").innerHTML = "<p style='color: var(--text-muted); font-size: 11px;'>No active uncertainty budget to decompose.</p>";
-      document.getElementById("why-sensitivity-txt").innerText = "Awaiting calibration records for sensitivity analysis.";
-    }
-
-    // 3. Fetch Drift Forecast
-    await loadForecastData();
-
-    // 4. Fetch Recommendations
-    const recs = await fetch(`/api/intelligence/recommendations/${encodeURIComponent(instName)}`).then(r => r.json());
-    const recsContainer = document.getElementById("intel-recommendations-container");
-    if (recsContainer) {
-      if (recs.length === 0) {
-        recsContainer.innerHTML = "<p style='color: var(--text-muted); font-size: 12px;'>No critical actions required. Asset operates within target reliability parameters.</p>";
-      } else {
-        recsContainer.innerHTML = recs.map(r => `
-          <div class="rec-card priority-${r.priority.toLowerCase()}">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 10px; font-weight: 800; color: ${r.priority === 'HIGH' ? '#dc2626' : (r.priority === 'MEDIUM' ? '#d97706' : '#16a34a')}; text-transform: uppercase;">
-                ${r.category.replace(/_/g, " ")} (${r.priority})
-              </span>
-            </div>
-            <h4 style="font-size: 13px; margin: 4px 0 2px 0;">${r.title}</h4>
-            <p style="font-size: 11px; color: #334155; margin: 0 0 6px 0; line-height: 1.4;">${r.description}</p>
-            <div style="font-size: 10px; font-family: monospace; color: var(--text-muted); background: #f8fafc; padding: 4px 8px; border-radius: 4px;">
-              Evidence: ${r.evidence}
-            </div>
-          </div>
-        `).join("");
-      }
-    }
-
-  } catch (err) {
-    console.error("Error loading intelligence for instrument:", err);
-  }
-}
-
-async function loadExplanationForSelectedCalc(calcId) {
-  const targetId = calcId || document.getElementById("intel-calc-select")?.value || activeCalculationId;
-  if (!targetId) return;
-
-  try {
-    const data = await fetch(`/api/intelligence/explain/${targetId}`).then(r => r.json());
-    document.getElementById("why-summary-txt").innerText = data.explanation_summary;
-    document.getElementById("why-sensitivity-txt").innerText = `🔍 Sensitivity Insight: ${data.sensitivity_insight}`;
-
-    // Render uncertainty contribution progress waterfall
-    const contList = document.getElementById("why-contributions-list");
-    if (contList && data.uncertainty_contributions) {
-      contList.innerHTML = data.uncertainty_contributions.map(c => `
-        <div style="margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; font-size: 11px;">
-            <span><strong>${c.component}</strong> <span style="color: var(--text-muted); font-size: 10px;">(${c.distribution})</span></span>
-            <span style="font-weight: 700; color: #1e3a8a;">${c.percentage_contribution}%</span>
-          </div>
-          <div class="contrib-bar-container">
-            <div class="contrib-bar-fill" style="width: ${c.percentage_contribution}%; background: ${c.percentage_contribution > 35 ? '#3b82f6' : '#93c5fd'};"></div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    const citBox = document.getElementById("why-citations-box");
-    if (citBox && data.evidence_citations) {
-      citBox.innerHTML = `<strong>Evidence Provenance:</strong> ${data.evidence_citations.join(" • ")}`;
-    }
-  } catch (err) {
-    console.error("Explanation error:", err);
-  }
-}
-
-async function loadDiffForSelectedCalc(calcId) {
-  const targetId = calcId || document.getElementById("intel-calc-select")?.value || activeCalculationId;
-  if (!targetId) return;
-
-  try {
-    const diff = await fetch(`/api/intelligence/diff/${targetId}`).then(r => r.json());
-    const badge = document.getElementById("diff-alert-badge");
-    const summary = document.getElementById("diff-summary-txt");
-    const tbody = document.getElementById("diff-table-body");
-    const insights = document.getElementById("diff-insights-list");
-
-    if (!diff.comparison_available) {
-      if (summary) summary.innerText = diff.message;
-      if (badge) { badge.innerText = "BASELINE"; badge.className = "badge badge-verified"; }
-      if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 16px;">Baseline calibration record. Prior calibration cycles will be compared automatically upon subsequent calibrations.</td></tr>`;
-      if (insights) insights.innerHTML = "";
-      return;
-    }
-
-    if (summary) summary.innerText = diff.summary;
-    if (badge) {
-      badge.innerText = diff.alert_level;
-      badge.className = `badge ${diff.alert_level === 'NORMAL' ? 'badge-pass' : (diff.alert_level === 'ATTENTION' ? 'badge-guard' : 'badge-fail')}`;
-    }
-
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td><strong>Accuracy Error</strong></td>
-          <td>${diff.delta_error_mm >= 0 ? '+' : ''}${diff.delta_error_mm.toFixed(5)} mm</td>
-          <td style="font-family: monospace; font-weight: 700; color: ${Math.abs(diff.delta_error_mm) > 0.0003 ? '#dc2626' : '#16a34a'};">
-            ${diff.delta_error_mm >= 0 ? '+' : ''}${diff.delta_error_mm.toFixed(5)} mm
-          </td>
-          <td><span class="badge ${Math.abs(diff.delta_error_mm) > 0.0003 ? 'badge-guard' : 'badge-pass'}">OK</span></td>
-        </tr>
-        <tr>
-          <td><strong>Expanded Uncertainty (U95)</strong></td>
-          <td>±${diff.delta_u95_mm >= 0 ? '+' : ''}${diff.delta_u95_mm.toFixed(5)} mm</td>
-          <td style="font-family: monospace; font-weight: 700;">${diff.pct_u95_change >= 0 ? '+' : ''}${diff.pct_u95_change}%</td>
-          <td><span class="badge ${Math.abs(diff.pct_u95_change) > 10 ? 'badge-guard' : 'badge-pass'}">${Math.abs(diff.pct_u95_change) > 10 ? 'SHIFT' : 'STABLE'}</span></td>
-        </tr>
-        <tr>
-          <td><strong>Repeatability Dispersion</strong></td>
-          <td>Type A Variance</td>
-          <td style="font-family: monospace; font-weight: 700;">${diff.pct_repeatability_change >= 0 ? '+' : ''}${diff.pct_repeatability_change}%</td>
-          <td><span class="badge ${Math.abs(diff.pct_repeatability_change) > 15 ? 'badge-fail' : 'badge-pass'}">${Math.abs(diff.pct_repeatability_change) > 15 ? 'DEGRADED' : 'STABLE'}</span></td>
-        </tr>
-        <tr>
-          <td><strong>Annual Drift Velocity</strong></td>
-          <td colspan="2" style="font-family: monospace; font-weight: 700; color: #1d4ed8;">${diff.annual_drift_rate_mm_year >= 0 ? '+' : ''}${diff.annual_drift_rate_mm_year.toFixed(6)} mm/year</td>
-          <td><span class="badge badge-verified">TRACKED</span></td>
-        </tr>
-      `;
-    }
-
-    if (insights && diff.insights) {
-      insights.innerHTML = `<strong>Longitudinal Insights:</strong><ul>${diff.insights.map(i => `<li>${i}</li>`).join("")}</ul>`;
-    }
-  } catch (err) {
-    console.error("Diff error:", err);
-  }
-}
-
-async function loadForecastData() {
-  const instName = document.getElementById("intel-inst-select")?.value || "Digital Micrometer";
-  const horizon = parseInt(document.getElementById("forecast-horizon-select")?.value || "12");
-
-  try {
-    const data = await fetch(`/api/intelligence/forecast/${encodeURIComponent(instName)}?forecast_months=${horizon}`).then(r => r.json());
-    document.getElementById("fc-expected-drift").innerText = `${data.expected_drift_mm >= 0 ? '+' : ''}${data.expected_drift_mm.toFixed(5)} mm`;
-    document.getElementById("fc-pred-interval").innerText = `[${data.prediction_interval_95_mm[0].toFixed(5)}, ${data.prediction_interval_95_mm[1].toFixed(5)}] mm`;
-    
-    const ootEl = document.getElementById("fc-oot-prob");
-    if (ootEl) {
-      ootEl.innerText = `${data.probability_out_of_tolerance_pct}% (${data.risk_level})`;
-      ootEl.style.color = data.risk_level === "LOW" ? "var(--success)" : (data.risk_level === "ELEVATED" ? "var(--warning)" : "var(--danger)");
-    }
-    document.getElementById("fc-statistical-basis").innerText = `${data.statistical_basis} Confidence: ${data.confidence_level}.`;
-  } catch (err) {
-    console.error("Forecast error:", err);
-  }
-}
-
-function openExplainForCalc(calcId) {
-  switchView("intelligence");
-  const calcSelect = document.getElementById("intel-calc-select");
-  if (calcSelect) {
-    calcSelect.value = calcId;
-  }
-  loadExplanationForSelectedCalc(calcId);
-  loadDiffForSelectedCalc(calcId);
-}
-
-

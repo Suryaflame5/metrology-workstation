@@ -3,24 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>METROLOGY WORKSTATION — Evidence-First Metrology Platform</title>
+  <title>METROLOGY WORKSTATION V5 — Measurement Engineering Platform</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- Sidebar Navigation -->
+  <!-- 1. LEFT PANE: Navigation Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <span class="logo-badge">v1.0.0</span>
-      <h1>METROLOGY</h1>
+      <span class="logo-badge">v5.0.0</span>
+      <h1>METROLOGY WORKSTATION</h1>
     </div>
 
-    <div class="sidebar-section">Workspace</div>
+    <div class="sidebar-section">Engineering Workspaces</div>
     <ul class="sidebar-menu">
       <li id="nav-dashboard" class="active"><a href="#" onclick="switchView('dashboard')"><span>📊</span> Dashboard</a></li>
+      <li id="nav-projects"><a href="#" onclick="switchView('projects')"><span>📁</span> Projects</a></li>
+      <li id="nav-instruments"><a href="#" onclick="switchView('instruments')"><span>🔬</span> Instruments Registry</a></li>
+      <li id="nav-plans"><a href="#" onclick="switchView('plans')"><span>📋</span> Measurement Plans</a></li>
+      <li id="nav-acquisition"><a href="#" onclick="switchView('acquisition')"><span>📥</span> Acquisition Studio</a></li>
+      <li id="nav-uncertainty-wb"><a href="#" onclick="switchView('uncertainty-wb')"><span>📐</span> Uncertainty Workbench</a></li>
+      <li id="nav-conformity-wb"><a href="#" onclick="switchView('conformity-wb')"><span>⚖️</span> Conformity Workbench</a></li>
+      <li id="nav-intelligence"><a href="#" onclick="switchView('intelligence')"><span>🧠</span> Intelligence Hub</a></li>
+    </ul>
+
+    <div class="sidebar-section">Calibration Studios</div>
+    <ul class="sidebar-menu">
       <li id="nav-workflow"><a href="#" onclick="startNewCalibration()"><span>⚡</span> Single-Point Studio</a></li>
       <li id="nav-multipoint"><a href="#" onclick="switchView('multipoint')"><span>📏</span> Multi-Point Studio</a></li>
-      <li id="nav-intelligence"><a href="#" onclick="switchView('intelligence')"><span>🧠</span> Measurement Intelligence</a></li>
       <li id="nav-calibrations"><a href="#" onclick="switchView('calibrations')"><span>📋</span> Calibrations Log</a></li>
       <li id="nav-procedures"><a href="#" onclick="switchView('procedures')"><span>🧰</span> Procedures Catalog</a></li>
     </ul>
@@ -29,7 +39,7 @@
     <ul class="sidebar-menu">
       <li id="nav-replay"><a href="#" onclick="switchView('replay')"><span>🔄</span> 12-Stage Replay</a></li>
       <li id="nav-tamper"><a href="#" onclick="switchView('tamper')"><span>🛡️</span> Tamper Detection</a></li>
-      <li id="nav-audit"><a href="#" onclick="switchView('audit')"><span>🔐</span> Audit Vault</a></li>
+      <li id="nav-audit"><a href="#" onclick="switchView('audit')"><span>🔐</span> Audit Ledger</a></li>
       <li id="nav-backups"><a href="#" onclick="switchView('backups')"><span>💾</span> Backup &amp; Recovery</a></li>
       <li id="nav-standards"><a href="#" onclick="switchView('standards')"><span>📜</span> Standards Registry</a></li>
     </ul>
@@ -42,13 +52,13 @@
 
     <!-- Live System Health Status -->
     <div class="system-status-box">
-      <div style="font-weight: 700; color: #f8fafc; margin-bottom: 8px; display: flex; justify-content: space-between;">
+      <div style="font-weight: 700; color: #f8fafc; margin-bottom: 6px; display: flex; justify-content: space-between;">
         <span>SYSTEM INTEGRITY</span>
         <span class="status-dot-ok">● ONLINE</span>
       </div>
       <div class="system-status-row">
-        <span>Calculation Engine:</span>
-        <strong id="sys-engine-status" style="color: var(--success);">VERIFIED</strong>
+        <span>Engine:</span>
+        <strong id="sys-engine-status" style="color: var(--success);">50-Digit Exact</strong>
       </div>
       <div class="system-status-row">
         <span>Audit Ledger:</span>
@@ -56,1080 +66,836 @@
       </div>
       <div class="system-status-row">
         <span>Database:</span>
-        <strong id="sys-db-status" style="color: var(--success);">OK</strong>
+        <strong id="sys-db-status" style="color: var(--success);">WAL Mode</strong>
       </div>
-      <div class="system-status-row">
-        <span>Last Check:</span>
-        <span id="sys-last-test" style="font-size: 10px;">Just now</span>
-      </div>
-      <button class="btn btn-outline" style="width: 100%; margin-top: 8px; padding: 4px; font-size: 10px; color: #94a3b8; border-color: #334155;" onclick="triggerSelfTest()">
+      <button class="btn btn-outline" style="width: 100%; margin-top: 6px; padding: 3px; font-size: 9px; color: #94a3b8; border-color: #334155;" onclick="triggerSelfTest()">
         Run System Self-Test
       </button>
     </div>
   </aside>
 
-  <!-- Main Workstation View Area -->
+  <!-- 2. CENTER & RIGHT WORKSPACE WRAPPER -->
   <div class="workspace-wrapper">
     <header class="workspace-topbar">
       <div class="topbar-breadcrumbs">
         Workspace / <strong id="topbar-current-view">Dashboard</strong>
       </div>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 8px;">
         <button class="btn btn-secondary" onclick="loadDashboard()">Refresh</button>
+        <button class="btn btn-primary" onclick="switchView('projects')">+ New Project</button>
         <button class="btn btn-primary" onclick="startNewCalibration()">+ New Calibration</button>
       </div>
     </header>
 
-    <div class="workspace-body">
+    <div class="workspace-main-content">
+      <div class="workspace-body">
 
-      <!-- VIEW 1: DASHBOARD -->
-      <section id="view-dashboard">
-        <!-- 4-Metric Strip -->
-        <div class="grid-4" style="margin-bottom: 16px;">
-          <div class="card" style="margin-bottom: 0; padding: 14px 16px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Production Calibrations</div>
-            <div style="font-size: 26px; font-weight: 900; color: #0f172a; margin-top: 4px;" id="stat-total">0</div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 14px 16px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Passed</div>
-            <div style="font-size: 26px; font-weight: 900; color: var(--success); margin-top: 4px;" id="stat-passed">0</div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 14px 16px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Failed</div>
-            <div style="font-size: 26px; font-weight: 900; color: var(--danger); margin-top: 4px;" id="stat-failed">0</div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 14px 16px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Guardband / Review</div>
-            <div style="font-size: 26px; font-weight: 900; color: var(--warning); margin-top: 4px;" id="stat-review">0</div>
-          </div>
-        </div>
-
-        <!-- Empty Workspace First-Run Banner (Shown when 0 calibrations exist) -->
-        <div class="card" id="empty-workspace-card" style="text-align: center; padding: 40px 24px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
-          <div style="font-size: 36px; margin-bottom: 10px;">📐</div>
-          <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Welcome to Metrology Workstation</h2>
-          <p style="color: var(--text-muted); font-size: 13px; max-width: 540px; margin: 0 auto 20px;">
-            Your sovereign measurement workspace is initialized and ready. Perform a single-point calibration, run multi-point testing, or browse ISO/GUM compliant procedure catalogs.
-          </p>
-          <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-primary" onclick="startNewCalibration()">+ Start New Calibration</button>
-            <button class="btn btn-secondary" onclick="switchView('multipoint')">Multi-Point Studio</button>
-            <button class="btn btn-secondary" onclick="switchView('procedures')">Browse Procedures</button>
-          </div>
-        </div>
-
-        <!-- Featured Active Calibration Telemetry Card (Shown when calibrations exist) -->
-        <div class="card hidden" id="featured-calibration-card" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
-          <div class="card-header">
-            <div>
-              <span class="badge badge-integrity" style="margin-bottom: 4px;">ACTIVE CALIBRATION TELEMETRY</span>
-              <h2 id="feat-title">—</h2>
-              <p id="feat-id-label" style="font-family: monospace;">—</p>
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard">
+          <div class="grid-4" style="margin-bottom: 14px;">
+            <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Projects</div>
+              <div style="font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 2px;" id="stat-active-projects">0</div>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-secondary" onclick="openReplayForActive()">Replay Math</button>
-              <button class="btn btn-primary" onclick="openActiveEvidence()">Evidence Package &rarr;</button>
+            <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Registered Instruments</div>
+              <div style="font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 2px;" id="stat-total-instruments">0</div>
+            </div>
+            <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Overdue Calibrations</div>
+              <div style="font-size: 22px; font-weight: 900; color: var(--danger); margin-top: 2px;" id="stat-overdue-instruments">0</div>
+            </div>
+            <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Production Calibrations</div>
+              <div style="font-size: 22px; font-weight: 900; color: var(--success); margin-top: 2px;" id="stat-total">0</div>
             </div>
           </div>
 
-          <div class="grid-4" style="background: #f1f5f9; padding: 14px; border-radius: var(--radius); margin-bottom: 14px;">
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">NOMINAL / MEASURED</div>
-              <div style="font-size: 14px; font-weight: 700;" id="feat-meas">—</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">EXPANDED UNCERTAINTY (U₉₅)</div>
-              <div style="font-size: 14px; font-weight: 700; color: var(--accent);" id="feat-u95">—</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">TEST UNCERTAINTY RATIO</div>
-              <div style="font-size: 14px; font-weight: 700;" id="feat-tur">—</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">STATUS DIMENSIONS</div>
-              <div style="margin-top: 3px; display: flex; gap: 4px;">
-                <span class="badge badge-pass" id="feat-verdict">PASS</span>
-                <span class="badge badge-verified">VERIFIED</span>
-                <span class="badge badge-integrity">INTEGRITY OK</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Production Calibrations Table -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Production Calibration Records</h2>
-              <p>Cryptographically hashed and audit-tracked</p>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Calculation ID</th>
-                <th>Rev</th>
-                <th>Instrument</th>
-                <th>Nominal</th>
-                <th>Expanded U₉₅</th>
-                <th>TUR</th>
-                <th>Decision</th>
-                <th>Calculation</th>
-                <th>Evidence</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody id="calibrations-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- VIEW 2: SINGLE-POINT 9-STEP WORKFLOW -->
-      <section id="view-workflow" class="hidden">
-        <div class="workflow-stepper">
-          <div class="wf-step active" id="wf-tab-1" onclick="setWorkflowStep(1)"><span class="step-idx">1</span> Instrument</div>
-          <div class="wf-step" id="wf-tab-2" onclick="setWorkflowStep(2)"><span class="step-idx">2</span> Procedure</div>
-          <div class="wf-step" id="wf-tab-3" onclick="setWorkflowStep(3)"><span class="step-idx">3</span> Environment</div>
-          <div class="wf-step" id="wf-tab-4" onclick="setWorkflowStep(4)"><span class="step-idx">4</span> Measurements</div>
-          <div class="wf-step" id="wf-tab-5" onclick="setWorkflowStep(5)"><span class="step-idx">5</span> Uncertainty</div>
-          <div class="wf-step" id="wf-tab-6" onclick="setWorkflowStep(6)"><span class="step-idx">6</span> Decision</div>
-          <div class="wf-step" id="wf-tab-7" onclick="setWorkflowStep(7)"><span class="step-idx">7</span> Review</div>
-          <div class="wf-step" id="wf-tab-8" onclick="setWorkflowStep(8)"><span class="step-idx">8</span> Evidence</div>
-          <div class="wf-step" id="wf-tab-9" onclick="setWorkflowStep(9)"><span class="step-idx">9</span> Certificate</div>
-        </div>
-
-        <!-- Step 1: Instrument -->
-        <div class="card wf-page" id="wf-page-1">
-          <div class="card-header">
-            <h2>Step 1: Instrument Selection</h2>
-            <p>Select measuring instrument and manufacturer specification model</p>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label>Instrument Family</label>
-              <select id="inp-inst-type" onchange="handleInstrumentChange()">
-                <option value="Outside Micrometer">Outside Micrometer</option>
-                <option value="Digital Caliper">Digital Caliper</option>
-                <option value="Dial Indicator">Dial Indicator</option>
-                <option value="Height Gauge">Height Gauge</option>
-                <option value="Gauge Block">Gauge Block</option>
-                <option value="Digital Multimeter">Digital Multimeter</option>
-                <option value="RTD Thermometer">RTD Thermometer</option>
-              </select>
-            </div>
-            <div>
-              <label>Range / Model</label>
-              <select id="inp-inst-model">
-                <option value="0–25 mm Outside Micrometer">0–25 mm Outside Micrometer</option>
-              </select>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-            <button class="btn btn-primary" onclick="setWorkflowStep(2)">Next: Procedure &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 2: Procedure -->
-        <div class="card wf-page hidden" id="wf-page-2">
-          <div class="card-header">
-            <h2>Step 2: Calibration Procedure</h2>
-            <p>Select standard calibration procedure and tolerances</p>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label>Procedure Document</label>
-              <select id="inp-proc-name">
-                <option value="Micrometer Calibration v1">ISO 3611:2023 / EURAMET cg-10 v5.0</option>
-              </select>
-            </div>
-            <div>
-              <label>Nominal Checkpoint (<span id="lbl-unit-nom">mm</span>)</label>
-              <input type="number" step="0.00001" id="inp-nominal" value="25.00000">
-            </div>
-            <div>
-              <label>Tolerance Band (± <span id="lbl-unit-tol">mm</span>)</label>
-              <input type="number" step="0.00001" id="inp-tolerance" value="0.00200">
-            </div>
-            <div>
-              <label>Decision Rule</label>
-              <select id="inp-decision-rule">
-                <option value="ANSI/NCSL Z540.3 Method 6">ANSI/NCSL Z540.3 Method 6 (2% False Accept Risk)</option>
-                <option value="ANSI/NCSL Z540.3 Method 5">ANSI/NCSL Z540.3 Method 5 (RSS Guardband)</option>
-                <option value="ISO 14253-1:2017">ISO 14253-1:2017 (Stringent Guardband w = U)</option>
-              </select>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(1)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(3)">Next: Environment &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 3: Environment -->
-        <div class="card wf-page hidden" id="wf-page-3">
-          <div class="card-header">
-            <h2>Step 3: Laboratory Environment</h2>
-            <p>Ambient thermal soak temperature, CTE model, and humidity</p>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label>Ambient Temperature (°C)</label>
-              <input type="number" step="0.1" id="inp-temp-amb" value="20.0">
-            </div>
-            <div>
-              <label>Max Temperature Deviation (± °C)</label>
-              <input type="number" step="0.1" id="inp-temp-dev" value="1.0">
-            </div>
-            <div>
-              <label>Thermal Expansion CTE (ppm/K)</label>
-              <input type="number" step="0.1" id="inp-temp-cte" value="11.5">
-            </div>
-            <div>
-              <label>Relative Humidity (%)</label>
-              <input type="number" step="1.0" id="inp-humidity" value="45.0">
-            </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(2)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(4)">Next: Measurements &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 4: Measurements -->
-        <div class="card wf-page hidden" id="wf-page-4">
-          <div class="card-header">
-            <h2>Step 4: Calibration Measurements</h2>
-            <p>Enter reference standard certificate data and repeated readings</p>
-          </div>
-          
-          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px;">
-            <h3 style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">REFERENCE STANDARD</h3>
-            <div class="grid-3">
-              <div>
-                <label>Standard Calibrated Value</label>
-                <input type="number" step="0.00001" id="inp-ref-val" value="25.00000">
-              </div>
-              <div>
-                <label>Expanded Uncertainty U</label>
-                <input type="number" step="0.00001" id="inp-ref-u" value="0.00040">
-              </div>
-              <div>
-                <label>Certificate Reference</label>
-                <input type="text" id="inp-ref-cert" value="CAL-STD-9921">
-              </div>
-            </div>
-          </div>
-
-          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px;">
-            <h3 style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">REPEATED OBSERVATIONS (TYPE A, n=5)</h3>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
-              <input type="number" step="0.0001" class="obs-in" value="25.0012">
-              <input type="number" step="0.0001" class="obs-in" value="25.0010">
-              <input type="number" step="0.0001" class="obs-in" value="25.0014">
-              <input type="number" step="0.0001" class="obs-in" value="25.0011">
-              <input type="number" step="0.0001" class="obs-in" value="25.0013">
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div>
-              <label>Scale Resolution / Division</label>
-              <input type="number" step="0.0001" id="inp-resolution" value="0.0010">
-            </div>
-            <div>
-              <label>Thermal Semi-Range a</label>
-              <input type="number" step="0.00001" id="inp-temp-hw" value="0.00030">
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(3)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="submitAndCalculate()">Execute Uncertainty Engine &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 5: Uncertainty Budget -->
-        <div class="card wf-page hidden" id="wf-page-5">
-          <div class="card-header">
-            <div>
-              <h2>Step 5: GUM Uncertainty Budget</h2>
-              <p>Click any row to inspect deep component provenance and cryptographic hash</p>
-            </div>
-            <span class="badge badge-verified" id="wf-budget-id">MC-PENDING</span>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Component</th>
-                <th>Type</th>
-                <th>Distribution</th>
-                <th>Divisor</th>
-                <th style="text-align: right;">Std Uncertainty</th>
-                <th>cᵢ</th>
-                <th style="text-align: right;">% Share</th>
-                <th>νᵢ</th>
-                <th style="text-align: right;">Provenance</th>
-              </tr>
-            </thead>
-            <tbody id="wf-budget-rows"></tbody>
-          </table>
-
-          <div class="grid-4" style="margin-top: 16px;">
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">COMBINED u_c</div>
-              <div style="font-size: 16px; font-weight: 800;" id="wf-uc">0.000398 mm</div>
-            </div>
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">EFFECTIVE ν_eff</div>
-              <div style="font-size: 16px; font-weight: 800;" id="wf-nueff">655.4</div>
-            </div>
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">COVERAGE FACTOR k</div>
-              <div style="font-size: 16px; font-weight: 800;" id="wf-k">1.9600</div>
-            </div>
-            <div class="card" style="margin-bottom: 0; background: #eff6ff; border-color: #3b82f6;">
-              <div style="font-size: 10px; font-weight: 700; color: #1d4ed8;">EXPANDED U₉₅</div>
-              <div style="font-size: 16px; font-weight: 800; color: #1e40af;" id="wf-u95">±0.00078 mm</div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(4)">&larr; Edit Inputs</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(6)">Next: Conformity Decision &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 6: Decision -->
-        <div class="card wf-page hidden" id="wf-page-6">
-          <div class="card-header">
-            <h2>Step 6: Conformity Decision &amp; Guardband Model</h2>
-            <p>Tolerance zones, guardbands, and false accept risk</p>
-          </div>
-
-          <div class="decision-diagram-box">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;">
-              <span>Lower Tolerance limit (<span id="dec-tl">-0.00200</span> mm)</span>
-              <span>Upper Tolerance limit (<span id="dec-tu">+0.00200</span> mm)</span>
-            </div>
-
-            <div class="visual-axis-container">
-              <div class="tol-bar" title="Tolerance Band"></div>
-              <div class="acc-bar" id="diag-acc-bar" title="Acceptance Zone"></div>
-              <div class="measured-marker" id="diag-marker">
-                <span class="marker-label" id="diag-marker-label">Error: +0.00120 mm</span>
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-around; font-size: 11px; color: #cbd5e1;">
-              <span>A_L: <strong id="dec-al">-0.00185 mm</strong></span>
-              <span>Guardband w: <strong id="dec-w">0.000154 mm</strong></span>
-              <span>A_U: <strong id="dec-au">+0.00185 mm</strong></span>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 14px;">
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">CONFORMITY VERDICT</div>
-              <div style="font-size: 24px; font-weight: 900; color: var(--success);" id="dec-verdict">PASS</div>
-              <p style="font-size: 12px; color: #475569;" id="dec-explanation">...</p>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">TEST UNCERTAINTY RATIO</div>
-              <div style="font-size: 20px; font-weight: 800;" id="dec-tur">TUR = 2.564</div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(5)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(7)">Next: Review &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 7: Review -->
-        <div class="card wf-page hidden" id="wf-page-7">
-          <div class="card-header">
-            <h2>Step 7: Pre-Generation Review</h2>
-            <p>Verify parameters before sealing the immutable evidence package</p>
-          </div>
-          <div class="grid-2">
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <h3 style="font-size: 12px; margin-bottom: 8px;">CALIBRATION SUMMARY</h3>
-              <div style="font-size: 12px; line-height: 1.8;">
-                <div>Instrument: <strong id="rev-inst">Outside Micrometer</strong></div>
-                <div>Nominal: <strong id="rev-nom">25.00000 mm</strong></div>
-                <div>Mean Measured: <strong id="rev-meas">25.00120 mm</strong></div>
-                <div>Error: <strong id="rev-err">+0.00120 mm</strong></div>
-                <div>Uncertainty U₉₅: <strong id="rev-u95">±0.00078 mm</strong></div>
-              </div>
-            </div>
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <h3 style="font-size: 12px; margin-bottom: 8px;">DECISION &amp; PROVENANCE</h3>
-              <div style="font-size: 12px; line-height: 1.8;">
-                <div>Decision Rule: <strong id="rev-rule">ANSI/NCSL Z540.3 Method 6</strong></div>
-                <div>TUR: <strong id="rev-tur">2.564</strong></div>
-                <div>Verdict: <span class="badge badge-pass" id="rev-verdict">PASS</span></div>
-                <div>Record Class: <strong>CALIBRATION (Production)</strong></div>
-              </div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(6)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(8)">Generate Evidence Package &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 8: Evidence -->
-        <div class="card wf-page hidden" id="wf-page-8">
-          <div class="card-header">
-            <div>
-              <h2>Step 8: Machine-Verifiable Evidence Package</h2>
-              <p>Cryptographic receipts and independent local verification</p>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              <a id="btn-dl-zip" class="btn btn-primary">Export Package (.zip)</a>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">CALCULATION ID</div>
-              <div style="font-family: monospace; font-size: 15px; font-weight: 700;" id="ev-cid">—</div>
-              <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-                SHA-256 Input: <span id="ev-in-hash" style="font-family: monospace; color: #0284c7;">...</span>
-              </div>
-              <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">
-                SHA-256 Calc: <span id="ev-calc-hash" style="font-family: monospace; color: #0284c7;">...</span>
-              </div>
-            </div>
-
-            <div class="card" style="margin-bottom: 0; background: #f8fafc;">
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">INDEPENDENT LOCAL VERIFIER</div>
-              <div style="font-size: 18px; font-weight: 900; color: var(--success); margin-top: 2px;" id="ev-status">READY</div>
-              <button class="btn btn-outline" style="width: 100%; margin-top: 8px;" onclick="runVerificationOnCurrent()">
-                Re-verify Math &amp; Cryptographic Trace
-              </button>
-            </div>
-          </div>
-
-          <div id="ev-checks-box" style="margin-top: 14px;">
-            <table class="data-table">
-              <thead><tr><th>Verification Check</th><th>Status</th><th>Details</th></tr></thead>
-              <tbody id="ev-checks-body"></tbody>
-            </table>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="setWorkflowStep(7)">&larr; Back</button>
-            <button class="btn btn-primary" onclick="setWorkflowStep(9)">View Certificate &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Step 9: Certificate -->
-        <div class="card wf-page hidden" id="wf-page-9">
-          <div class="card-header">
-            <h2>Step 9: Standalone Calibration Certificate</h2>
-            <p>Printable calibration certificate with complete provenance audit trail</p>
-          </div>
-          <div style="text-align: center; padding: 30px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
-            <h3 style="font-size: 16px;">Calibration Certificate Ready</h3>
-            <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-              Document is cryptographically bound to Calculation Trace <strong id="cert-calc-id">—</strong>
+          <!-- Empty Workspace Banner -->
+          <div class="card" id="empty-workspace-card" style="text-align: center; padding: 36px 20px; background: #ffffff;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📐</div>
+            <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Metrology Workstation V5 Initialized</h2>
+            <p style="color: var(--text-muted); font-size: 12px; max-width: 560px; margin: 0 auto 16px;">
+              Your sovereign engineering workstation is ready. Create a project, register assets, build measurement plans, or run interactive GUM uncertainty models.
             </p>
-            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
-              <a id="btn-view-report" target="_blank" class="btn btn-primary">Open Printable Certificate</a>
-              <button class="btn btn-secondary" onclick="switchView('dashboard')">Return to Dashboard</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- VIEW 3: MULTI-POINT CALIBRATION STUDIO -->
-      <section id="view-multipoint" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Multi-Point Calibration Studio</h2>
-              <p>Calibrate measuring instruments across multiple nominal checkpoints</p>
-            </div>
-            <button class="btn btn-primary" onclick="executeMultiPointCalibration()">Execute Multi-Point Calibration &rarr;</button>
-          </div>
-
-          <div class="grid-3" style="margin-bottom: 16px;">
-            <div>
-              <label>Instrument Type</label>
-              <select id="mp-inst-select" onchange="loadMultiPointProcedureTemplate()">
-                <option value="caliper_0_150">Digital Caliper (0–150 mm)</option>
-                <option value="micrometer_0_25">Outside Micrometer (0–25 mm)</option>
-                <option value="dial_indicator_0_10">Dial Indicator (0–10 mm)</option>
-                <option value="height_gauge_0_300">Height Gauge (0–300 mm)</option>
-                <option value="gauge_block_comparison">Gauge Block Comparison</option>
-                <option value="digital_multimeter_dcv">Digital Multimeter (0–10 V DC)</option>
-                <option value="digital_thermometer_rtd">Digital RTD Thermometer</option>
-              </select>
-            </div>
-            <div>
-              <label>Decision Rule</label>
-              <select id="mp-rule-select">
-                <option value="ANSI/NCSL Z540.3 Method 6">ANSI/NCSL Z540.3 Method 6</option>
-                <option value="ANSI/NCSL Z540.3 Method 5">ANSI/NCSL Z540.3 Method 5</option>
-                <option value="ISO 14253-1:2017">ISO 14253-1:2017</option>
-              </select>
-            </div>
-            <div>
-              <label>Resolution (<span id="mp-unit-lbl">mm</span>)</label>
-              <input type="number" step="0.001" id="mp-resolution-inp" value="0.010">
+            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="switchView('projects')">+ Create Project</button>
+              <button class="btn btn-secondary" onclick="switchView('instruments')">Register Instrument</button>
+              <button class="btn btn-secondary" onclick="switchView('uncertainty-wb')">Uncertainty Workbench</button>
+              <button class="btn btn-secondary" onclick="startNewCalibration()">Single-Point Studio</button>
             </div>
           </div>
 
-          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h3 style="font-size: 12px; font-weight: 700; color: #334155;">CHECKPOINTS &amp; MEASUREMENT DATA GRID</h3>
-              <button class="btn btn-outline" style="padding: 2px 8px; font-size: 11px;" onclick="addMultiPointRow()">+ Add Checkpoint</button>
-            </div>
-            <table class="data-table" id="mp-table">
-              <thead>
-                <tr>
-                  <th>Point</th>
-                  <th>Nominal</th>
-                  <th>Tolerance (±)</th>
-                  <th>Std U (k=2)</th>
-                  <th>Readings (5 runs)</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="mp-table-body"></tbody>
-            </table>
-          </div>
-
-          <!-- Multi-Point Execution Results Card -->
-          <div id="mp-results-card" class="hidden">
-            <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <span class="badge badge-pass" id="mp-res-verdict">OVERALL PASS</span>
-                  <h3 style="margin-top: 4px;" id="mp-res-title">Multi-Point Calibration Summary</h3>
-                </div>
-                <div style="font-family: monospace; font-weight: 700; color: #166534;" id="mp-res-id">MP-00000000</div>
-              </div>
-              <div class="grid-3" style="margin-top: 10px; font-size: 12px;">
-                <div>Total Checkpoints: <strong id="mp-res-count">5</strong></div>
-                <div>Max Error of Indication: <strong id="mp-res-maxerr">0.0040 mm</strong></div>
-                <div>Max Expanded U₉₅: <strong id="mp-res-maxu95">±0.0062 mm</strong></div>
-              </div>
-            </div>
-
-            <table class="data-table" style="margin-top: 12px;">
-              <thead>
-                <tr>
-                  <th>Point</th>
-                  <th>Nominal</th>
-                  <th>Mean Measured</th>
-                  <th>Error</th>
-                  <th>Expanded U₉₅</th>
-                  <th>TUR</th>
-                  <th>Guardband w</th>
-                  <th>Verdict</th>
-                </tr>
-              </thead>
-              <tbody id="mp-res-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VIEW 4: PROCEDURES CATALOG -->
-      <section id="view-procedures" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Standard Metrology Procedures Catalog</h2>
-              <p>Supported instrument families, international standards, and calibration models</p>
-            </div>
-          </div>
-          <div class="grid-2" id="procedures-catalog-grid"></div>
-        </div>
-      </section>
-
-      <!-- VIEW: MEASUREMENT RELIABILITY INTELLIGENCE (V5) -->
-      <section id="view-intelligence" class="hidden">
-        <!-- Controls & Asset Selector Bar -->
-        <div class="card" style="margin-bottom: 16px; padding: 16px 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-            <div>
-              <div class="section-tag">MEASUREMENT INTELLIGENCE ENGINE</div>
-              <h2 style="font-size: 18px; margin-top: 2px;">Instrument Asset Intelligence Hub</h2>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <select id="intel-inst-select" class="form-control" style="font-size: 12px; width: 220px;" onchange="loadIntelligenceForSelectedInstrument()">
-                <option value="Digital Micrometer">Digital Micrometer (Mitutoyo 293)</option>
-              </select>
-              <select id="intel-calc-select" class="form-control" style="font-size: 12px; width: 180px;" onchange="loadExplanationForSelectedCalc()">
-                <option value="">Latest Calibration</option>
-              </select>
-              <button class="btn btn-outline" onclick="loadMeasurementIntelligence()">🔄 Refresh Intelligence</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 1. Measurement Reliability Profile & Health Score -->
-        <div class="intel-health-gauge">
-          <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-            <div class="intel-health-score-circle" id="intel-score-circle">
-              <span style="font-size: 24px; font-weight: 900; color: #10b981;" id="intel-overall-score">91</span>
-              <span style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">HEALTH</span>
-            </div>
-            <div>
-              <div style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">RELIABILITY STATUS: <span id="intel-status-pill" class="badge badge-pass">HEALTHY</span></div>
-              <h3 style="font-size: 18px; color: #fff; margin-top: 4px;" id="intel-profile-title">Digital Micrometer</h3>
-              <p style="font-size: 12px; color: #cbd5e1; max-width: 500px; margin-top: 4px;" id="intel-profile-summary">
-                Analyzing historical telemetry and drift trajectories...
-              </p>
-            </div>
-          </div>
-          <div style="min-width: 240px; background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
-            <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">RECOMMENDED ACTION:</div>
-            <div style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-top: 2px;" id="intel-rec-interval-txt">Optimal Interval: 12 Months</div>
-            <div style="font-size: 11px; color: #e2e8f0; margin-top: 4px;">Predicted OOT Risk: <strong id="intel-oot-risk-txt">1.2%</strong></div>
-          </div>
-        </div>
-
-        <!-- 5 Sub-Indices Progress Grid -->
-        <div class="grid-4" style="margin-bottom: 16px;">
-          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
-              <span>Conformity Margin</span>
-              <span id="sub-conformity-val">95%</span>
-            </div>
-            <div class="intel-subindex-bar"><div id="sub-conformity-bar" class="intel-subindex-fill" style="width: 95%;"></div></div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
-              <span>Drift Stability</span>
-              <span id="sub-drift-val">90%</span>
-            </div>
-            <div class="intel-subindex-bar"><div id="sub-drift-bar" class="intel-subindex-fill" style="width: 90%;"></div></div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
-              <span>Repeatability Stability</span>
-              <span id="sub-rep-val">92%</span>
-            </div>
-            <div class="intel-subindex-bar"><div id="sub-rep-bar" class="intel-subindex-fill" style="width: 92%;"></div></div>
-          </div>
-          <div class="card" style="margin-bottom: 0; padding: 12px 14px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
-              <span>Reference Assurance</span>
-              <span id="sub-ref-val">94%</span>
-            </div>
-            <div class="intel-subindex-bar"><div id="sub-ref-bar" class="intel-subindex-fill" style="width: 94%;"></div></div>
-          </div>
-        </div>
-
-        <!-- 2-Column Experience Grid -->
-        <div class="grid-2">
-          <!-- Experience 1: WHY? (Explain This Result) -->
-          <div class="card">
+          <!-- Featured Active Telemetry Card -->
+          <div class="card hidden" id="featured-calibration-card">
             <div class="card-header">
               <div>
-                <span class="badge-intel">EXPERIENCE ①</span>
-                <h3 style="font-size: 15px; margin-top: 4px;">WHY DID THIS RESULT PASS / FAIL?</h3>
-                <p style="font-size: 11px; color: var(--text-muted);">Explainable engineering derivation &amp; uncertainty breakdown</p>
+                <span class="badge badge-integrity" style="margin-bottom: 4px;">ACTIVE CALIBRATION TELEMETRY</span>
+                <h2 id="feat-title">—</h2>
+                <p id="feat-id-label" style="font-family: var(--font-mono); font-size: 11px;">—</p>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-secondary" onclick="openReplayForActive()">Replay Math</button>
+                <button class="btn btn-primary" onclick="openActiveEvidence()">Evidence Package &rarr;</button>
               </div>
             </div>
-            <div id="intel-why-container">
-              <div style="background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 12px;">
-                <div style="font-size: 11px; font-weight: 800; color: #1e3a8a; text-transform: uppercase;">ENGINEERING SUMMARY:</div>
-                <p style="font-size: 12px; color: #1e293b; margin-top: 4px; line-height: 1.5;" id="why-summary-txt">Loading explanation...</p>
+            <div class="grid-4" style="background: #f8fafc; padding: 10px; border-radius: var(--radius); margin-bottom: 10px;">
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">NOMINAL / MEASURED</div>
+                <div style="font-size: 13px; font-weight: 700;" id="feat-meas">—</div>
               </div>
-
-              <div style="margin-bottom: 12px;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-                  Uncertainty Contribution Waterfall:
-                </div>
-                <div id="why-contributions-list"></div>
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">UNCERTAINTY U95</div>
+                <div style="font-size: 13px; font-weight: 700;" id="feat-unc">—</div>
               </div>
-
-              <div style="font-size: 11px; background: #eff6ff; padding: 10px 14px; border-radius: 6px; border: 1px solid #bfdbfe; color: #1e40af;" id="why-sensitivity-txt">
-                Sensitivity analysis insight...
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">TUR / GUARDBAND</div>
+                <div style="font-size: 13px; font-weight: 700;" id="feat-tur">—</div>
               </div>
-
-              <div style="margin-top: 10px; font-size: 10px; color: var(--text-muted);" id="why-citations-box"></div>
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">CONFORMITY VERDICT</div>
+                <div style="font-size: 13px; font-weight: 700;" id="feat-verdict">—</div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <!-- Experience 2: WHAT CHANGED? (Longitudinal Difference Engine) -->
+        <!-- VIEW 2: PROJECTS -->
+        <section id="view-projects" class="hidden">
           <div class="card">
             <div class="card-header">
-              <div>
-                <span class="badge-intel">EXPERIENCE ②</span>
-                <h3 style="font-size: 15px; margin-top: 4px;">WHAT CHANGED SINCE LAST CALIBRATION?</h3>
-                <p style="font-size: 11px; color: var(--text-muted);">Longitudinal stability, drift rates, and variance shifts</p>
-              </div>
-              <span class="badge badge-pass" id="diff-alert-badge">STABLE</span>
+              <h2>📁 Engineering Projects &amp; Workspaces</h2>
+              <button class="btn btn-primary" onclick="showNewProjectForm()">+ New Project</button>
             </div>
-            <div id="intel-diff-container">
-              <p style="font-size: 12px; color: #334155; margin-bottom: 12px; line-height: 1.5;" id="diff-summary-txt">
-                Comparing against historical calibration records...
-              </p>
-              <table class="data-table" style="margin-bottom: 12px;">
+
+            <!-- New Project Form -->
+            <div id="new-project-form-container" class="card hidden" style="background: #f8fafc; border: 1px dashed var(--border);">
+              <h3 style="margin-bottom: 10px;">Create Engineering Project</h3>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Project Name *</label>
+                  <input type="text" id="inp-proj-name" class="form-control" placeholder="e.g. Turbine Rotor Dimensional Audit 2026">
+                </div>
+                <div class="form-group">
+                  <label>Customer / Laboratory Site</label>
+                  <input type="text" id="inp-proj-site" class="form-control" placeholder="e.g. GE Aerospace Lab 4">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Description &amp; Scope</label>
+                <textarea id="inp-proj-desc" class="form-control" rows="2" placeholder="Quality audit scope, tolerances, and calibration targets"></textarea>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="hideNewProjectForm()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCreateProject()">Save Project</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="projects-table">
                 <thead>
                   <tr>
-                    <th>Metric</th>
-                    <th>Current Value</th>
-                    <th>Δ Shift</th>
+                    <th>Project ID</th>
+                    <th>Name</th>
+                    <th>Customer / Site</th>
                     <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody id="diff-table-body">
-                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Awaiting calibration comparison...</td></tr>
+                <tbody id="projects-tbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No projects found. Create one above.</td></tr>
                 </tbody>
               </table>
-              <div id="diff-insights-list" style="font-size: 11px; color: #475569;"></div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Row 3: WHAT HAPPENS NEXT? & WHAT SHOULD I DO? -->
-        <div class="grid-2" style="margin-top: 16px;">
-          <!-- Experience 4: WHAT HAPPENS NEXT? (Drift & Risk Forecaster) -->
+        <!-- VIEW 3: INSTRUMENTS REGISTRY -->
+        <section id="view-instruments" class="hidden">
           <div class="card">
             <div class="card-header">
-              <div>
-                <span class="badge-intel">EXPERIENCE ④</span>
-                <h3 style="font-size: 15px; margin-top: 4px;">WHAT HAPPENS NEXT? (DRIFT &amp; RISK FORECAST)</h3>
-                <p style="font-size: 11px; color: var(--text-muted);">Statistical trajectory with 95% calibrated prediction intervals</p>
-              </div>
-              <select id="forecast-horizon-select" class="form-control" style="font-size: 11px; width: 120px;" onchange="loadForecastData()">
-                <option value="6">6 Months</option>
-                <option value="8">8 Months</option>
-                <option value="12" selected>12 Months</option>
-                <option value="18">18 Months</option>
-              </select>
+              <h2>🔬 Instrument Asset Registry</h2>
+              <button class="btn btn-primary" onclick="showNewInstrumentForm()">+ Register Instrument</button>
             </div>
-            <div id="intel-forecast-container">
-              <div class="grid-3" style="margin-bottom: 12px;">
-                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Expected Drift</div>
-                  <div style="font-size: 16px; font-weight: 800; color: #0284c7;" id="fc-expected-drift">+0.00042 mm</div>
+
+            <!-- New Instrument Form -->
+            <div id="new-instrument-form-container" class="card hidden" style="background: #f8fafc; border: 1px dashed var(--border);">
+              <h3 style="margin-bottom: 10px;">Register New Measurement Instrument</h3>
+              <div class="grid-3">
+                <div class="form-group">
+                  <label>Manufacturer *</label>
+                  <input type="text" id="inp-inst-mfg" class="form-control" placeholder="e.g. Mitutoyo">
                 </div>
-                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">95% Prediction Interval</div>
-                  <div style="font-size: 13px; font-weight: 800; font-family: monospace;" id="fc-pred-interval">[+0.0001, +0.0007]</div>
+                <div class="form-group">
+                  <label>Model Designation *</label>
+                  <input type="text" id="inp-inst-model" class="form-control" placeholder="e.g. QuantuMike 0-25mm">
                 </div>
-                <div style="background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Predicted OOT Risk</div>
-                  <div style="font-size: 16px; font-weight: 800; color: #10b981;" id="fc-oot-prob">1.2% (LOW)</div>
+                <div class="form-group">
+                  <label>Serial Number</label>
+                  <input type="text" id="inp-inst-sn" class="form-control" placeholder="e.g. SN-994821">
                 </div>
               </div>
-              <p style="font-size: 11px; color: var(--text-muted);" id="fc-statistical-basis">
-                Grounded in empirical calibration cycles and JCGM 100 uncertainty bounds.
-              </p>
+              <div class="grid-4">
+                <div class="form-group">
+                  <label>Instrument Type</label>
+                  <select id="inp-inst-type" class="form-control">
+                    <option value="Micrometer">Micrometer</option>
+                    <option value="Caliper">Caliper</option>
+                    <option value="Dial Indicator">Dial Indicator</option>
+                    <option value="Gauge Block">Gauge Block</option>
+                    <option value="Digital Multimeter">Digital Multimeter</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Range (Min – Max mm)</label>
+                  <div style="display: flex; gap: 4px;">
+                    <input type="number" id="inp-inst-min" class="form-control" value="0.0">
+                    <input type="number" id="inp-inst-max" class="form-control" value="25.0">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Resolution (mm)</label>
+                  <input type="number" id="inp-inst-res" class="form-control" step="0.0001" value="0.001">
+                </div>
+                <div class="form-group">
+                  <label>Interval (Months)</label>
+                  <input type="number" id="inp-inst-interval" class="form-control" value="12">
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="hideNewInstrumentForm()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCreateInstrument()">Save Instrument</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="instruments-table">
+                <thead>
+                  <tr>
+                    <th>Asset ID</th>
+                    <th>Manufacturer &amp; Model</th>
+                    <th>Serial #</th>
+                    <th>Type</th>
+                    <th>Range</th>
+                    <th>Resolution</th>
+                    <th>Status</th>
+                    <th>Next Due</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="instruments-tbody">
+                  <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No instruments registered. Register one above.</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
+        </section>
 
-          <!-- Experience 5: WHAT SHOULD I DO? (Action Recommender) -->
+        <!-- VIEW 4: MEASUREMENT PLANS -->
+        <section id="view-plans" class="hidden">
           <div class="card">
             <div class="card-header">
+              <h2>📋 Structured Measurement Plans</h2>
+              <button class="btn btn-primary" onclick="showNewPlanForm()">+ New Measurement Plan</button>
+            </div>
+
+            <!-- New Plan Form -->
+            <div id="new-plan-form-container" class="card hidden" style="background: #f8fafc; border: 1px dashed var(--border);">
+              <h3 style="margin-bottom: 10px;">Define Measurement Plan</h3>
+              <div class="grid-3">
+                <div class="form-group">
+                  <label>Plan Name *</label>
+                  <input type="text" id="inp-plan-name" class="form-control" placeholder="e.g. 25mm Outside Micrometer Calibration">
+                </div>
+                <div class="form-group">
+                  <label>Measurand</label>
+                  <input type="text" id="inp-plan-measurand" class="form-control" value="External Length">
+                </div>
+                <div class="form-group">
+                  <label>Nominal Value (mm)</label>
+                  <input type="number" id="inp-plan-nominal" class="form-control" step="0.0001" value="25.0">
+                </div>
+              </div>
+              <div class="grid-4">
+                <div class="form-group">
+                  <label>Tolerance Lower (mm)</label>
+                  <input type="number" id="inp-plan-toll" class="form-control" step="0.0001" value="-0.002">
+                </div>
+                <div class="form-group">
+                  <label>Tolerance Upper (mm)</label>
+                  <input type="number" id="inp-plan-tolu" class="form-control" step="0.0001" value="0.002">
+                </div>
+                <div class="form-group">
+                  <label>Required Repetitions</label>
+                  <input type="number" id="inp-plan-reps" class="form-control" value="5">
+                </div>
+                <div class="form-group">
+                  <label>Decision Rule</label>
+                  <select id="inp-plan-rule" class="form-control">
+                    <option value="ANSI/NCSL Z540.3 Method 6">ANSI/NCSL Z540.3 Method 6</option>
+                    <option value="ANSI/NCSL Z540.3 Method 5">ANSI/NCSL Z540.3 Method 5</option>
+                    <option value="ISO 14253-1:2017">ISO 14253-1:2017</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="hideNewPlanForm()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCreatePlan()">Save Plan</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="plans-table">
+                <thead>
+                  <tr>
+                    <th>Plan ID</th>
+                    <th>Plan Name</th>
+                    <th>Measurand</th>
+                    <th>Nominal</th>
+                    <th>Tolerance Limits</th>
+                    <th>Repetitions</th>
+                    <th>Decision Rule</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="plans-tbody">
+                  <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No measurement plans defined. Create one above.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 5: ACQUISITION STUDIO -->
+        <section id="view-acquisition" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📥 Measurement Acquisition &amp; Dispersion Studio</h2>
+            </div>
+            <div class="grid-2">
               <div>
-                <span class="badge-intel">EXPERIENCE ⑤</span>
-                <h3 style="font-size: 15px; margin-top: 4px;">WHAT SHOULD I DO? (ACTION RECOMMENDATIONS)</h3>
-                <p style="font-size: 11px; color: var(--text-muted);">Defensible engineering actions for laboratory quality managers</p>
+                <div class="form-group">
+                  <label>Select Measurement Plan</label>
+                  <select id="acq-select-plan" class="form-control" onchange="onAcquisitionPlanChanged()">
+                    <option value="">-- Select Plan --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Operator Name</label>
+                  <input type="text" id="acq-operator" class="form-control" value="Lead Metrology Technician">
+                </div>
+                <div class="form-group">
+                  <label>Repeated Measurement Readings (comma or space separated)</label>
+                  <textarea id="acq-readings-input" class="form-control" rows="4" placeholder="25.0012, 25.0010, 25.0014, 25.0011, 25.0013" oninput="liveAnalyzeAcquisition()"></textarea>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-secondary" onclick="populateSampleReadings()">Load Sample Readings</button>
+                  <button class="btn btn-primary" onclick="submitAcquisition()">Acquire &amp; Save Dataset</button>
+                </div>
+              </div>
+
+              <!-- Live Statistical Dispersion Card -->
+              <div class="card" style="background: #f8fafc; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 8px;">Statistical Dispersion Analysis</h3>
+                <div class="grid-2" style="margin-bottom: 8px;">
+                  <div class="inspector-field">
+                    <span>Sample Count (n):</span>
+                    <strong id="acq-stat-n">0</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>Sample Mean (x̄):</span>
+                    <strong id="acq-stat-mean">—</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>Sample SD (s):</span>
+                    <strong id="acq-stat-sd">—</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>Type A Repeatability u(x̄):</span>
+                    <strong id="acq-stat-urep">—</strong>
+                  </div>
+                </div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+                  <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">3-SIGMA OUTLIER FILTERING:</div>
+                  <div id="acq-stat-outliers" style="font-size: 11px; color: var(--success); font-weight: 600;">No outliers detected</div>
+                </div>
               </div>
             </div>
-            <div id="intel-recommendations-container">
-              <div class="rec-card priority-info">
-                <div style="font-size: 10px; font-weight: 800; color: #10b981; text-transform: uppercase;">INTERVAL OPTIMIZATION (INFO)</div>
-                <h4 style="font-size: 13px; margin: 2px 0;">Maintain Standard 12-Month Interval</h4>
-                <p style="font-size: 11px; color: #475569; margin-top: 2px;">Predicted out-of-tolerance risk (1.2%) is well below the laboratory's 2.0% threshold.</p>
-              </div>
+          </div>
+        </section>
+
+        <!-- VIEW 6: UNCERTAINTY WORKBENCH -->
+        <section id="view-uncertainty-wb" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📐 Interactive GUM Uncertainty Workbench (JCGM 100:2008)</h2>
+              <button class="btn btn-primary" onclick="addUncertaintyRow()">+ Add Component</button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- VIEW 5: AUDIT VAULT -->
-      <section id="view-audit" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Hash-Chained Cryptographic Audit Vault</h2>
-              <p>Immutable ledger recording every calibration, revision, verification, and backup event</p>
-            </div>
-            <button class="btn btn-outline" onclick="verifyLedgerIntegrity()">Verify Ledger Hash Chain</button>
-          </div>
-
-          <div id="audit-integrity-banner" class="card" style="background: #f8fafc; margin-bottom: 14px;">
-            <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">LEDGER INTEGRITY STATUS:</div>
-            <div style="font-size: 18px; font-weight: 900; color: var(--success); margin-top: 2px;" id="audit-status-txt">VERIFIED — CRYPTOGRAPHICALLY INTACT</div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Event ID</th>
-                <th>Timestamp</th>
-                <th>Action</th>
-                <th>Target ID</th>
-                <th>Actor</th>
-                <th>Event SHA-256 Hash</th>
-              </tr>
-            </thead>
-            <tbody id="audit-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- VIEW 6: BACKUP & RECOVERY -->
-      <section id="view-backups" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>SQLite Database Backup &amp; Recovery</h2>
-              <p>Live atomic backups with SHA-256 manifests and verified restoration</p>
-            </div>
-            <button class="btn btn-primary" onclick="createLiveBackup()">+ Create Live Backup</button>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Backup File</th>
-                <th>Created At</th>
-                <th>Size</th>
-                <th>SHA-256 Digest</th>
-                <th>Integrity</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody id="backups-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- VIEW 7: 12-STAGE REPLAY -->
-      <section id="view-replay" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>12-Stage Mathematical Calculation Replay</h2>
-              <p>Reconstruct and independently verify every intermediate derivation stage</p>
-            </div>
-            <button class="btn btn-outline" onclick="loadReplay()">Reload Replay</button>
-          </div>
-          <div id="replay-stages-container">
-            <p style="color: var(--text-muted); font-size: 13px;">Select a calculation to replay mathematical derivation steps...</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- VIEW 8: TAMPER DETECTION LAB -->
-      <section id="view-tamper" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Anti-Tampering Verification Lab</h2>
-              <p>Demonstrate cryptographic tamper detection when raw measurements or records are modified</p>
-            </div>
-          </div>
-          
-          <div class="card" style="background: #f8fafc;">
-            <p style="font-size: 13px; color: #334155; margin-bottom: 12px;">
-              This lab demonstrates the zero-trust tamper-evident architecture. Clicking the button below simulates an unauthorized modification of raw measurement observations (+0.0500 mm in Run 1) and executes the independent verifier.
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+              Directly evaluate GUM propagation, variance contributions, and Welch-Satterthwaite effective degrees of freedom in 50-digit exact decimal arithmetic.
             </p>
-            <button class="btn btn-danger-outline" onclick="runTamperDemo()">
-              🛡️ Execute Simulated Tamper Test on Active Calibration
-            </button>
-          </div>
 
-          <div id="tamper-results-box" class="hidden" style="margin-top: 14px;">
-            <div class="card" style="border-color: #fca5a5; background: #fef2f2;">
-              <div style="font-size: 11px; font-weight: 800; color: #dc2626;">VERIFICATION DIAGNOSTIC REPORT:</div>
-              <div style="font-size: 20px; font-weight: 900; color: #991b1b; margin-top: 2px;" id="tamper-status">TAMPERING DETECTED — REJECTED</div>
-              <p style="font-size: 12px; color: #7f1d1d; margin-top: 4px;" id="tamper-diag">...</p>
+            <div class="table-responsive" style="margin-bottom: 12px;">
+              <table class="data-table" id="uncertainty-wb-table">
+                <thead>
+                  <tr>
+                    <th>Component Name</th>
+                    <th>Distribution</th>
+                    <th>Semi-Range / U</th>
+                    <th>k Factor</th>
+                    <th>Sensitivity (c_i)</th>
+                    <th>DoF (ν_i)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="uncertainty-wb-tbody">
+                  <!-- Dynamic rows added by JS -->
+                </tbody>
+              </table>
             </div>
-            <table class="data-table" style="margin-top: 10px;">
-              <thead><tr><th>Check</th><th>Status</th><th>Diagnostic Detail</th></tr></thead>
-              <tbody id="tamper-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
-      <!-- VIEW 9: STANDARDS CONCORDANCE -->
-      <section id="view-standards" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Standards Concordance Registry</h2>
-              <p>Clause-by-clause traceability mapping mathematical implementations to primary standard clauses</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <button class="btn btn-secondary" onclick="loadDefaultUncertaintyBudget()">Load Standard 4-Component Budget</button>
+              <button class="btn btn-primary" onclick="calculateUncertaintyWorkbench()">⚡ Propagate GUM Budget</button>
             </div>
-          </div>
-          <div class="grid-3" id="standards-list-grid"></div>
-          <div class="card hidden" id="standards-viewer-card" style="margin-top: 16px; background: #f8fafc;">
-            <div class="card-header"><h3 id="standards-viewer-title">Standard Document</h3></div>
-            <pre id="standards-viewer-content" style="font-family: inherit; font-size: 12px; white-space: pre-wrap; line-height: 1.6;"></pre>
-          </div>
-        </div>
-      </section>
 
-      <!-- VIEW 10: LAB PROFILE & SETTINGS -->
-      <section id="view-settings" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2>Laboratory Profile &amp; Settings</h2>
-              <p>Configure laboratory metadata, certificate headers, and calibration defaults</p>
-            </div>
-            <button class="btn btn-primary" onclick="saveLabSettings()">Save Settings</button>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label>Laboratory Name</label>
-              <input type="text" id="set-lab-name" value="Precision Metrology Reference Laboratory">
-            </div>
-            <div>
-              <label>Laboratory Code</label>
-              <input type="text" id="set-lab-code" value="LAB-REF-01">
-            </div>
-            <div>
-              <label>Accreditation Reference</label>
-              <input type="text" id="set-lab-accred" value="ISO/IEC 17025 Ready / National Standard Calibration">
-            </div>
-            <div>
-              <label>Certificate Prefix</label>
-              <input type="text" id="set-cert-prefix" value="CERT-2026-">
-            </div>
-            <div>
-              <label>Default Technician</label>
-              <input type="text" id="set-tech-name" value="Metrology Specialist">
-            </div>
-            <div>
-              <label>Nominal Calibration Temperature (°C)</label>
-              <input type="number" step="0.1" id="set-temp-nom" value="20.0">
+            <!-- GUM Output Results Card -->
+            <div class="card" id="uncertainty-wb-results" style="background: #f8fafc; border: 1px solid var(--border);">
+              <h3 style="margin-bottom: 8px;">GUM Propagation Results</h3>
+              <div class="grid-4" style="margin-bottom: 10px;">
+                <div class="inspector-field">
+                  <span>Combined uc:</span>
+                  <strong id="uwb-res-uc">—</strong>
+                </div>
+                <div class="inspector-field">
+                  <span>Effective DoF (νeff):</span>
+                  <strong id="uwb-res-dof">—</strong>
+                </div>
+                <div class="inspector-field">
+                  <span>Coverage Factor (k95):</span>
+                  <strong id="uwb-res-k">—</strong>
+                </div>
+                <div class="inspector-field">
+                  <span>Expanded U95:</span>
+                  <strong id="uwb-res-u95" style="color: var(--primary);">—</strong>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table" id="uwb-breakdown-table">
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>Distribution</th>
+                      <th>Standard Uncertainty u_i</th>
+                      <th>Variance Contribution (c_i · u_i)²</th>
+                      <th>% Share</th>
+                    </tr>
+                  </thead>
+                  <tbody id="uwb-breakdown-tbody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Propagate budget to see variance waterfall.</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- VIEW 11: PLANS & LICENSING -->
-      <section id="view-license" class="hidden">
-        <div class="card" style="margin-bottom: 24px;">
-          <div class="card-header">
-            <div>
-              <h2>Commercial Plans &amp; Workstation Entitlements</h2>
-              <p>Manage subscription, verify cryptographic entitlements, and unlock laboratory capabilities</p>
+        <!-- VIEW 7: CONFORMITY WORKBENCH -->
+        <section id="view-conformity-wb" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>⚖️ Dedicated Conformity Assessment Workbench</h2>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-outline" onclick="activateTrialPlan()">⚡ Activate 14-Day Pro Trial</button>
-              <button class="btn btn-outline" onclick="openLicenseTokenModal()">🔑 Enter License Key</button>
-              <button class="btn btn-outline" onclick="resetToFreePlan()">↺ Reset to Community</button>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+              Apply ANSI/NCSL Z540.3 Method 6 &amp; Method 5 guardbands or ISO 14253-1 decision rules with exact Test Uncertainty Ratio (TUR) analysis.
+            </p>
+
+            <div class="grid-2" style="margin-bottom: 12px;">
+              <div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label>Nominal Value (mm)</label>
+                    <input type="number" id="cwb-nominal" class="form-control" step="0.0001" value="25.0">
+                  </div>
+                  <div class="form-group">
+                    <label>Measured Value (mm)</label>
+                    <input type="number" id="cwb-measured" class="form-control" step="0.0001" value="25.0012">
+                  </div>
+                </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label>Lower Tolerance (mm)</label>
+                    <input type="number" id="cwb-toll" class="form-control" step="0.0001" value="-0.002">
+                  </div>
+                  <div class="form-group">
+                    <label>Upper Tolerance (mm)</label>
+                    <input type="number" id="cwb-tolu" class="form-control" step="0.0001" value="0.002">
+                  </div>
+                </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label>Expanded Uncertainty U95 (mm)</label>
+                    <input type="number" id="cwb-u95" class="form-control" step="0.00001" value="0.00078">
+                  </div>
+                  <div class="form-group">
+                    <label>Decision Rule</label>
+                    <select id="cwb-rule" class="form-control">
+                      <option value="ANSI/NCSL Z540.3 Method 6">ANSI/NCSL Z540.3 Method 6 (2% Risk)</option>
+                      <option value="ANSI/NCSL Z540.3 Method 5">ANSI/NCSL Z540.3 Method 5 (RSS)</option>
+                      <option value="ISO 14253-1:2017">ISO 14253-1:2017 (Complete Guardband)</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 4px;" onclick="calculateConformityWorkbench()">⚡ Evaluate Conformity Assessment</button>
+              </div>
+
+              <!-- Visual Conformity Verdict Card -->
+              <div class="card" style="background: #f8fafc; border: 1px solid var(--border);">
+                <div class="card-header">
+                  <h3>Conformity Verdict &amp; Guardband</h3>
+                  <span class="badge badge-pass" id="cwb-verdict-badge">PASS</span>
+                </div>
+                <div class="grid-2" style="margin-bottom: 8px;">
+                  <div class="inspector-field">
+                    <span>Error of Indication:</span>
+                    <strong id="cwb-res-error">+0.00120 mm</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>TUR:</span>
+                    <strong id="cwb-res-tur">2.564</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>Guardband Width (w):</span>
+                    <strong id="cwb-res-w">0.000154 mm</strong>
+                  </div>
+                  <div class="inspector-field">
+                    <span>Consumer Risk (P_CR):</span>
+                    <strong id="cwb-res-pfa">≤ 2.0%</strong>
+                  </div>
+                </div>
+                <div style="margin-top: 6px; padding: 8px; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px;">
+                  <div style="font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Acceptance Interval:</div>
+                  <div id="cwb-res-interval" style="font-family: var(--font-mono); font-weight: bold; color: var(--primary);">[24.99815, 25.00185] mm</div>
+                </div>
+                <div style="margin-top: 6px; font-size: 10px; color: var(--text-muted);" id="cwb-res-statement">
+                  ANSI/NCSL Z540.3 Method 6 guardbanding applied ensuring consumer risk does not exceed 2.0%.
+                </div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <!-- Active License Status Card -->
-          <div class="grid-3" style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <div>
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Current Edition</div>
-              <div id="lic-edition-display" style="font-size: 18px; font-weight: 700; color: var(--accent); margin-top: 4px;">Community Evaluation</div>
-              <div id="lic-state-badge" style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(56, 189, 248, 0.2); color: var(--accent); margin-top: 6px;">FREE</div>
+        <!-- VIEW 8: MEASUREMENT INTELLIGENCE -->
+        <section id="view-intelligence" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🧠 Measurement Reliability Intelligence Hub</h2>
+              <span class="badge badge-integrity">V5 PREDICTIVE ENGINE</span>
             </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Licensed Entity / User</div>
-              <div id="lic-customer-display" style="font-size: 14px; font-weight: 600; color: #f8fafc; margin-top: 4px;">Local Workstation User</div>
-              <div id="lic-seat-display" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Seat Allocation: 1 Workstation</div>
+            <div class="grid-2" style="margin-bottom: 12px;">
+              <div class="form-group">
+                <label>Select Instrument Asset</label>
+                <select id="intel-instrument-select" class="form-control" onchange="loadIntelligenceForSelectedInstrument()">
+                  <option value="Micrometer">0–25 mm Outside Micrometer</option>
+                  <option value="Caliper">0–150 mm Digital Caliper</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: flex-end;">
+                <button class="btn btn-secondary" onclick="loadMeasurementIntelligence()">Refresh Intelligence Profile</button>
+              </div>
             </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Offline Authorization</div>
-              <div style="font-size: 13px; font-weight: 600; color: var(--success); margin-top: 4px;">● 100% Offline-First Authorized</div>
-              <div id="lic-expiry-display" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Expiration: Permanent (Community)</div>
+
+            <!-- Health Score & 5 Killer Experiences -->
+            <div class="grid-2" style="margin-bottom: 12px;">
+              <div class="card" style="background: #f8fafc;">
+                <h3>Measurement Reliability Score</h3>
+                <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px;">
+                  <div style="width: 70px; height: 70px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900;" id="intel-health-score">88</div>
+                  <div>
+                    <div style="font-weight: 700; font-size: 13px;" id="intel-health-rating">HEALTHY</div>
+                    <div style="font-size: 11px; color: var(--text-muted);" id="intel-health-summary">Nominal drift stability and adequate TUR margin.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="background: #f8fafc;">
+                <h3>Sub-Index Breakdown</h3>
+                <div class="inspector-field"><span>Conformity Health:</span><strong id="intel-sub-conf">92 / 100</strong></div>
+                <div class="inspector-field"><span>Drift Stability:</span><strong id="intel-sub-drift">85 / 100</strong></div>
+                <div class="inspector-field"><span>Repeatability Index:</span><strong id="intel-sub-rep">88 / 100</strong></div>
+                <div class="inspector-field"><span>Environmental Margin:</span><strong id="intel-sub-env">90 / 100</strong></div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <!-- Commercial Plans Matrix -->
-          <h3 style="margin-bottom: 16px; font-size: 16px; color: #f8fafc;">Available Commercial Editions</h3>
-          <div class="grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            
-            <!-- Free Plan -->
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">
-              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Community</div>
-              <div style="font-size: 24px; font-weight: 800; color: var(--accent); margin: 8px 0;">$0 <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">/ Free</span></div>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Evaluation and mathematical verification for individual technicians.</p>
-              <ul style="font-size: 12px; line-height: 1.8; color: var(--text-muted); padding-left: 16px; margin-bottom: 16px; flex-grow: 1;">
-                <li>50-digit exact GUM math</li>
-                <li>Outside Micrometer (0–25mm)</li>
-                <li>12-stage calculation replay</li>
-                <li>Up to 10 stored calibrations</li>
-              </ul>
-              <button class="btn btn-outline" style="width: 100%;" disabled>Current Baseline</button>
+        <!-- VIEW 9: SINGLE-POINT STUDIO -->
+        <section id="view-workflow" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>⚡ Single-Point Calibration Studio</h2>
             </div>
-
-            <!-- Professional Plan -->
-            <div style="background: rgba(30, 41, 59, 0.7); border: 2px solid var(--accent); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; position: relative;">
-              <div style="position: absolute; top: -10px; right: 12px; background: var(--accent); color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">RECOMMENDED</div>
-              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Professional</div>
-              <div style="font-size: 24px; font-weight: 800; color: var(--accent); margin: 8px 0;">$49 <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">/ mo ($490/yr)</span></div>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Complete standalone calibration workstation for professional metrologists.</p>
-              <ul style="font-size: 12px; line-height: 1.8; color: #f8fafc; padding-left: 16px; margin-bottom: 16px; flex-grow: 1;">
-                <li><strong>All 7 Instrument Families</strong></li>
-                <li><strong>Multi-Point Calibration Studio</strong></li>
-                <li><strong>Unlimited Local Records</strong></li>
-                <li><strong>Machine-Verifiable Evidence ZIP</strong></li>
-                <li><strong>Unwatermarked PDF Certificates</strong></li>
-                <li><strong>Atomic SQLite Backups</strong></li>
-              </ul>
-              <button class="btn btn-primary" style="width: 100%;" onclick="activateTrialPlan()">Start 14-Day Free Trial</button>
+            <div class="grid-2">
+              <div>
+                <div class="form-group">
+                  <label>Instrument Designation</label>
+                  <input type="text" id="calc-inst-name" class="form-control" value="0–25 mm Outside Micrometer">
+                </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label>Nominal (mm)</label>
+                    <input type="number" id="calc-nom" class="form-control" value="25.0">
+                  </div>
+                  <div class="form-group">
+                    <label>Tolerance (± mm)</label>
+                    <input type="number" id="calc-tol" class="form-control" value="0.002">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>5 Repeated Readings (mm)</label>
+                  <input type="text" id="calc-readings" class="form-control" value="25.0012, 25.0010, 25.0014, 25.0011, 25.0013">
+                </div>
+                <button class="btn btn-primary" onclick="submitSinglePointCalibration()">⚡ Compute Exact GUM Calibration</button>
+              </div>
+              <div class="card" style="background: #f8fafc;">
+                <h3>Calculation Output</h3>
+                <div id="single-point-output" style="font-size: 11px; color: var(--text-muted);">Enter inputs and click compute.</div>
+              </div>
             </div>
-
-            <!-- Business Plan -->
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">
-              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Business / Team</div>
-              <div style="font-size: 24px; font-weight: 800; color: var(--accent); margin: 8px 0;">$149 <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">/ mo ($1,490/yr)</span></div>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Multi-seat laboratory deployment with custom accreditation branding.</p>
-              <ul style="font-size: 12px; line-height: 1.8; color: var(--text-muted); padding-left: 16px; margin-bottom: 16px; flex-grow: 1;">
-                <li>Everything in Professional</li>
-                <li><strong>5 Floating Workstation Seats</strong></li>
-                <li><strong>Custom Lab Branding &amp; Logos</strong></li>
-                <li><strong>Peer Review Revision Lineage</strong></li>
-                <li><strong>Batch Multi-Point Execution</strong></li>
-              </ul>
-              <button class="btn btn-outline" style="width: 100%;" onclick="openLicenseTokenModal()">Enter Team Key</button>
-            </div>
-
-            <!-- Enterprise Plan -->
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">
-              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Enterprise</div>
-              <div style="font-size: 24px; font-weight: 800; color: var(--accent); margin: 8px 0;">$4,900 <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">/ yr</span></div>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Defense, aerospace &amp; multi-site standards labs requiring air-gapped provisioning.</p>
-              <ul style="font-size: 12px; line-height: 1.8; color: var(--text-muted); padding-left: 16px; margin-bottom: 16px; flex-grow: 1;">
-                <li>Everything in Business</li>
-                <li><strong>25+ Site License Seats</strong></li>
-                <li><strong>Air-Gapped Token Provisioning</strong></li>
-                <li><strong>Custom Guardband Equations</strong></li>
-                <li><strong>4-Hour Priority SLA Support</strong></li>
-              </ul>
-              <button class="btn btn-outline" style="width: 100%;" onclick="openLicenseTokenModal()">Enter Enterprise Key</button>
-            </div>
-
           </div>
-        </div>
-      </section>
+        </section>
 
-    </div>
-  </div>
+        <!-- VIEW 10: MULTI-POINT STUDIO -->
+        <section id="view-multipoint" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📏 Multi-Point Calibration Studio</h2>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Calibrate instruments across multiple nominal test points.</p>
+            <div id="multipoint-points-container"></div>
+            <button class="btn btn-primary" onclick="submitMultiPointCalibration()">⚡ Compute Multi-Point Calibration</button>
+          </div>
+        </section>
 
-  <!-- Component Provenance Modal Drawer -->
-  <div class="modal-overlay hidden" id="provenance-modal" onclick="closeProvenanceModal(event)">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="card-header">
-        <h2 id="modal-comp-label">Uncertainty Component Provenance</h2>
-        <button class="btn btn-outline" style="padding: 2px 8px;" onclick="closeProvenanceModal()">✕</button>
+        <!-- VIEW 11: CALIBRATIONS LOG -->
+        <section id="view-calibrations" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📋 Historical Calibrations Log</h2>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Record ID</th>
+                    <th>Instrument</th>
+                    <th>Nominal</th>
+                    <th>Measured</th>
+                    <th>U95</th>
+                    <th>Verdict</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrations-tbody">
+                  <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No records found.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 12: PROCEDURES CATALOG -->
+        <section id="view-procedures" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>🧰 Metrology Procedures Catalog</h2></div>
+            <div id="procedures-list"></div>
+          </div>
+        </section>
+
+        <!-- VIEW 13: 12-STAGE REPLAY -->
+        <section id="view-replay" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>🔄 12-Stage Mathematical Replay</h2></div>
+            <div id="replay-output" style="font-size: 11px;">Select a record to replay its 12 derivation stages.</div>
+          </div>
+        </section>
+
+        <!-- VIEW 14: TAMPER DETECTION LAB -->
+        <section id="view-tamper" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>🛡️ Anti-Tamper Verification Lab</h2></div>
+            <div id="tamper-output" style="font-size: 11px;">Select record to test cryptographic integrity.</div>
+          </div>
+        </section>
+
+        <!-- VIEW 15: AUDIT VAULT -->
+        <section id="view-audit" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>🔐 Cryptographic Audit Ledger</h2></div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Target ID</th>
+                    <th>Actor</th>
+                    <th>SHA-256 Hash</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No audit events recorded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 16: BACKUP & RECOVERY -->
+        <section id="view-backups" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>💾 SQLite Database Backup &amp; Recovery</h2>
+              <button class="btn btn-primary" onclick="triggerCreateBackup()">Create Live Snapshot</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Backup File</th>
+                    <th>Size</th>
+                    <th>Timestamp</th>
+                    <th>SHA-256 Checksum</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="backups-tbody">
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No backups found.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 17: STANDARDS REGISTRY -->
+        <section id="view-standards" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>📜 International Standards Concordance</h2></div>
+            <p style="font-size: 11px; color: var(--text-muted);">
+              JCGM 100:2008 (GUM) • JCGM 101:2008 (MCM) • ANSI/NCSL Z540.3-2006 • ISO 14253-1:2017 • ISO/IEC 17025:2017.
+            </p>
+          </div>
+        </section>
+
+        <!-- VIEW 18: SETTINGS -->
+        <section id="view-settings" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>⚙️ Laboratory Profile &amp; Settings</h2></div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Laboratory Name</label>
+                <input type="text" id="set-lab-name" class="form-control" value="Precision Metrology Lab">
+              </div>
+              <div class="form-group">
+                <label>Standard Uncertainty Decimal Digits</label>
+                <input type="number" class="form-control" value="50" disabled>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 19: LICENSING -->
+        <section id="view-license" class="hidden">
+          <div class="card">
+            <div class="card-header"><h2>💎 Plans &amp; Offline Entitlements</h2></div>
+            <div class="grid-3" style="margin-top: 10px;">
+              <div class="card" style="border: 2px solid var(--primary);">
+                <h3>Professional Edition</h3>
+                <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin: 6px 0;">$49 / mo</div>
+                <ul style="font-size: 11px; color: var(--text-muted); list-style: square; padding-left: 16px; margin-bottom: 12px;">
+                  <li>Full GUM &amp; Z540.3 Engines</li>
+                  <li>Multi-Point Calibrations</li>
+                  <li>12-Stage Mathematical Replay</li>
+                  <li>Cryptographic Evidence Packages</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
-      <div id="modal-comp-details"></div>
+
+      <!-- 3. RIGHT PANE: Engineering Context Inspector -->
+      <aside class="inspector-pane">
+        <div class="inspector-header">
+          <h3>Context Inspector</h3>
+          <span class="badge badge-integrity">LIVE</span>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">Active Project Context</div>
+          <div class="inspector-field">
+            <span>Project:</span>
+            <strong id="insp-proj-name">General Laboratory</strong>
+          </div>
+          <div class="inspector-field">
+            <span>Customer Site:</span>
+            <strong id="insp-proj-site">Local Workspace</strong>
+          </div>
+          <div class="inspector-field">
+            <span>Active Asset:</span>
+            <strong id="insp-inst-name">—</strong>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">Exact Mathematical Kernel</div>
+          <div class="inspector-field">
+            <span>Precision Context:</span>
+            <strong>50 Dec Digits</strong>
+          </div>
+          <div class="inspector-field">
+            <span>Rounding Mode:</span>
+            <strong>Round-Half-Even</strong>
+          </div>
+          <div class="inspector-field">
+            <span>Guardband Method:</span>
+            <strong>Z540.3 Method 6</strong>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">Cryptographic Trace</div>
+          <div class="inspector-field">
+            <span>Input SHA-256:</span>
+            <strong id="insp-hash-in" style="font-size: 9px; word-break: break-all;">—</strong>
+          </div>
+          <div class="inspector-field">
+            <span>Calculation Hash:</span>
+            <strong id="insp-hash-calc" style="font-size: 9px; word-break: break-all;">—</strong>
+          </div>
+        </div>
+      </aside>
     </div>
+
+    <!-- 4. BOTTOM STATUS BAR -->
+    <footer class="workstation-statusbar">
+      <div class="statusbar-item">
+        <span class="status-dot-ok">●</span>
+        <span>Engine: 50-Digit Exact Decimal (Active)</span>
+      </div>
+      <div class="statusbar-item">
+        <span>SQLite WAL: Locked &amp; Sovereign</span>
+      </div>
+      <div class="statusbar-item">
+        <span>Audit Ledger: Hash-Chained Intact</span>
+      </div>
+      <div class="statusbar-item">
+        <span id="stat-version-label">v5.0.0 Production Engineering Workstation</span>
+      </div>
+    </footer>
   </div>
 
   <script src="app.js"></script>
