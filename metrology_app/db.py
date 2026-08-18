@@ -383,6 +383,9 @@ def insert_audit_event(
     }
 
 
+save_audit_event = insert_audit_event
+
+
 def list_audit_events(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
     """Retrieve list of audit events."""
     init_db(db_path)

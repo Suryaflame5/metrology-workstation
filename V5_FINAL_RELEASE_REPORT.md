@@ -1,14 +1,15 @@
-# V5 FINAL RELEASE REPORT — METROLOGY WORKSTATION
+# METROLOGY WORKSTATION V5.1: FINAL RELEASE REPORT
+## Reproducible Measurement Intelligence
 
 ```text
-                    METROLOGY WORKSTATION V5
-             THE ENGINEERING MEASUREMENT WORKSTATION
+                    METROLOGY WORKSTATION V5.1
+             REPRODUCIBLE MEASUREMENT INTELLIGENCE
 
                      PRODUCTION RELEASE GATE
 ```
 
-**Version**: `5.0.0` (Production Release)  
-**Git Commit**: `82a3b88b2f80fb7304d246ad35d8c827042300ae`  
+**Generation**: `V5.1` (Reproducible Measurement Intelligence)  
+**Commercial Version**: `v1.1.0`  
 **Publisher**: NovyraX Engineering Studio  
 **Audit Date**: August 18, 2026  
 
@@ -18,37 +19,34 @@
 
 | Deliverable Attribute | Verified Value |
 | :--- | :--- |
-| **Product Version** | `v5.0.0` |
-| **Release Generation** | V5 Production Engineering Workstation |
-| **Windows Setup Installer** | `dist/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe` (`58,720,177 bytes` / `56.00 MB`) |
-| **Installer SHA-256** | `bb4d077fa55bc7195d2b277fa8dd04eba20eae18ef40bdd30aaf74cf61398b75` |
-| **Standalone Executable** | `dist/MetrologyWorkstation.exe` (`53,245,056 bytes` / `50.78 MB`) |
-| **Executable SHA-256** | `a007ff711762b23f84bca0ea0ec5ac7197aca3af59fa7c281e1c0b4e96f31b83` |
+| **Product Version** | `v1.1.0` (Major Generation: `V5.1`) |
+| **Release Generation** | Reproducible Measurement Intelligence |
+| **Windows Setup Installer** | `dist/Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe` (`58,729,189 bytes` / `56.01 MB`) |
+| **Installer SHA-256** | `739cadc88040edaca244399ee411b0c4ef72c85e61d715e2271511326f253e31` |
+| **Standalone Executable** | `dist/MetrologyWorkstation.exe` (`53,252,194 bytes` / `50.78 MB`) |
+| **Executable SHA-256** | `208a8839850f8ef461846c4a097bfb0688c1f637aa20c1adcf28ffcbbe063538` |
 | **GitHub Repository** | `https://github.com/Suryaflame5/metrology-workstation` |
-| **GitHub Release Tag** | `v5.0.0` |
-| **Automated Test Count** | **97 / 97 Tests Passing (100%)** |
+| **GitHub Release Tag** | `v1.1.0` |
+| **Automated Test Count** | **102 / 102 Tests Passing (100%)** |
 | **Mathematical Engine** | 50-Digit Exact Decimal Context (JCGM 100/101, Z540.3 M6, ISO 14253-1) |
 | **Security & Privacy** | Localhost binding only, offline HMAC licensing, zero telemetry, zero cardholder storage |
 | **NovyraX Integration** | Authoritative `NOVYRAX_V5_INTEGRATION_MANIFEST.json` generated |
 
 ---
 
-## 2. New V5 Engineering Capabilities
+## 2. What V5.1 Adds for the Metrology Engineer
 
-1. **3-Pane Persistent Workstation Shell**: Dense, professional, laboratory-grade layout with left navigation tree, central active engineering views, right live context inspector, and bottom precision status bar.
-2. **Project-Centric Hierarchy (`/api/projects`)**: Group calibrations, assets, plans, and reports by project, customer, or laboratory site.
-3. **Instrument Asset Registry (`/api/instruments`)**: Full lifecycle tracking of physical instruments with serial numbers, measuring ranges, accuracy classes, calibration intervals, and automatic overdue alerts.
-4. **Structured Measurement Plans (`/api/plans`)**: Define repeatable testing protocols with tolerance limits and standardized decision rules.
-5. **Measurement Acquisition Studio (`/api/measurements`)**: Live repeated reading capture with real-time statistics ($\bar{x}, s, u_{\text{rep}}$) and 3-sigma outlier detection.
-6. **Interactive Uncertainty Workbench (`/api/workbench/uncertainty`)**: Dynamic GUM budget builder with real-time sensitivity and Welch-Satterthwaite DoF computation.
-7. **Dedicated Conformity Workbench (`/api/workbench/conformity`)**: Visual guardbanded acceptance boundaries and risk assessment under ANSI Z540.3 Method 6 ($P_{\text{CR}} \le 2\%$), Method 5, and ISO 14253-1.
-8. **Measurement Reliability Intelligence Hub (`/api/intelligence/*`)**: 5 predictive intelligence engines ("WHY?", "WHAT CHANGED?", 0–100 Health Score, Drift Risk Forecaster, and Action Recommender).
-9. **Zero-Downtime Non-Destructive Auto-Migration**: Seamlessly upgrades existing customer SQLite databases while preserving 100% of historical records and SHA-256 audit chains.
+1. **Evidence 12-Stage Exact Mathematical Reproduction (`/api/evidence/reproduce/*`)**: Replays stored calibration runs, reproduces every single derivation step in 50-digit exact decimal arithmetic, verifies input & calculation hashes against the original record, and outputs confirmation of reproducibility.
+2. **Cryptographic Audit Ledger Hash-Chain Verifier (`/api/audit/verify-chain`)**: Traverses all blocks from genesis ($0^{64}$) to head, verifying that $H_n = \text{SHA-256}(H_{n-1} + \text{payload})$, instantly exposing any altered or reordered blocks.
+3. **Inspectable Mathematical Equations & Derivations**: Transparent derivation cards in both Uncertainty and Conformity workbenches with explicit standard clause citations (JCGM 100:2008, ANSI Z540.3-2006 Method 6, ISO 14253-1:2017).
+4. **Controlled Engineering Sandbox (`#view-sandbox`)**: 5 pre-built real-world scenarios (Micrometer Calibration, Digital Caliper Verification, Dial Indicator Linearity, Thermal Expansion Differential, and Guardband Decision Rule Comparison) allowing engineers to test and tweak values without touching production records.
+5. **ISO/IEC 17025 Compliant Calibration Certificates (`/api/reports/html/*`)**: Printable, publication-ready calibration certificate reports containing complete UUT metadata, environmental conditions, statistical evaluations, guardband acceptance limits, and cryptographic SHA-256 hashes.
+6. **Standardized Release Artifacts**: Unified version naming across all binaries (`Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe`).
 
 ---
 
 ## 3. Final Signoff
 
-Metrology Workstation V5 has successfully passed all mathematical, architectural, security, regression, clean-room, and packaging gates.
+Metrology Workstation V5.1 (`v1.1.0`) has passed all regression, mathematical derivation, clean-room, and packaging tests.
 
 **STATUS: PRODUCTION RELEASE CERTIFIED**

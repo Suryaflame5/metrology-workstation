@@ -1,13 +1,14 @@
 {
   "product_name": "Metrology Workstation",
-  "package_identity": "MetrologyWorkstation.Commercial",
-  "version": "1.1.0",
+  "package_identity": "MetrologyWorkstation.Engineering",
+  "product_generation": "V5.1",
+  "generation_title": "Reproducible Measurement Intelligence",
+  "commercial_version": "1.1.0",
   "release_tag": "v1.1.0",
-  "release_type": "V5 Measurement Intelligence Production Release",
   "architecture": "x64",
   "publisher": "CN=NOVYRAX Studio",
-  "build_timestamp": "2026-08-18T20:00:00.000000+00:00",
-  "regression_tests": "89/89 PASSED (100%)",
+  "build_timestamp": "2026-08-18T21:30:00.000000+00:00",
+  "automated_tests": "102/102 PASSED (100%)",
   "clean_db_verified": true,
   "telemetry_disabled": true,
   "system_requirements": {
@@ -17,14 +18,12 @@
     "disk_space_mb": 200
   },
   "hashes": {
-    "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe": "5275c1b26accdda867e1e9aa1222e7a45901d4b09a2231c508a6afd1758d8c67",
-    "MetrologyWorkstation.exe": "891be6b0ca25ef80ed22eaf7cf74f81aa1444a013f9aff9e5d47ae76ceb39ca5"
+    "Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe": "739cadc88040edaca244399ee411b0c4ef72c85e61d715e2271511326f253e31",
+    "MetrologyWorkstation.exe": "208a8839850f8ef461846c4a097bfb0688c1f637aa20c1adcf28ffcbbe063538"
   },
   "distribution": {
     "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
     "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v1.1.0",
-    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
-    "website_url": "https://novyrax.vercel.app",
-    "mirror_url": "https://novyrax.netlify.app"
+    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe"
   }
 }

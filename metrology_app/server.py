@@ -579,6 +579,204 @@ def api_v5_stats():
     return get_v5_dashboard_stats()
 
 
+# --- V5.1 Audit Chain Verification ---
+@app.post("/api/audit/verify-chain")
+def api_verify_audit_chain():
+    """Cryptographically verify the entire audit ledger hash chain from block 1 to N."""
+    from .services.verifier_service import verify_entire_audit_chain
+    return verify_entire_audit_chain()
+
+
+# --- V5.1 Evidence Reproduction Engine ---
+@app.post("/api/evidence/reproduce/{calculation_id}")
+def api_reproduce_evidence(calculation_id: str):
+    """Independently replay and reproduce calculation from raw inputs, verifying SHA-256 match."""
+    from .services.verifier_service import verify_calculation_by_id
+    res = verify_calculation_by_id(calculation_id)
+    return {
+        "calculation_id": calculation_id,
+        "is_valid": res.is_valid,
+        "overall_status": res.overall_status,
+        "checks": [{"check_name": c.check_name, "status": c.status, "details": c.details} for c in res.checks],
+        "diagnostics": res.diagnostics,
+        "reproduced_successfully": res.is_valid,
+    }
+
+
+# --- V5.1 Engineering Calibration Certificate / Report ---
+@app.get("/api/reports/html/{calculation_id}", response_class=HTMLResponse)
+def api_get_html_report(calculation_id: str):
+    """Generate a printable ISO/IEC 17025 compliant calibration report."""
+    rec = get_calculation(calculation_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Calculation record not found")
+
+    inp = rec.get("input_data", {})
+    res = rec.get("result_data", {})
+    meas_summary = res.get("summary", {})
+    unc_summary = res.get("uncertainty_summary", {})
+    dec_summary = res.get("decision_summary", {})
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CALIBRATION CERTIFICATE — {rec.get('id')}</title>
+  <style>
+    body {{ font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #0f172a; line-height: 1.5; font-size: 13px; }}
+    .header {{ border-bottom: 2px solid #1e293b; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; }}
+    .title {{ font-size: 20px; font-weight: 800; letter-spacing: 0.5px; color: #1e3a8a; }}
+    .subtitle {{ font-size: 12px; color: #64748b; margin-top: 4px; }}
+    .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }}
+    .box {{ border: 1px solid #cbd5e1; border-radius: 4px; padding: 14px; background: #f8fafc; }}
+    .box h4 {{ margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }}
+    .row {{ display: flex; justify-content: space-between; margin-bottom: 4px; }}
+    .row span {{ color: #64748b; }}
+    .row strong {{ font-family: monospace; font-size: 12px; }}
+    table {{ width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }}
+    th, td {{ border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }}
+    th {{ background: #f1f5f9; text-transform: uppercase; font-size: 10px; }}
+    .badge {{ display: inline-block; padding: 3px 8px; border-radius: 3px; font-weight: bold; font-size: 11px; }}
+    .badge-pass {{ background: #d1fae5; color: #065f46; }}
+    .badge-guard {{ background: #fef3c7; color: #92400e; }}
+    .badge-fail {{ background: #fee2e2; color: #991b1b; }}
+    .integrity {{ margin-top: 30px; border-top: 1px dashed #94a3b8; padding-top: 14px; font-size: 11px; color: #64748b; }}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">OFFICIAL CALIBRATION CERTIFICATE</div>
+      <div class="subtitle">Concordant with ISO/IEC 17025:2017 &amp; ANSI/NCSL Z540.3-2006</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-weight: bold; font-family: monospace;">CERTIFICATE ID: {rec.get('id')}</div>
+      <div style="font-size: 11px; color: #64748b;">DATE: {rec.get('created_at', '')[:19].replace('T', ' ')} UTC</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="box">
+      <h4>Unit Under Test (UUT)</h4>
+      <div class="row"><span>Instrument:</span><strong>{rec.get('instrument_name')}</strong></div>
+      <div class="row"><span>Standard Procedure:</span><strong>{rec.get('procedure_name')}</strong></div>
+      <div class="row"><span>Nominal Target:</span><strong>{rec.get('nominal_value')} mm</strong></div>
+      <div class="row"><span>Specification:</span><strong>±{inp.get('tolerance_limit_mm', '0.0020')} mm</strong></div>
+    </div>
+    <div class="box">
+      <h4>Environmental Conditions &amp; Standard</h4>
+      <div class="row"><span>Temperature:</span><strong>{inp.get('ambient_temp_c', 20.0)} °C (±0.5 °C)</strong></div>
+      <div class="row"><span>Relative Humidity:</span><strong>{inp.get('relative_humidity_pct', 45.0)} %</strong></div>
+      <div class="row"><span>Reference Standard:</span><strong>Grade 0 Gauge Blocks (CAL-STD-01)</strong></div>
+      <div class="row"><span>Operator:</span><strong>Lead Metrologist</strong></div>
+    </div>
+  </div>
+
+  <h4>Measurement Results &amp; Statistical Evaluation</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Nominal (mm)</th>
+        <th>Measured Mean (mm)</th>
+        <th>Error of Indication (mm)</th>
+        <th>Repeatability u(x̄) (mm)</th>
+        <th>Combined u_c (mm)</th>
+        <th>Expanded U_95 (mm)</th>
+        <th>Coverage k</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;">{rec.get('nominal_value')}</td>
+        <td style="font-family: monospace;">{meas_summary.get('measured_mean_mm', '—')}</td>
+        <td style="font-family: monospace;">{meas_summary.get('error_of_indication_mm', '—')}</td>
+        <td style="font-family: monospace;">±{unc_summary.get('type_a_repeatability_mm', '—')}</td>
+        <td style="font-family: monospace;">±{unc_summary.get('combined_standard_uncertainty_uc_mm', '—')}</td>
+        <td style="font-family: monospace; font-weight: bold; color: #1e40af;">±{unc_summary.get('expanded_uncertainty_U95_mm', '—')}</td>
+        <td style="font-family: monospace;">{unc_summary.get('coverage_factor_k', '2.000')}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Conformity Assessment &amp; Decision Rule</h4>
+  <div class="box" style="margin-bottom: 20px;">
+    <div class="row"><span>Decision Rule:</span><strong>{dec_summary.get('decision_rule', 'ANSI/NCSL Z540.3 Method 6')}</strong></div>
+    <div class="row"><span>Test Uncertainty Ratio (TUR):</span><strong>{dec_summary.get('tur', '—')}</strong></div>
+    <div class="row"><span>Guardband Width (w):</span><strong>{dec_summary.get('guardband_width_mm', '—')} mm</strong></div>
+    <div class="row"><span>Acceptance Interval:</span><strong>[{dec_summary.get('acceptance_limit_lower_mm', '—')}, {dec_summary.get('acceptance_limit_upper_mm', '—')}] mm</strong></div>
+    <div class="row"><span>Conformity Verdict:</span><strong><span class="badge badge-{rec.get('conformity_verdict', 'PASS').lower()}">{rec.get('conformity_verdict')}</span></strong></div>
+  </div>
+
+  <div class="integrity">
+    <div style="font-weight: bold; margin-bottom: 4px;">CRYPTOGRAPHIC EVIDENCE &amp; PROVENANCE RECORD</div>
+    <div>Input SHA-256: <code style="font-family: monospace;">{rec.get('input_sha256')}</code></div>
+    <div>Calculation SHA-256: <code style="font-family: monospace;">{rec.get('calculation_sha256')}</code></div>
+    <div style="margin-top: 6px; font-size: 10px;">Generated by Metrology Workstation V5.1 (Exact 50-Digit Decimal Kernel) • Fully Reproducible</div>
+  </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+
+
+# --- V5.1 Engineering Sandbox Scenarios ---
+@app.get("/api/sandbox/scenarios")
+def api_get_sandbox_scenarios():
+    """Retrieve pre-built engineering sandbox scenarios."""
+    return [
+        {
+            "id": "scenario-micrometer",
+            "name": "Outside Micrometer Calibration (0–25 mm)",
+            "description": "5-point nominal calibration of a precision micrometer using Grade 0 gauge blocks under ANSI Z540.3 Method 6.",
+            "instrument": {"manufacturer": "Mitutoyo", "model": "QuantuMike 293-340", "range": "0–25 mm", "resolution": 0.001},
+            "nominal_points": [5.0, 10.0, 15.0, 20.0, 25.0],
+            "tolerance": 0.002,
+            "decision_rule": "ANSI/NCSL Z540.3 Method 6",
+            "sample_readings": [25.0012, 25.0010, 25.0014, 25.0011, 25.0013],
+        },
+        {
+            "id": "scenario-caliper",
+            "name": "Digital Caliper Verification (0–150 mm)",
+            "description": "Verification of digital caliper measuring jaws across 5 test points under ISO 14253-1 complete guardbanding.",
+            "instrument": {"manufacturer": "Starrett", "model": "EC799A-6/150", "range": "0–150 mm", "resolution": 0.01},
+            "nominal_points": [20.0, 50.0, 80.0, 100.0, 150.0],
+            "tolerance": 0.02,
+            "decision_rule": "ISO 14253-1:2017",
+            "sample_readings": [50.01, 50.02, 50.01, 50.00, 50.01],
+        },
+        {
+            "id": "scenario-dial-gauge",
+            "name": "Dial Indicator Repeatability & Linearity",
+            "description": "Plunger travel testing with Type A repeatability and digital quantization evaluation.",
+            "instrument": {"manufacturer": "Mahr", "model": "MarCator 1075 R", "range": "0–12.5 mm", "resolution": 0.001},
+            "nominal_points": [1.0, 2.5, 5.0, 7.5, 10.0],
+            "tolerance": 0.003,
+            "decision_rule": "ANSI/NCSL Z540.3 Method 5",
+            "sample_readings": [5.0015, 5.0018, 5.0012, 5.0016, 5.0014],
+        },
+        {
+            "id": "scenario-thermal",
+            "name": "Thermal Expansion Differential Effect",
+            "description": "Evaluation of length measurement bias when steel part (11.5 ppm/K) and aluminum standard (23.0 ppm/K) are at 23.5 °C.",
+            "instrument": {"manufacturer": "Custom", "model": "Length Comparator", "range": "0–100 mm", "resolution": 0.0001},
+            "nominal_points": [100.0],
+            "tolerance": 0.005,
+            "decision_rule": "ANSI/NCSL Z540.3 Method 6",
+            "sample_readings": [100.0038, 100.0041, 100.0039, 100.0040, 100.0037],
+        },
+        {
+            "id": "scenario-guardband-compare",
+            "name": "Decision Rule Guardband Comparison",
+            "description": "Direct side-by-side comparison of ANSI Z540.3 Method 6 (2% risk), Method 5 (RSS), and ISO 14253-1 on identical TUR=2.5 data.",
+            "instrument": {"manufacturer": "Reference", "model": "Standard Test Unit", "range": "0–50 mm", "resolution": 0.0005},
+            "nominal_points": [25.0],
+            "tolerance": 0.002,
+            "decision_rule": "ANSI/NCSL Z540.3 Method 6",
+            "sample_readings": [25.0012, 25.0011, 25.0013, 25.0012, 25.0012],
+        },
+    ]
+
+
+
 # Mount static web UI assets
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 if os.path.exists(STATIC_DIR):

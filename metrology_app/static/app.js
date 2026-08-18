@@ -29,7 +29,7 @@ function switchView(viewName) {
 
   const views = [
     "dashboard", "projects", "instruments", "plans", "acquisition",
-    "uncertainty-wb", "conformity-wb", "intelligence", "workflow",
+    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "workflow",
     "multipoint", "calibrations", "procedures", "replay", "tamper",
     "audit", "backups", "standards", "settings", "license"
   ];
@@ -662,6 +662,17 @@ async function loadAuditLedger() {
   } catch (e) {}
 }
 
+async function verifyAuditChainLive() {
+  try {
+    const res = await fetch("/api/audit/verify-chain", { method: "POST" });
+    if (!res.ok) return;
+    const data = await res.json();
+    alert(`AUDIT LEDGER VERIFICATION:\nStatus: ${data.status}\nTotal Blocks: ${data.total_events}\n${data.message}`);
+  } catch (e) {
+    alert("Audit verification error.");
+  }
+}
+
 // ==========================================
 // 9. REPLAY & TAMPER CONTROLLER
 // ==========================================
@@ -681,7 +692,10 @@ async function loadReplayForId(id) {
     if (out) {
       out.innerHTML = `
         <div style="background: #f8fafc; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;">
-          <h3 style="margin-bottom: 6px;">12-Stage Mathematical Derivation Replay</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h3 style="margin: 0;">12-Stage Mathematical Derivation Replay</h3>
+            <button class="btn btn-primary btn-sm" onclick="reproduceCalculationLive('${id}')">⚡ Verify &amp; Reproduce Hashes</button>
+          </div>
           <p>Reproducing exact derivation for <strong>${id}</strong> across 50-digit exact decimal context.</p>
           <div style="margin-top: 8px; font-family: var(--font-mono); font-size: 11px;">
             ${(data.replay_stages || []).map((st, i) => `<div>[Stage ${i+1}] ${escapeHtml(st.title || st.name)}: <strong>${escapeHtml(st.summary || "OK")}</strong></div>`).join("")}
@@ -690,6 +704,17 @@ async function loadReplayForId(id) {
       `;
     }
   } catch (e) {}
+}
+
+async function reproduceCalculationLive(id) {
+  try {
+    const res = await fetch(`/api/evidence/reproduce/${id}`, { method: "POST" });
+    if (!res.ok) return;
+    const data = await res.json();
+    alert(`CALCULATION REPRODUCIBILITY REPORT:\nStatus: ${data.overall_status}\nReproduced All 12 Stages: ${data.reproduced_successfully ? 'YES (100% MATCH)' : 'MISMATCH'}\n${data.diagnostics}`);
+  } catch (e) {
+    alert("Error reproducing calculation.");
+  }
 }
 
 function openActiveEvidence() {
@@ -718,7 +743,93 @@ function startNewCalibration() {
   switchView("workflow");
 }
 
+// ==========================================
+// 11. ENGINEERING SANDBOX CONTROLLER
+// ==========================================
+
+let sandboxScenariosData = [];
+
+async function loadSelectedSandboxScenario() {
+  const sel = document.getElementById("sandbox-select-scenario")?.value;
+  if (!sel) return;
+  try {
+    const res = await fetch("/api/sandbox/scenarios");
+    if (!res.ok) return;
+    sandboxScenariosData = await res.json();
+    const sc = sandboxScenariosData.find(s => s.id === sel);
+    if (!sc) return;
+
+    document.getElementById("sb-scenario-title").innerText = sc.name;
+    document.getElementById("sb-scenario-desc").innerText = sc.description;
+    document.getElementById("sb-nom").innerText = `${sc.nominal_points.join(", ")} mm`;
+    document.getElementById("sb-tol").innerText = `±${sc.tolerance} mm`;
+    document.getElementById("sb-rule").innerText = sc.decision_rule;
+  } catch (e) {
+    console.error("Error loading sandbox scenario:", e);
+  }
+}
+
+async function runSandboxSimulation() {
+  const sel = document.getElementById("sandbox-select-scenario")?.value;
+  const sc = sandboxScenariosData.find(s => s.id === sel) || {
+    name: "Outside Micrometer Calibration",
+    nominal_points: [25.0],
+    tolerance: 0.002,
+    decision_rule: "ANSI/NCSL Z540.3 Method 6",
+    sample_readings: [25.0012, 25.0010, 25.0014, 25.0011, 25.0013]
+  };
+
+  const nom = sc.nominal_points[0];
+  const tol = sc.tolerance;
+  const readings = sc.sample_readings;
+  const mean = readings.reduce((a, b) => a + b, 0) / readings.length;
+  const variance = readings.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (readings.length - 1);
+  const u_rep = Math.sqrt(variance) / Math.sqrt(readings.length);
+  const u95 = Math.sqrt(Math.pow(u_rep, 2) + Math.pow(0.0003, 2)) * 2.0;
+
+  try {
+    const res = await fetch("/api/workbench/conformity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nominal_value: nom,
+        measured_value: mean,
+        tolerance_lower: -tol,
+        tolerance_upper: tol,
+        expanded_uncertainty_U95: u95,
+        decision_rule: sc.decision_rule,
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const container = document.getElementById("sandbox-results-container");
+    if (container) {
+      container.innerHTML = `
+        <div style="background: #f8fafc; padding: 12px; border-radius: 4px; border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: var(--primary); font-size: 13px;">Simulation Output: ${escapeHtml(sc.name)}</strong>
+            <span class="badge badge-${data.conformance_verdict.toLowerCase().replace('_', '-')}">${data.conformance_verdict}</span>
+          </div>
+          <div class="grid-4" style="margin-bottom: 8px; font-size: 11px;">
+            <div><span>Simulated Mean:</span> <strong>${mean.toFixed(5)} mm</strong></div>
+            <div><span>Expanded U95:</span> <strong>±${u95.toFixed(6)} mm</strong></div>
+            <div><span>Calculated TUR:</span> <strong>${data.tur.toFixed(3)}</strong></div>
+            <div><span>Guardband Width (w):</span> <strong>${data.guardband_width_w.toFixed(6)} mm</strong></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-top: 6px; border-top: 1px solid var(--border);">
+            ${escapeHtml(data.derivation_statement)}
+          </div>
+        </div>
+      `;
+    }
+  } catch (e) {
+    console.error("Error executing sandbox simulation:", e);
+  }
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+

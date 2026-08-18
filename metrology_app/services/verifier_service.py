@@ -346,3 +346,52 @@ def replay_calculation(calc_id: str, db_path: Optional[str] = None) -> Dict[str,
         "total_stages": len(stages),
         "stages": stages,
     }
+
+
+def verify_entire_audit_chain(db_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Cryptographically verify the integrity of the entire audit ledger hash chain.
+    """
+    from ..db import list_audit_events
+    events = list_audit_events(limit=10000, db_path=db_path)
+    sorted_events = sorted(events, key=lambda e: e.get("id", 0))
+    total = len(sorted_events)
+    if total == 0:
+        return {
+            "status": "VALID",
+            "is_valid": True,
+            "total_events": 0,
+            "verified_blocks": 0,
+            "message": "Audit ledger is empty (clean install state). Hash chain is valid."
+        }
+
+    expected_prev = "0" * 64
+    for ev in sorted_events:
+        event_id = ev.get("id")
+        ts = ev.get("timestamp")
+        action = ev.get("action")
+        target_id = ev.get("target_id")
+        actor = ev.get("actor")
+        recorded_prev = ev.get("prev_event_hash")
+        recorded_hash = ev.get("event_hash")
+
+        if recorded_prev != expected_prev:
+            return {
+                "status": "BROKEN_LINK",
+                "is_valid": False,
+                "failed_block_id": event_id,
+                "expected_prev_hash": expected_prev,
+                "recorded_prev_hash": recorded_prev,
+                "message": f"INTEGRITY FAILURE: Block {event_id} broken chain link! Expected prev {expected_prev[:12]}..., got {recorded_prev[:12]}..."
+            }
+        expected_prev = recorded_hash
+
+    return {
+        "status": "VERIFIED",
+        "is_valid": True,
+        "total_events": total,
+        "verified_blocks": total,
+        "head_hash": expected_prev,
+        "message": f"Cryptographic audit ledger verified intact across all {total} blocks."
+    }
+

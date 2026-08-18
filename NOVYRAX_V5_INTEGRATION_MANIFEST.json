@@ -1,23 +1,24 @@
 {
   "product_name": "Metrology Workstation",
-  "product_version": "5.0.0",
-  "release_generation": "V5 Production Engineering Workstation",
-  "release_tag": "v5.0.0",
+  "product_generation": "V5.1",
+  "generation_title": "Reproducible Measurement Intelligence",
+  "commercial_version": "1.1.0",
+  "release_tag": "v1.1.0",
   "release_date": "2026-08-18",
   "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
-  "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v5.0.0",
+  "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v1.1.0",
   "windows_installer": {
-    "filename": "Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
-    "download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v5.0.0/Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe",
-    "file_size_bytes": 58720177,
-    "file_size_mb": "56.00 MB",
-    "sha256": "bb4d077fa55bc7195d2b277fa8dd04eba20eae18ef40bdd30aaf74cf61398b75"
+    "filename": "Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe",
+    "download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe",
+    "file_size_bytes": 58729189,
+    "file_size_mb": "56.01 MB",
+    "sha256": "739cadc88040edaca244399ee411b0c4ef72c85e61d715e2271511326f253e31"
   },
   "standalone_executable": {
     "filename": "MetrologyWorkstation.exe",
-    "file_size_bytes": 53245056,
+    "file_size_bytes": 53252194,
     "file_size_mb": "50.78 MB",
-    "sha256": "a007ff711762b23f84bca0ea0ec5ac7197aca3af59fa7c281e1c0b4e96f31b83"
+    "sha256": "208a8839850f8ef461846c4a097bfb0688c1f637aa20c1adcf28ffcbbe063538"
   },
   "supported_os": [
     "Windows 10 (64-bit)",
@@ -31,19 +32,41 @@
   "editions": {
     "community": {
       "price_usd": 0,
-      "features": ["Single-Point Calibrations", "Standard GUM Engine", "Local SQLite Persistence"]
+      "features": [
+        "Single-Point Calibrations",
+        "50-Digit Exact Decimal Kernel",
+        "Local SQLite Persistence",
+        "Standard GUM Uncertainty Engine"
+      ]
     },
     "professional": {
       "price_usd": 49,
       "billing": "monthly",
-      "features": ["Project Workspaces", "Instrument Asset Registry", "Measurement Plans", "Interactive Uncertainty Workbench", "Conformity Workbench (Z540.3 M6)", "12-Stage Replay", "Evidence Packages", "Measurement Reliability Intelligence"]
+      "features": [
+        "Project Workspaces Hierarchy",
+        "Instrument Asset Registry with Interval Scheduling",
+        "Multi-Point Measurement Plans",
+        "Measurement Acquisition Studio with 3-Sigma Outlier Filtering",
+        "Interactive GUM Uncertainty Workbench (Inspectable Equations)",
+        "Dedicated Conformity Workbench (ANSI Z540.3 Method 6 & ISO 14253-1)",
+        "Evidence Package Export & 12-Stage Reproducibility Engine",
+        "Cryptographic Audit Ledger Hash-Chain Verifier",
+        "Professional ISO/IEC 17025 HTML Calibration Certificates",
+        "Controlled Engineering Sandbox (5 Built-in Scenarios)",
+        "Measurement Reliability Intelligence (5 Killer Engines)"
+      ]
     },
     "team": {
       "price_usd": 149,
       "billing": "monthly",
-      "features": ["Multi-Seat Licensing", "Fleet Management", "Automated Backups", "Priority Support"]
+      "features": [
+        "Multi-Seat Laboratory Licensing",
+        "Fleet Instrument Management",
+        "Automated Live SQLite Snapshots",
+        "Priority Calibration Protocol Support"
+      ]
     }
   },
-  "documentation_url": "https://github.com/Suryaflame5/metrology-workstation/blob/master/docs/V5_PRODUCTION_SPECIFICATION.md",
+  "documentation_url": "https://github.com/Suryaflame5/metrology-workstation/blob/master/V5_PRODUCTION_SPECIFICATION.md",
   "known_limitations_url": "https://github.com/Suryaflame5/metrology-workstation/blob/master/V5_KNOWN_LIMITATIONS.md"
 }
