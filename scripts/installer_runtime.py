@@ -17,9 +17,9 @@ import subprocess
 from pathlib import Path
 
 
-APP_NAME = "Metrology Workstation"
-APP_VERSION = "1.0.0"
-PUBLISHER = "Metrology Workstation Engineering"
+APP_NAME = "Metrology Workstation 5"
+APP_VERSION = "5.0.0"
+PUBLISHER = "NOVYRAX Engineering Studio"
 EXE_NAME = "MetrologyWorkstation.exe"
 REG_UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstation"
 

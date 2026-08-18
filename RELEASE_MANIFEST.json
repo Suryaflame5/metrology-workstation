@@ -1,14 +1,15 @@
 {
-  "product_name": "Metrology Workstation",
+  "product_name": "Metrology Workstation 5",
   "package_identity": "MetrologyWorkstation.Engineering",
-  "product_generation": "V5.1",
-  "generation_title": "Reproducible Measurement Intelligence",
-  "commercial_version": "1.1.0",
-  "release_tag": "v1.1.0",
+  "product_generation": "V5",
+  "generation_title": "Adaptive Measurement Intelligence & Sovereign Engineering Workstation",
+  "commercial_version": "5.0.0",
+  "file_version": "5.0.0.0",
+  "release_tag": "v5.0.0",
   "architecture": "x64",
-  "publisher": "CN=NOVYRAX Studio",
-  "build_timestamp": "2026-08-18T21:30:00.000000+00:00",
-  "automated_tests": "102/102 PASSED (100%)",
+  "publisher": "CN=NOVYRAX Engineering Studio",
+  "build_timestamp": "2026-08-18T22:10:00.000000+00:00",
+  "automated_tests": "106/106 PASSED (100%)",
   "clean_db_verified": true,
   "telemetry_disabled": true,
   "system_requirements": {
@@ -18,12 +19,12 @@
     "disk_space_mb": 200
   },
   "hashes": {
-    "Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe": "739cadc88040edaca244399ee411b0c4ef72c85e61d715e2271511326f253e31",
-    "MetrologyWorkstation.exe": "208a8839850f8ef461846c4a097bfb0688c1f637aa20c1adcf28ffcbbe063538"
+    "Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe": "16d5072adadec1575c91560c98abd7049a7adc2a17e8d019ce6b0ef769ec1414",
+    "MetrologyWorkstation.exe": "b0549e05e94f327d28663b2d40d6f9b3dc66e7b458ff366433c43cd04418dba6"
   },
   "distribution": {
     "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
-    "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v1.1.0",
-    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe"
+    "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v5.0.0",
+    "installer_download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v5.0.0/Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe"
   }
 }

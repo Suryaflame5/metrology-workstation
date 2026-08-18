@@ -65,6 +65,8 @@ class CalculationCreateRequest(BaseModel):
     revision_number: int = Field(default=1, description="Revision index (1, 2, ...)")
     parent_sha256: Optional[str] = Field(default=None, description="Hash of parent revision")
     revision_notes: Optional[str] = Field(default=None, description="Audit rationale for revision")
+    project_id: Optional[str] = Field(default=None, description="Associated project ID")
+    instrument_id: Optional[str] = Field(default=None, description="Associated instrument ID")
 
 
 class UncertaintyBudgetRow(BaseModel):
@@ -307,6 +309,9 @@ class UncertaintyComponentInput(BaseModel):
     coverage_factor_k: float = Field(default=2.0, description="Coverage factor if normal distribution")
     sensitivity_coefficient: float = Field(default=1.0, description="Partial derivative c_i")
     degrees_of_freedom: float = Field(default=50.0, description="Degrees of freedom (infinity or finite)")
+
+
+UncertaintyComponentItem = UncertaintyComponentInput
 
 
 class UncertaintyWorkbenchRequest(BaseModel):

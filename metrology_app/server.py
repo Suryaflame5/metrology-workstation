@@ -776,6 +776,64 @@ def api_get_sandbox_scenarios():
     ]
 
 
+# --- V5 Demo Project Loader ---
+@app.post("/api/demo/load")
+def api_load_demo_project():
+    """Seed and load the realistic preloaded demonstration project (Keysight 34401A DMM)."""
+    from .services.demo_loader_service import load_preloaded_demonstration_project
+    return load_preloaded_demonstration_project()
+
+
+# --- V5 Measurement Bill of Materials (MBOM) ---
+@app.get("/api/mbom/{calculation_id}")
+def api_get_mbom(calculation_id: str):
+    """Retrieve the full reconstructible Measurement Bill of Materials (MBOM) tree."""
+    from .services.mbom_service import generate_measurement_bill_of_materials
+    res = generate_measurement_bill_of_materials(calculation_id)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+
+# --- V5 Adaptive Calibration Interval Intelligence ---
+@app.post("/api/intelligence/adaptive-interval/{instrument_id}")
+def api_adaptive_interval(instrument_id: str):
+    """Compute evidence-backed adaptive calibration interval recommendation based on asset history."""
+    from .services.interval_intelligence import compute_adaptive_calibration_interval
+    inst = get_instrument(instrument_id)
+    if not inst:
+        raise HTTPException(status_code=404, detail="Instrument not found in registry")
+    
+    # Retrieve calibration history for this instrument
+    history = list_calculations(limit=50)
+    matching_records = [c for c in history if c.get("instrument_id") == instrument_id or inst.get("model", "").lower() in c.get("instrument_name", "").lower()]
+    
+    return compute_adaptive_calibration_interval(
+        instrument_id=instrument_id,
+        manufacturer=inst.get("manufacturer", "Unknown"),
+        model=inst.get("model", "General"),
+        current_interval_months=inst.get("calibration_interval_months", 12),
+        history_records=matching_records,
+        tolerance_span_mm=0.004,
+    )
+
+
+# --- V5 Uncertainty Contribution Intelligence & What-If ---
+@app.post("/api/intelligence/uncertainty-contributions")
+def api_uncertainty_contributions(req: UncertaintyWorkbenchRequest):
+    """Identify dominant contributors and improvement potential in an uncertainty budget."""
+    from .services.uncertainty_intelligence import analyze_uncertainty_contributions
+    return analyze_uncertainty_contributions(req.components)
+
+
+@app.post("/api/intelligence/uncertainty-what-if")
+def api_uncertainty_what_if(req: UncertaintyWorkbenchRequest, target_component: str = Query(...), reduction_pct: float = Query(50.0)):
+    """Deterministically simulate the impact of reducing a specific uncertainty source."""
+    from .services.uncertainty_intelligence import simulate_what_if_uncertainty_reduction
+    return simulate_what_if_uncertainty_reduction(req.components, target_component, reduction_pct)
+
+
+
 
 # Mount static web UI assets
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))

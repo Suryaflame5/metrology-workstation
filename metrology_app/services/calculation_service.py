@@ -302,6 +302,8 @@ def compute_micrometer_calibration(
             "calculation_sha256": calculation_sha256,
             "status": "VALIDATED",
             "conformity_verdict": verdict,
+            "project_id": request.project_id,
+            "instrument_id": request.instrument_id,
         },
         db_path=db_path,
     )

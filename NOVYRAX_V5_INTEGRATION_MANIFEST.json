@@ -1,24 +1,25 @@
 {
-  "product_name": "Metrology Workstation",
-  "product_generation": "V5.1",
-  "generation_title": "Reproducible Measurement Intelligence",
-  "commercial_version": "1.1.0",
-  "release_tag": "v1.1.0",
+  "product_name": "Metrology Workstation 5",
+  "product_generation": "V5",
+  "generation_title": "Adaptive Measurement Intelligence & Sovereign Engineering Workstation",
+  "commercial_version": "5.0.0",
+  "file_version": "5.0.0.0",
+  "release_tag": "v5.0.0",
   "release_date": "2026-08-18",
   "github_repository": "https://github.com/Suryaflame5/metrology-workstation",
-  "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v1.1.0",
+  "github_release_url": "https://github.com/Suryaflame5/metrology-workstation/releases/tag/v5.0.0",
   "windows_installer": {
-    "filename": "Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe",
-    "download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v1.1.0/Metrology-Workstation-v1.1.0-Windows-x64-Setup.exe",
-    "file_size_bytes": 58729189,
-    "file_size_mb": "56.01 MB",
-    "sha256": "739cadc88040edaca244399ee411b0c4ef72c85e61d715e2271511326f253e31"
+    "filename": "Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe",
+    "download_url": "https://github.com/Suryaflame5/metrology-workstation/releases/download/v5.0.0/Metrology-Workstation-v5.0.0-Windows-x64-Setup.exe",
+    "file_size_bytes": 58737467,
+    "file_size_mb": "56.02 MB",
+    "sha256": "16d5072adadec1575c91560c98abd7049a7adc2a17e8d019ce6b0ef769ec1414"
   },
   "standalone_executable": {
     "filename": "MetrologyWorkstation.exe",
-    "file_size_bytes": 53252194,
-    "file_size_mb": "50.78 MB",
-    "sha256": "208a8839850f8ef461846c4a097bfb0688c1f637aa20c1adcf28ffcbbe063538"
+    "file_size_bytes": 53262803,
+    "file_size_mb": "50.79 MB",
+    "sha256": "b0549e05e94f327d28663b2d40d6f9b3dc66e7b458ff366433c43cd04418dba6"
   },
   "supported_os": [
     "Windows 10 (64-bit)",
@@ -50,10 +51,14 @@
         "Interactive GUM Uncertainty Workbench (Inspectable Equations)",
         "Dedicated Conformity Workbench (ANSI Z540.3 Method 6 & ISO 14253-1)",
         "Evidence Package Export & 12-Stage Reproducibility Engine",
+        "Measurement Bill of Materials (MBOM) Full-Lineage Spec Tree",
+        "Adaptive Calibration Interval Intelligence (ISO/IEC 17025 & NCSL RP-1)",
+        "Uncertainty Contribution Intelligence & What-If Variance Reduction",
         "Cryptographic Audit Ledger Hash-Chain Verifier",
-        "Professional ISO/IEC 17025 HTML Calibration Certificates",
+        "ISO/IEC 17025 Calibration Certificate PDF/HTML Generator",
         "Controlled Engineering Sandbox (5 Built-in Scenarios)",
-        "Measurement Reliability Intelligence (5 Killer Engines)"
+        "Preloaded Demonstration Project (Keysight 34401A 6.5-Digit DMM)",
+        "Measurement Reliability Intelligence (5 Analytical Engines)"
       ]
     },
     "team": {

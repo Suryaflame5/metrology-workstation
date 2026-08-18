@@ -29,7 +29,7 @@ function switchView(viewName) {
 
   const views = [
     "dashboard", "projects", "instruments", "plans", "acquisition",
-    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "workflow",
+    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "mbom", "workflow",
     "multipoint", "calibrations", "procedures", "replay", "tamper",
     "audit", "backups", "standards", "settings", "license"
   ];
@@ -828,8 +828,102 @@ async function runSandboxSimulation() {
   }
 }
 
+// ==========================================
+// 12. DEMO PROJECT LOADER & MBOM VIEWER
+// ==========================================
+
+async function loadDemoProjectLive() {
+  try {
+    const res = await fetch("/api/demo/load", { method: "POST" });
+    if (!res.ok) return;
+    const data = await res.json();
+    alert(`DEMONSTRATION PROJECT LOADED:\n${data.message}\n\nProject: ${data.project.name}\nInstrument: ${data.instrument.manufacturer} ${data.instrument.model}\nCalculation ID: ${data.calculation.id}`);
+    loadDashboard();
+    loadProjects();
+    loadInstruments();
+    loadCalibrationsLog();
+    activeCalculationId = data.calculation.id;
+    openMbomForActive();
+  } catch (e) {
+    alert("Error loading demonstration project.");
+  }
+}
+
+function openMbomForActive() {
+  if (!activeCalculationId) {
+    alert("Please select a calibration record to view its MBOM.");
+    return;
+  }
+  switchView("mbom");
+  loadMbomForId(activeCalculationId);
+}
+
+async function loadMbomForId(id) {
+  try {
+    const res = await fetch(`/api/mbom/${id}`);
+    if (!res.ok) return;
+    const mbom = await res.json();
+    const c = document.getElementById("mbom-content-container");
+    if (!c) return;
+
+    c.innerHTML = `
+      <div style="background: #ffffff; padding: 14px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 10px;">
+          <div>
+            <h3 style="font-size: 13px; color: var(--primary);">MEASUREMENT BILL OF MATERIALS — ${escapeHtml(mbom.calculation_id)}</h3>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">SHA-256: ${mbom.provenance?.calculation_sha256}</div>
+          </div>
+          <span class="badge badge-${mbom.conformity_decision?.conformance_verdict.toLowerCase().replace('_', '-')}">${mbom.conformity_decision?.conformance_verdict}</span>
+        </div>
+
+        <div class="grid-2" style="font-size: 11px; margin-bottom: 12px;">
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">1. Asset &amp; Project Node</div>
+            <div><strong>Project:</strong> ${escapeHtml(mbom.project?.name)} (${mbom.project?.id})</div>
+            <div><strong>Site:</strong> ${escapeHtml(mbom.project?.customer_site)}</div>
+            <div><strong>Instrument:</strong> ${escapeHtml(mbom.instrument?.manufacturer)} ${escapeHtml(mbom.instrument?.model)}</div>
+            <div><strong>Serial Number:</strong> ${escapeHtml(mbom.instrument?.serial_number)}</div>
+            <div><strong>Range / Res:</strong> ${mbom.instrument?.range} / ${mbom.instrument?.resolution}</div>
+          </div>
+
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">2. Reference Standard &amp; Environment</div>
+            <div><strong>Standard:</strong> ${escapeHtml(mbom.reference_standard?.designation)}</div>
+            <div><strong>Traceability ID:</strong> ${escapeHtml(mbom.reference_standard?.traceability_id)}</div>
+            <div><strong>Standard Uncertainty:</strong> ${escapeHtml(mbom.reference_standard?.standard_uncertainty_u_std)}</div>
+            <div><strong>Operator:</strong> ${escapeHtml(mbom.operator?.name)}</div>
+            <div><strong>Ambient Conditions:</strong> ${mbom.environmental_conditions?.ambient_temperature_c} °C, ${mbom.environmental_conditions?.relative_humidity_pct}% RH</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="font-size: 11px;">
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">3. GUM Uncertainty Model</div>
+            <div><strong>Framework:</strong> JCGM 100:2008 (GUM)</div>
+            <div><strong>Combined uc:</strong> ±${mbom.uncertainty_model?.combined_standard_uncertainty_uc_mm} mm</div>
+            <div><strong>Effective DoF (νeff):</strong> ${mbom.uncertainty_model?.effective_degrees_of_freedom}</div>
+            <div><strong>Expanded U95:</strong> ±${mbom.uncertainty_model?.expanded_uncertainty_u95_mm} mm (k=${mbom.uncertainty_model?.coverage_factor_k95})</div>
+          </div>
+
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">4. Conformity &amp; Risk Guardband</div>
+            <div><strong>Decision Rule:</strong> ${mbom.conformity_decision?.decision_rule}</div>
+            <div><strong>TUR:</strong> ${mbom.conformity_decision?.test_uncertainty_ratio_tur}</div>
+            <div><strong>Guardband Width (w):</strong> ${mbom.conformity_decision?.guardband_width_w_mm} mm</div>
+            <div><strong>Acceptance Interval:</strong> [${mbom.conformity_decision?.acceptance_intervals_mm?.join(', ')}] mm</div>
+            <div><strong>Consumer Risk Target:</strong> ${mbom.conformity_decision?.consumer_risk_target}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.error("Error loading MBOM:", e);
+  }
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
 

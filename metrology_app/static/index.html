@@ -115,15 +115,15 @@
           <!-- Empty Workspace Banner -->
           <div class="card" id="empty-workspace-card" style="text-align: center; padding: 36px 20px; background: #ffffff;">
             <div style="font-size: 32px; margin-bottom: 8px;">📐</div>
-            <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Metrology Workstation V5 Initialized</h2>
+            <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Metrology Workstation 5 Initialized</h2>
             <p style="color: var(--text-muted); font-size: 12px; max-width: 560px; margin: 0 auto 16px;">
-              Your sovereign engineering workstation is ready. Create a project, register assets, build measurement plans, or run interactive GUM uncertainty models.
+              Your sovereign engineering workstation is ready. Create a project, register assets, or load a realistic demonstration case.
             </p>
             <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-              <button class="btn btn-primary" onclick="switchView('projects')">+ Create Project</button>
+              <button class="btn btn-primary" onclick="loadDemoProjectLive()">🔬 Load Demonstration Project: Keysight DMM</button>
+              <button class="btn btn-secondary" onclick="switchView('projects')">+ Create Project</button>
               <button class="btn btn-secondary" onclick="switchView('instruments')">Register Instrument</button>
               <button class="btn btn-secondary" onclick="switchView('uncertainty-wb')">Uncertainty Workbench</button>
-              <button class="btn btn-secondary" onclick="startNewCalibration()">Single-Point Studio</button>
             </div>
           </div>
 
@@ -136,6 +136,7 @@
                 <p id="feat-id-label" style="font-family: var(--font-mono); font-size: 11px;">—</p>
               </div>
               <div style="display: flex; gap: 6px;">
+                <button class="btn btn-secondary" onclick="openMbomForActive()">View MBOM</button>
                 <button class="btn btn-secondary" onclick="openReplayForActive()">Replay Math</button>
                 <button class="btn btn-primary" onclick="openActiveEvidence()">Evidence Package &rarr;</button>
               </div>
@@ -690,6 +691,22 @@
                 <div class="inspector-field"><span>Repeatability Index:</span><strong id="intel-sub-rep">88 / 100</strong></div>
                 <div class="inspector-field"><span>Environmental Margin:</span><strong id="intel-sub-env">90 / 100</strong></div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8B: MEASUREMENT BILL OF MATERIALS (MBOM) -->
+        <section id="view-mbom" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🌳 Measurement Bill of Materials (MBOM)</h2>
+              <span class="badge badge-integrity">RECONSTRUCTIBLE PROVENANCE SPECIFICATION</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Full engineering lineage linking Project, Asset, Reference Standard, Environmental Bias, Measurement Dataset, GUM Budget, and SHA-256 Hashes.
+            </p>
+            <div id="mbom-content-container" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Select a calibration record to generate its full MBOM specification tree.</div>
             </div>
           </div>
         </section>
