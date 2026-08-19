@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  metrology-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: metrology_v2
+      POSTGRES_USER: metrology_user
+      POSTGRES_PASSWORD: metrology_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metrology_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  metrology-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_HOST=metrology-db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=metrology_v2
+      - DATABASE_USER=metrology_user
+      - DATABASE_PASSWORD=metrology_password
+    depends_on:
+      metrology-db:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

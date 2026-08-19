@@ -1,0 +1,78 @@
+# Premium Edition Requirements for Metrology Workstation
+# Enterprise-grade dependencies for advanced analytics, fleet management, and certificate generation
+
+# Core Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Mathematical & Scientific
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+
+# Advanced Analytics
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Certificate Generation
+reportlab>=4.0.0
+Pillow>=10.0.0
+
+# Digital Signatures
+cryptography>=41.0.0
+
+# Database Integration
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+pymysql>=1.1.0
+pyodbc>=5.0.0
+
+# File Processing
+openpyxl>=3.1.0
+xlrd>=2.0.0
+python-docx>=1.1.0
+
+# HTTP Client
+requests>=2.31.0
+httpx>=0.25.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Plugin System
+importlib-metadata>=6.8.0
+
+# Build Tools
+pyinstaller>=6.0.0
+setuptools>=68.0.0
+wheel>=0.41.0
+
+# Development & Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.10.0
+flake8>=6.1.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=1.3.0
+
+# Optional: Web Scraping (for marketplace)
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Optional: Advanced AI Features (future)
+torch>=2.1.0
+transformers>=4.35.0
+
+# Platform-specific dependencies
+# Windows
+pywin32>=306; sys_platform == 'win32'
+
+# macOS
+pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'
