@@ -13,6 +13,7 @@ ENV/
 
 # Build & Dist Artifacts
 build/
+dist/
 *.spec
 
 # Local Runtime Databases & Caches

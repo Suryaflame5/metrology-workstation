@@ -51,18 +51,18 @@ class CrossPlatformBuilder:
     def check_dependencies(self):
         """Check if required build dependencies are installed."""
         required_packages = [
-            'PyInstaller',
-            'setuptools',
-            'wheel',
-            'pillow',  # For icon generation
+            ('PyInstaller', 'pyinstaller'),
+            ('setuptools', 'setuptools'),
+            ('wheel', 'wheel'),
+            ('PIL', 'pillow'),  # Pillow imports as PIL
         ]
         
         missing_packages = []
-        for package in required_packages:
+        for import_name, pip_name in required_packages:
             try:
-                __import__(package.lower())
+                __import__(import_name)
             except ImportError:
-                missing_packages.append(package)
+                missing_packages.append(pip_name)
         
         if missing_packages:
             print(f"Missing required packages: {', '.join(missing_packages)}")
@@ -73,20 +73,37 @@ class CrossPlatformBuilder:
     
     def create_pyinstaller_spec(self):
         """Create PyInstaller spec file for premium edition."""
+        product_name_clean = PREMIUM_CONFIG["product_name"].replace(" ", "")
+        # Convert path to use forward slashes for cross-platform compatibility
+        project_root_safe = str(self.project_root).replace('\\', '/')
+        desktop_app_path = self.project_root / 'desktop_app.py'
+        
+        # Use absolute paths for data files to avoid path resolution issues
+        metrology_app_path = self.project_root / 'metrology_app'
+        metrology_core_path = self.project_root / 'metrology_core'
+        website_path = self.project_root / 'website'
+        standards_path = self.project_root / 'standards'
+        
+        # Pre-compute icon path based on platform (use None if icon doesn't exist)
+        icon_path = None  # Icon file not available, will use default
+        
+        # Build icon parameter conditionally
+        icon_param = f",\n    icon='{icon_path}'" if icon_path else ""
+        
         spec_content = f'''
 # -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
 a = Analysis(
-    ['desktop_app.py'],
-    pathex=['{self.project_root}'],
+    ['{str(desktop_app_path).replace(chr(92), "/")}'],
+    pathex=['{project_root_safe}'],
     binaries=[],
     datas=[
-        ('metrology_app', 'metrology_app'),
-        ('metrology_core', 'metrology_core'),
-        ('website', 'website'),
-        ('standards', 'standards'),
+        ('{str(metrology_app_path).replace(chr(92), "/")}', 'metrology_app'),
+        ('{str(metrology_core_path).replace(chr(92), "/")}', 'metrology_core'),
+        ('{str(website_path).replace(chr(92), "/")}', 'website'),
+        ('{str(standards_path).replace(chr(92), "/")}', 'standards'),
     ],
     hiddenimports=[
         'metrology_app.services.advanced_analytics_service',
@@ -113,7 +130,7 @@ a = Analysis(
         'pydantic',
     ],
     hookspath=[],
-    hooksconfig={{},
+    hooksconfig={{}},
     runtime_hooks=[],
     excludes=[
         'matplotlib',
@@ -136,7 +153,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='{PREMIUM_CONFIG["product_name"].replace(" ", "")}',
+    name='{product_name_clean}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -148,8 +165,7 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
-    entitlements_file=None,
-    icon='assets/premium_icon.ico' if platform.system() == 'Windows' else 'assets/premium_icon.icns',
+    entitlements_file=None{icon_param}
 )
 
 coll = COLLECT(
@@ -160,7 +176,7 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='{PREMIUM_CONFIG["product_name"].replace(" ", "")}'
+    name='{product_name_clean}'
 )
 '''
         
@@ -325,6 +341,27 @@ end;
         
         print("Building Mac Premium App Bundle...")
         
+        # Pre-compute values for f-string
+        product_name_clean = PREMIUM_CONFIG["product_name"].replace(" ", "")
+        company_name_lower = PREMIUM_CONFIG["company_name"].lower()
+        version = PREMIUM_CONFIG["version"]
+        # Convert path to use forward slashes for cross-platform compatibility
+        project_root_safe = str(self.project_root).replace('\\', '/')
+        desktop_app_path = self.project_root / 'desktop_app.py'
+        
+        # Use absolute paths for data files to avoid path resolution issues
+        metrology_app_path = self.project_root / 'metrology_app'
+        metrology_core_path = self.project_root / 'metrology_core'
+        website_path = self.project_root / 'website'
+        standards_path = self.project_root / 'standards'
+        
+        # Pre-compute icon path (use None if icon doesn't exist)
+        icon_path = None  # Icon file not available, will use default
+        
+        # Build icon parameter conditionally
+        icon_param = f",\n    icon='{icon_path}'" if icon_path else ""
+        bundle_icon_param = f",\n    icon='{icon_path}'" if icon_path else ""
+        
         # Create PyInstaller spec for Mac
         spec_content = f'''
 # -*- mode: python ; coding: utf-8 -*-
@@ -332,14 +369,14 @@ end;
 block_cipher = None
 
 a = Analysis(
-    ['desktop_app.py'],
-    pathex=['{self.project_root}'],
+    ['{str(desktop_app_path).replace(chr(92), "/")}'],
+    pathex=['{project_root_safe}'],
     binaries=[],
     datas=[
-        ('metrology_app', 'metrology_app'),
-        ('metrology_core', 'metrology_core'),
-        ('website', 'website'),
-        ('standards', 'standards'),
+        ('{str(metrology_app_path).replace(chr(92), "/")}', 'metrology_app'),
+        ('{str(metrology_core_path).replace(chr(92), "/")}', 'metrology_core'),
+        ('{str(website_path).replace(chr(92), "/")}', 'website'),
+        ('{str(standards_path).replace(chr(92), "/")}', 'standards'),
     ],
     hiddenimports=[
         'metrology_app.services.advanced_analytics_service',
@@ -358,7 +395,7 @@ a = Analysis(
         'fastapi',
     ],
     hookspath=[],
-    hooksconfig={{},
+    hooksconfig={{}},
     runtime_hooks=[],
     excludes=[
         'matplotlib',
@@ -381,7 +418,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='{PREMIUM_CONFIG["product_name"].replace(" ", "")}',
+    name='{product_name_clean}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -393,8 +430,7 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
-    entitlements_file=None,
-    icon='assets/premium_icon.icns',
+    entitlements_file=None{icon_param}
 )
 
 app = BUNDLE(
@@ -405,15 +441,14 @@ app = BUNDLE(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='{PREMIUM_CONFIG["product_name"].replace(" ", "")}.app',
-    icon='assets/premium_icon.icns',
-    bundle_identifier='com.{PREMIUM_CONFIG["company_name"].lower()}.metrologypremium',
+    name='{product_name_clean}.app'{bundle_icon_param},
+    bundle_identifier='com.{company_name_lower}.metrologypremium',
     info_plist={{
         'CFBundleName': '{PREMIUM_CONFIG["product_name"]}',
         'CFBundleDisplayName': '{PREMIUM_CONFIG["product_name"]}',
-        'CFBundleIdentifier': 'com.{PREMIUM_CONFIG["company_name"].lower()}.metrologypremium',
-        'CFBundleVersion': '{PREMIUM_CONFIG["version"]}',
-        'CFBundleShortVersionString': '{PREMIUM_CONFIG["version"]}',
+        'CFBundleIdentifier': 'com.{company_name_lower}.metrologypremium',
+        'CFBundleVersion': '{version}',
+        'CFBundleShortVersionString': '{version}',
         'CFBundlePackageType': 'APPL',
         'CFBundleSignature': '????',
         'NSHighResolutionCapable': True,
@@ -493,7 +528,7 @@ app = BUNDLE(
         docs_dir.mkdir(exist_ok=True)
         
         for filename, content in premium_docs.items():
-            with open(docs_dir / filename, 'w') as f:
+            with open(docs_dir / filename, 'w', encoding='utf-8') as f:
                 f.write(content)
         
         print("Premium features documentation generated")

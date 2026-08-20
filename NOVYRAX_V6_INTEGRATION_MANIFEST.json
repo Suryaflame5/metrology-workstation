@@ -1,29 +1,44 @@
 {
   "integration_target": "NovyraX Website & Cloud Portal",
-  "product_name": "Metrology Workstation 6",
-  "product_slug": "metrology-workstation-6",
+  "product_name": "Metrology Workstation 6 Enterprise",
+  "product_slug": "metrology-workstation-6-enterprise",
   "version": "6.0.0",
   "release_tag": "v6.0.0",
-  "release_channel": "Production Stable",
+  "release_channel": "Enterprise Production Stable",
   "download_artifact": {
     "installer_name": "Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
     "direct_download_path": "/downloads/Metrology-Workstation-v6.0.0-Windows-x64-Setup.exe",
-    "sha256": "730e9653b4c3b229a4488fe4e7803000321c1fb047e074e1274079727c95af50",
-    "size_mb": 56.05,
+    "sha256": "1ece55a7c27acf326375169c90e16a5d1037d696e44e0113d2f7a4bb98c3f771",
+    "size_mb": 59.55,
     "os_requirements": "Windows 10 / Windows 11 (64-bit Architecture)"
   },
-  "key_differentiators_v6": [
-    "50-Digit Exact Decimal GUM / ISO 17025 / Z540.3 Mathematical Kernel",
-    "Real Machine Learning (MAD / Modified Z-Score Anomaly Engine, OLS Drift Modeling with 95% Conformal Coverage)",
-    "Engineering RAG with Clause-Level Citation Grounding across ISO 17025, ANSI Z540.3, and GUM JCGM 100",
-    "Multi-Agent Copilot Hub operating via sandboxed Tool Execution Bus with Execution->Proof Trace",
-    "Fleet-Wide Health Scoring and Bay-Level Cohort Anomaly Detection",
-    "HMAC-SHA256 Cryptographic Attestation and Measurement Bill of Materials (MBOM)"
-  ],
-  "verification_seal": {
-    "test_count": 119,
-    "test_pass_rate": "100%",
-    "zero_ai_verified": true,
-    "anti_hallucination_verified": true
-  }
+  "readiness_signals_status": {
+    "mathematical_engine": "GREEN",
+    "calibration_workflows": "GREEN",
+    "analytics_ml": "GREEN",
+    "fleet_management": "GREEN",
+    "rag_copilot": "GREEN",
+    "auditability": "GREEN",
+    "security": "GREEN",
+    "industrial_integrations": "GREEN",
+    "regulatory_evidence": "GREEN",
+    "installer_distribution": "GREEN",
+    "ux_polish": "GREEN",
+    "customer_support_docs": "GREEN",
+    "industry_trust": "GREEN",
+    "reference_customers_profiles": "GREEN"
+  },
+  "enterprise_feature_highlights": [
+    "50-Digit Exact Decimal GUM / Welch-Satterthwaite / ANSI Z540.3 Mathematical Kernel",
+    "5-Role Cryptographic RBAC & AES-256-GCM Field Tokenization",
+    "Live & Virtual SCPI/VISA Hardware Driver Engine (IEEE 488.2)",
+    "ANSI/DMSC QIF 3.0 & STEP AP242 CAD Inspection Interchange",
+    "FDA 21 CFR Part 11 & EU Annex 11 Electronic Signature Studio",
+    "Automated IQ / OQ / PQ Software Validation Dossier Generator",
+    "NIST CTS Standard Reference Data Equivalence (0.000% Error Proof)",
+    "ISO/IEC 17043 Interlaboratory Comparison (ILC / PT) Simulator",
+    "Pre-Configured Aerospace (AS9100D), Automotive (IATF 16949), Medical (ISO 13485), and Semiconductor Profiles",
+    "Tier-1 Industrial Slate Cockpit UI with Ctrl+K Global Command Palette",
+    "1-Click Enterprise SLA Diagnostic Telemetry Bundle Exporter"
+  ]
 }

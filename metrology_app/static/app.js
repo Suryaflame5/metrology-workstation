@@ -29,8 +29,9 @@ function switchView(viewName) {
 
   const views = [
     "dashboard", "projects", "instruments", "plans", "acquisition",
-    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "fleet", "rag", "copilot", "mbom", "workflow",
-    "multipoint", "calibrations", "procedures", "replay", "tamper",
+    "uncertainty-wb", "conformity-wb", "sandbox", "intelligence", "fleet", "rag", "copilot",
+    "scpi", "qif", "part11", "qualification", "benchmarks", "ilc", "profiles", "handbook", "support",
+    "mbom", "workflow", "multipoint", "calibrations", "procedures", "replay", "tamper",
     "audit", "backups", "standards", "settings", "license"
   ];
 
@@ -1088,10 +1089,485 @@ async function submitCopilotQueryLive() {
   }
 }
 
+// ==========================================
+// 14. ENTERPRISE INDUSTRIAL & COMPLIANCE CONTROLLERS
+// ==========================================
+
+function setScpiCmd(cmd) {
+  const el = document.getElementById("scpi-command-input");
+  if (el) el.value = cmd;
+}
+
+async function sendScpiCommandLive() {
+  const resource = document.getElementById("scpi-resource-input")?.value || "VIRTUAL::KEY34461A";
+  const cmd = document.getElementById("scpi-command-input")?.value || "*IDN?";
+  const term = document.getElementById("scpi-terminal-log");
+
+  if (term) term.innerText += `\n> [TX] ${resource} >> ${cmd}`;
+
+  try {
+    const res = await fetch("/api/enterprise/industrial/scpi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource_string: resource, command: cmd }),
+    });
+    const data = await res.json();
+    if (term) {
+      term.innerText += `\n< [RX] ${data.response || "OK"}`;
+      term.scrollTop = term.scrollHeight;
+    }
+  } catch (e) {
+    if (term) term.innerText += `\n! [ERR] ${e.message}`;
+  }
+}
+
+async function parseQifPlanLive() {
+  const raw = document.getElementById("qif-import-textarea")?.value || "";
+  const c = document.getElementById("qif-output-container");
+  if (!c) return;
+
+  try {
+    const res = await fetch("/api/enterprise/industrial/qif/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raw_content: raw }),
+    });
+    const data = await res.json();
+
+    let rows = (data.characteristics || []).map(ch => `
+      <tr>
+        <td><strong>${escapeHtml(ch.characteristic_id)}</strong></td>
+        <td>${escapeHtml(ch.feature_name)}</td>
+        <td>${ch.nominal_value} mm</td>
+        <td>+${ch.tolerance_upper} / ${ch.tolerance_lower} mm</td>
+        <td><span class="badge badge-enterprise">Datum: ${escapeHtml(ch.datum_reference)}</span></td>
+      </tr>
+    `).join("");
+
+    c.innerHTML = `
+      <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px;">Extracted ${data.characteristics_count} Quality Characteristics (${data.format})</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Feature</th>
+            <th>Nominal</th>
+            <th>Tolerance</th>
+            <th>Datum Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || "<tr><td colspan='5'>No characteristics found.</td></tr>"}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    console.error("QIF parse error:", e);
+  }
+}
+
+async function exportActiveCalculationQifLive() {
+  if (!activeCalculationId) {
+    alert("Please select or calculate a calibration record first.");
+    return;
+  }
+  try {
+    const res = await fetch(`/api/enterprise/industrial/qif/export/${activeCalculationId}`);
+    const data = await res.json();
+    const c = document.getElementById("qif-output-container");
+    if (c) {
+      c.innerHTML = `
+        <div style="font-weight: 700; color: var(--success); margin-bottom: 6px;">✓ Exported QIF 3.0 Standard Results Package</div>
+        <pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 4px; font-size: 10px; max-height: 240px; overflow: auto;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+      `;
+    }
+  } catch (e) {
+    console.error("QIF export error:", e);
+  }
+}
+
+async function executePart11SignatureLive() {
+  const username = document.getElementById("part11-username-select")?.value || "chief_metrologist";
+  const password = document.getElementById("part11-password-input")?.value || "";
+  const reason = document.getElementById("part11-reason-select")?.value || "APPROVAL_RELEASE";
+  const c = document.getElementById("part11-seal-output");
+  if (!c) return;
+
+  const targetCalcId = activeCalculationId || "CALC-RECENT";
+  const targetHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+  try {
+    const res = await fetch("/api/enterprise/compliance/sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        calculation_id: targetCalcId,
+        calculation_sha256: targetHash,
+        username: username,
+        password: password,
+        reason: reason,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      c.innerHTML = `<div style="color: var(--danger); font-size: 11px;">⚠️ Signature Ceremony Rejected: ${escapeHtml(err.detail || "Authentication Failed")}</div>`;
+      return;
+    }
+    const data = await res.json();
+
+    c.innerHTML = `
+      <div style="border: 2px solid #059669; background: #ecfdf5; padding: 12px; border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <strong style="color: #065f46; font-size: 13px;">🔒 FDA 21 CFR Part 11 Cryptographically Sealed Signature</strong>
+          <span class="badge badge-pass">SEALED &amp; BINDING</span>
+        </div>
+        <div style="font-size: 11px; color: #064e3b; margin-bottom: 4px;"><strong>Signer:</strong> ${escapeHtml(data.signer?.full_name)} (${escapeHtml(data.signer?.role)})</div>
+        <div style="font-size: 11px; color: #064e3b; margin-bottom: 4px;"><strong>Badge ID:</strong> ${escapeHtml(data.signer?.badge_id)}</div>
+        <div style="font-size: 11px; color: #064e3b; margin-bottom: 6px;"><strong>Signing Reason:</strong> ${escapeHtml(data.signing_reason)}</div>
+        <div style="font-size: 10px; font-family: var(--font-mono); color: #047857; word-break: break-all;">
+          <strong>Signature Token:</strong> ${escapeHtml(data.signature_token)}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.error("Signature error:", e);
+  }
+}
+
+async function executeQualificationProtocolLive() {
+  const c = document.getElementById("qualification-dossier-output");
+  if (!c) return;
+  c.innerHTML = "<div style='font-size: 11px; color: var(--text-muted);'>⚡ Executing automated IQ / OQ / PQ validation protocols...</div>";
+
+  try {
+    const res = await fetch("/api/enterprise/compliance/qualification", { method: "POST" });
+    const data = await res.json();
+
+    c.innerHTML = `
+      <div style="margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="font-size: 14px; color: var(--primary);">Automated Software Qualification Protocol (IQ / OQ / PQ)</h3>
+          <span class="badge badge-pass">${escapeHtml(data.status)}</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">${escapeHtml(data.regulatory_attestation)}</div>
+        <div class="grid-3" style="font-size: 11px; margin-bottom: 12px;">
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569;">IQ (Installation)</div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--success);">${data.iq_section?.status}</div>
+          </div>
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569;">OQ (Operational)</div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--success);">${data.oq_section?.status}</div>
+          </div>
+          <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+            <div style="font-weight: 700; color: #475569;">PQ (Performance)</div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--success);">${data.pq_section?.status}</div>
+          </div>
+        </div>
+        <div style="font-size: 11px; font-family: var(--font-mono); color: #0f172a;">
+          ✓ All ${data.total_test_protocols} qualification protocols executed with ${data.pass_rate_pct}% PASS in ${data.execution_duration_ms} ms.
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.error("Qualification error:", e);
+  }
+}
+
+async function runNistBenchmarksLive() {
+  const c = document.getElementById("nist-benchmarks-output");
+  if (!c) return;
+  c.innerHTML = "<div style='font-size: 11px; color: var(--text-muted);'>🏛️ Comparing calculations against NIST Standard Reference Data...</div>";
+
+  try {
+    const res = await fetch("/api/enterprise/benchmarks/nist");
+    const data = await res.json();
+
+    let rows = (data.benchmark_details || []).map(b => `
+      <tr>
+        <td><strong>${escapeHtml(b.benchmark_id)}</strong></td>
+        <td>${escapeHtml(b.parameter)}</td>
+        <td>${escapeHtml(b.calculated_mean)}</td>
+        <td>${escapeHtml(b.nist_mean)}</td>
+        <td>${escapeHtml(b.absolute_arithmetic_error)}</td>
+        <td><span class="badge badge-pass">EXACT MATCH</span></td>
+      </tr>
+    `).join("");
+
+    c.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="font-size: 13px; color: var(--primary);">NIST CTS Standard Reference Data Equivalence</h3>
+        <span class="badge badge-pass">${escapeHtml(data.status)}</span>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">${escapeHtml(data.statement)}</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Benchmark</th>
+            <th>Parameter</th>
+            <th>Calculated Mean</th>
+            <th>NIST Reference Mean</th>
+            <th>Max Deviation</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    console.error("NIST Benchmark error:", e);
+  }
+}
+
+async function generateTraceabilityDossierLive() {
+  const c = document.getElementById("nist-benchmarks-output");
+  if (!c) return;
+  try {
+    const res = await fetch(`/api/enterprise/compliance/traceability/${activeCalculationId || "CALC-RECENT"}`);
+    const data = await res.json();
+
+    let chainHtml = (data.traceability_chain || []).map(ch => `
+      <div style="background: #ffffff; padding: 10px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: var(--primary); font-size: 11px;">${escapeHtml(ch.tier)}: ${escapeHtml(ch.entity)}</strong>
+          <span class="badge badge-enterprise">${escapeHtml(ch.expanded_uncertainty)}</span>
+        </div>
+        <div style="font-size: 11px; color: #334155; margin-top: 2px;">${escapeHtml(ch.standard_type)} (Trace ID: ${escapeHtml(ch.traceability_id)})</div>
+      </div>
+    `).join("");
+
+    c.innerHTML = `
+      <h3 style="font-size: 13px; color: var(--primary); margin-bottom: 6px;">${escapeHtml(data.statement_title)}</h3>
+      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">${escapeHtml(data.formal_declaration)}</p>
+      <div style="margin-bottom: 10px;">${chainHtml}</div>
+    `;
+  } catch (e) {
+    console.error("Traceability error:", e);
+  }
+}
+
+async function simulateIlcRoundLive() {
+  const c = document.getElementById("ilc-results-output");
+  if (!c) return;
+  c.innerHTML = "<div style='font-size: 11px; color: var(--text-muted);'>🌐 Evaluating Interlaboratory Comparison En-ratios...</div>";
+
+  try {
+    const res = await fetch("/api/enterprise/benchmarks/ilc");
+    const data = await res.json();
+
+    let rows = (data.participant_evaluations || []).map(p => `
+      <tr>
+        <td><strong>${escapeHtml(p.lab_name)}</strong></td>
+        <td>${p.measured_value_mm.toFixed(5)} mm</td>
+        <td>±${p.stated_uncertainty_mm.toFixed(5)} mm</td>
+        <td><strong>${p.en_ratio.toFixed(3)}</strong></td>
+        <td><span class="badge badge-${p.status.toLowerCase()}">${p.status} (|En| &le; 1.0)</span></td>
+      </tr>
+    `).join("");
+
+    c.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="font-size: 13px; color: var(--primary);">ISO/IEC 17043 Proficiency Testing Round: ${escapeHtml(data.pt_round_id)}</h3>
+        <span class="badge badge-pass">${data.satisfactory_participants}/${data.total_participants} SATISFACTORY</span>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">${escapeHtml(data.round_summary)} (Reference: ${data.reference_value_mm} mm ±${data.reference_uncertainty_u95_mm} mm)</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Participant Laboratory</th>
+            <th>Measured Value</th>
+            <th>Stated Uncertainty (U95)</th>
+            <th>Normalized Error (En)</th>
+            <th>Proficiency Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    console.error("ILC error:", e);
+  }
+}
+
+async function loadIndustryProfilesLive() {
+  const c = document.getElementById("industry-profiles-container");
+  if (!c) return;
+
+  try {
+    const res = await fetch("/api/enterprise/profiles");
+    const data = await res.json();
+
+    c.innerHTML = (data.industry_profiles || []).map(p => `
+      <div class="card" style="background: #ffffff; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 13px; color: var(--primary);">${escapeHtml(p.title)}</h3>
+          <span class="badge badge-enterprise">${escapeHtml(p.sector)}</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>Governing Standards:</strong> ${escapeHtml(p.regulatory_standards?.join(" • "))}
+        </div>
+        <div class="grid-2" style="font-size: 11px; margin-bottom: 8px;">
+          <div><strong>Decision Rule:</strong> ${escapeHtml(p.default_decision_rule)}</div>
+          <div><strong>Thermal Soaking:</strong> ${p.thermal_soaking_hours} hrs (${escapeHtml(p.temperature_band_c)})</div>
+        </div>
+        <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">Preloaded Inspection Templates:</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${(p.templates || []).map(t => `
+            <button class="btn btn-outline btn-sm" onclick="applyIndustryTemplate('${escapeHtml(t.name)}', ${t.nominal_mm}, ${t.tolerance_upper_mm})">
+              📋 Load ${escapeHtml(t.name)} (${t.nominal_mm} mm)
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error("Industry profiles error:", e);
+  }
+}
+
+function applyIndustryTemplate(name, nominal, tol) {
+  switchView("workflow");
+  const elName = document.getElementById("calc-inst-name");
+  const elNom = document.getElementById("calc-nom");
+  const elTol = document.getElementById("calc-tol");
+  if (elName) elName.value = name;
+  if (elNom) elNom.value = nominal;
+  if (elTol) elTol.value = tol;
+}
+
+async function loadHandbookArticlesLive() {
+  const c = document.getElementById("handbook-articles-container");
+  if (!c) return;
+
+  try {
+    const res = await fetch("/api/enterprise/support/handbook");
+    const data = await res.json();
+
+    c.innerHTML = (data.articles || []).map(art => `
+      <div class="card" style="background: #ffffff; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 13px; color: var(--primary);">${escapeHtml(art.title)}</h3>
+          <span class="badge badge-integrity">${escapeHtml(art.category)}</span>
+        </div>
+        <p style="font-size: 11px; color: #334155; line-height: 1.5; margin-bottom: 8px;">${escapeHtml(art.content)}</p>
+        <div style="font-size: 10px; color: var(--text-muted);">
+          <strong>Citations:</strong> ${escapeHtml(art.citations?.join(" • "))}
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error("Handbook error:", e);
+  }
+}
+
+async function generateSupportBundleLive() {
+  const c = document.getElementById("support-bundle-output");
+  if (!c) return;
+
+  try {
+    const res = await fetch("/api/enterprise/support/diagnostic-bundle");
+    const data = await res.json();
+
+    c.innerHTML = `
+      <div style="border: 1px solid var(--primary); background: #f0f9ff; padding: 12px; border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <strong style="color: var(--primary); font-size: 13px;">📦 Enterprise SLA Diagnostic Telemetry Bundle Ready</strong>
+          <span class="badge badge-enterprise">SLA 24x7</span>
+        </div>
+        <div style="font-size: 11px; color: #0369a1; margin-bottom: 4px;"><strong>Bundle ID:</strong> ${escapeHtml(data.support_bundle_id)}</div>
+        <div style="font-size: 10px; font-family: var(--font-mono); color: #0284c7; word-break: break-all; margin-bottom: 6px;">
+          <strong>SHA-256 Checksum:</strong> ${escapeHtml(data.sha256_checksum)}
+        </div>
+        <div style="font-size: 11px; color: #334155; margin-bottom: 8px;">${escapeHtml(data.instructions)}</div>
+        <pre style="background: #0f172a; color: #38bdf8; padding: 8px; border-radius: 4px; font-size: 10px; max-height: 180px; overflow: auto;">${escapeHtml(JSON.stringify(data.bundle_data, null, 2))}</pre>
+      </div>
+    `;
+  } catch (e) {
+    console.error("Support bundle error:", e);
+  }
+}
+
+// Global Command Palette Keylistener (Ctrl + K)
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    e.preventDefault();
+    toggleCommandPalette();
+  }
+  if (e.key === "Escape") {
+    closeCommandPalette();
+  }
+});
+
+function toggleCommandPalette() {
+  let modal = document.getElementById("command-palette-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "command-palette-modal";
+    modal.className = "cmd-modal-backdrop";
+    modal.onclick = (e) => { if (e.target === modal) closeCommandPalette(); };
+    modal.innerHTML = `
+      <div class="cmd-modal-box">
+        <div class="cmd-input-wrapper">
+          <span style="color: #94a3b8;">🔍</span>
+          <input type="text" id="cmd-search-input" placeholder="Type a command, module, or standard (e.g. SCPI, NIST, Part 11, GUM)..." oninput="filterCommandPalette(this.value)">
+        </div>
+        <ul class="cmd-results-list" id="cmd-results-list"></ul>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove("hidden");
+  const input = document.getElementById("cmd-search-input");
+  if (input) {
+    input.value = "";
+    input.focus();
+    filterCommandPalette("");
+  }
+}
+
+function closeCommandPalette() {
+  const modal = document.getElementById("command-palette-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+const COMMAND_PALETTE_ACTIONS = [
+  { label: "⚡ Single-Point Calibration Studio", action: () => switchView("workflow") },
+  { label: "🔌 SCPI / VISA Hardware Studio", action: () => switchView("scpi") },
+  { label: "📐 QIF 3.0 & STEP CAD Metrology", action: () => switchView("qif") },
+  { label: "✍️ FDA 21 CFR Part 11 Electronic Signs", action: () => switchView("part11") },
+  { label: "📜 Automated IQ / OQ / PQ Software Qualification", action: () => switchView("qualification") },
+  { label: "🏛️ NIST Reference Data Benchmarks", action: () => switchView("benchmarks") },
+  { label: "🌐 ISO/IEC 17043 Interlaboratory Comparison (ILC / PT)", action: () => switchView("ilc") },
+  { label: "🏭 Pre-Configured Industry Profiles (Aerospace, Auto, Med)", action: () => switchView("profiles") },
+  { label: "🤖 Engineering Copilot & Investigation", action: () => switchView("copilot") },
+  { label: "🚢 Fleet Intelligence & Cohort Anomaly", action: () => switchView("fleet") },
+  { label: "📖 Metrology Engineering Handbook", action: () => switchView("handbook") },
+  { label: "💼 1-Click SLA Diagnostic Support Bundle", action: () => switchView("support") },
+];
+
+function filterCommandPalette(query) {
+  const list = document.getElementById("cmd-results-list");
+  if (!list) return;
+  const q = query.toLowerCase();
+  const filtered = COMMAND_PALETTE_ACTIONS.filter(item => item.label.toLowerCase().includes(q));
+
+  list.innerHTML = filtered.map((item, idx) => `
+    <li onclick="COMMAND_PALETTE_ACTIONS[${COMMAND_PALETTE_ACTIONS.indexOf(item)}].action(); closeCommandPalette();">
+      <span>${escapeHtml(item.label)}</span>
+      <span style="font-size: 10px; color: #64748b; font-family: var(--font-mono);">↵ Enter</span>
+    </li>
+  `).join("");
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
 
 
 

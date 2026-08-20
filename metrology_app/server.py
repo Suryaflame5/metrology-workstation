@@ -908,11 +908,160 @@ def api_v6_generate_attestation(calculation_id: str):
     return res
 
 
-@app.post("/api/v6/attestation/verify")
-def api_v6_verify_attestation(pkg: Dict[str, Any]):
-    """Verify cryptographic signature and hash integrity of an attestation package."""
-    from .attestation.signer import verify_attestation_token
-    return verify_attestation_token(pkg)
+# ==============================================================================
+# ENTERPRISE TIER ENDPOINTS (RBAC, SCPI/VISA, 21 CFR Part 11, IQ/OQ/PQ, NIST)
+# ==============================================================================
+
+class EnterpriseLoginRequest(BaseModel):
+    username: str = Field(..., description="Enterprise username")
+    password: str = Field(..., description="User password")
+
+
+class SCPIExecutionRequest(BaseModel):
+    resource_string: str = Field(default="VIRTUAL::KEY34461A", description="VISA / SCPI resource descriptor")
+    command: str = Field(default="*IDN?", description="SCPI command or query")
+
+
+class QIFParseRequest(BaseModel):
+    raw_content: str = Field(..., description="Raw QIF 3.0 JSON or XML string")
+
+
+class Part11SignatureRequest(BaseModel):
+    calculation_id: str = Field(..., description="Target calculation ID")
+    calculation_sha256: str = Field(..., description="SHA-256 hash of calculation record")
+    username: str = Field(..., description="Signer username")
+    password: str = Field(..., description="Signer password for re-authentication")
+    reason: str = Field(default="APPROVAL_RELEASE", description="Regulatory signature reason code")
+
+
+@app.post("/api/enterprise/auth/login")
+def api_enterprise_login(req: EnterpriseLoginRequest):
+    """Authenticate enterprise user and return cryptographic RBAC session token."""
+    from .security.rbac import authenticate_user
+    sess = authenticate_user(req.username, req.password)
+    if not sess:
+        raise HTTPException(status_code=401, detail="Authentication failed: invalid credentials.")
+    return sess
+
+
+@app.get("/api/enterprise/auth/users")
+def api_enterprise_users():
+    """List registered enterprise accounts and assigned roles."""
+    from .security.rbac import list_users
+    return {"users": list_users()}
+
+
+@app.get("/api/enterprise/security/merkle-verify")
+def api_enterprise_merkle_verify():
+    """Run full cryptographic Merkle Root audit ledger verification."""
+    from .security.merkle_audit import verify_audit_ledger_integrity
+    return verify_audit_ledger_integrity()
+
+
+@app.post("/api/enterprise/industrial/scpi")
+def api_enterprise_scpi_exec(req: SCPIExecutionRequest):
+    """Execute SCPI command over TCP/IP, Serial, or Virtual Loopback driver."""
+    from .industrial.scpi_visa import execute_scpi_command_live
+    return execute_scpi_command_live(req.resource_string, req.command)
+
+
+@app.post("/api/enterprise/industrial/qif/parse")
+def api_enterprise_qif_parse(req: QIFParseRequest):
+    """Parse ANSI/DMSC QIF 3.0 or STEP AP242 XML/JSON measurement plan."""
+    from .industrial.qif_step import parse_qif_plan
+    return parse_qif_plan(req.raw_content)
+
+
+@app.get("/api/enterprise/industrial/qif/export/{calculation_id}")
+def api_enterprise_qif_export(calculation_id: str):
+    """Export calculation record to standard QIF 3.0 Results JSON schema."""
+    from .db import get_calculation
+    from .industrial.qif_step import export_qif_results
+    rec = get_calculation(calculation_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Calculation record not found.")
+    return export_qif_results(rec)
+
+
+@app.get("/api/enterprise/industrial/telemetry/sample")
+def api_enterprise_telemetry_sample(nominal: float = Query(25.0), elapsed_sec: float = Query(0.0)):
+    """Fetch live streaming physical telemetry sample with thermal expansion error and Gaussian noise."""
+    from .industrial.telemetry_emulator import generate_live_telemetry_sample
+    return generate_live_telemetry_sample(nominal_value=nominal, elapsed_seconds=elapsed_sec)
+
+
+@app.post("/api/enterprise/compliance/sign")
+def api_enterprise_part11_sign(req: Part11SignatureRequest):
+    """Execute compliant FDA 21 CFR Part 11 electronic signature ceremony."""
+    from .compliance.part11_signatures import execute_electronic_signature, SignatureReason
+    try:
+        reason_enum = SignatureReason[req.reason]
+    except KeyError:
+        reason_enum = SignatureReason.APPROVAL_RELEASE
+
+    res = execute_electronic_signature(
+        calculation_id=req.calculation_id,
+        calculation_sha256=req.calculation_sha256,
+        username=req.username,
+        password_plain=req.password,
+        reason=reason_enum,
+    )
+    if "error" in res:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return res
+
+
+@app.post("/api/enterprise/compliance/qualification")
+def api_enterprise_iq_oq_pq():
+    """Execute automated IQ/OQ/PQ software validation suite and generate formal dossier."""
+    from .compliance.iq_oq_pq import execute_full_qualification_protocol
+    return execute_full_qualification_protocol()
+
+
+@app.get("/api/enterprise/compliance/traceability/{calculation_id}")
+def api_enterprise_traceability(calculation_id: str):
+    """Generate Statement of Unbroken Traceability to NIST and SI Base Units."""
+    from .db import get_calculation
+    from .compliance.traceability import generate_traceability_dossier
+    rec = get_calculation(calculation_id)
+    inst_name = rec.get("instrument_name", "Precision Outside Micrometer") if rec else "Precision Instrument"
+    return generate_traceability_dossier(instrument_name=inst_name)
+
+
+@app.get("/api/enterprise/benchmarks/nist")
+def api_enterprise_nist_benchmarks():
+    """Execute mathematical equivalence checks against NIST Standard Reference Data."""
+    from .benchmarks.nist_benchmarks import run_nist_benchmark_verification
+    return run_nist_benchmark_verification()
+
+
+@app.get("/api/enterprise/benchmarks/ilc")
+def api_enterprise_ilc_round():
+    """Simulate ISO/IEC 17043 Interlaboratory Comparison round and compute En-ratios."""
+    from .benchmarks.ilc_pt import simulate_proficiency_testing_round
+    return simulate_proficiency_testing_round()
+
+
+@app.get("/api/enterprise/profiles")
+def api_enterprise_profiles():
+    """List pre-configured compliance profiles for Aerospace, Automotive, Medical, and Semiconductor."""
+    from .profiles.industry_profiles import list_industry_profiles
+    return {"industry_profiles": list_industry_profiles()}
+
+
+@app.get("/api/enterprise/support/diagnostic-bundle")
+def api_enterprise_support_bundle():
+    """Export 1-click sanitized enterprise diagnostic telemetry support dossier."""
+    from .support.support_bundle import generate_enterprise_support_bundle
+    return generate_enterprise_support_bundle()
+
+
+@app.get("/api/enterprise/support/handbook")
+def api_enterprise_handbook():
+    """Retrieve in-app interactive metrology engineering handbook articles."""
+    from .support.handbook import list_handbook_articles
+    return {"articles": list_handbook_articles()}
+
 
 
 

@@ -31,6 +31,21 @@
       <li id="nav-copilot"><a href="#" onclick="switchView('copilot')"><span>🤖</span> Engineering Copilot</a></li>
     </ul>
 
+    <div class="sidebar-section">Industrial Integrations</div>
+    <ul class="sidebar-menu">
+      <li id="nav-scpi"><a href="#" onclick="switchView('scpi')"><span>🔌</span> SCPI / VISA Studio</a></li>
+      <li id="nav-qif"><a href="#" onclick="switchView('qif')"><span>📐</span> QIF 3.0 &amp; STEP CAD</a></li>
+      <li id="nav-profiles"><a href="#" onclick="switchView('profiles')"><span>🏭</span> Industry Profiles</a></li>
+    </ul>
+
+    <div class="sidebar-section">Regulatory &amp; Quality</div>
+    <ul class="sidebar-menu">
+      <li id="nav-part11"><a href="#" onclick="switchView('part11')"><span>✍️</span> 21 CFR Part 11 Signs</a></li>
+      <li id="nav-qualification"><a href="#" onclick="switchView('qualification')"><span>📜</span> IQ / OQ / PQ Dossier</a></li>
+      <li id="nav-benchmarks"><a href="#" onclick="switchView('benchmarks')"><span>🏛️</span> NIST Benchmarks</a></li>
+      <li id="nav-ilc"><a href="#" onclick="switchView('ilc')"><span>🌐</span> ISO 17043 ILC / PT</a></li>
+    </ul>
+
     <div class="sidebar-section">Calibration Studios</div>
     <ul class="sidebar-menu">
       <li id="nav-workflow"><a href="#" onclick="startNewCalibration()"><span>⚡</span> Single-Point Studio</a></li>
@@ -43,13 +58,15 @@
     <ul class="sidebar-menu">
       <li id="nav-replay"><a href="#" onclick="switchView('replay')"><span>🔄</span> 12-Stage Replay</a></li>
       <li id="nav-tamper"><a href="#" onclick="switchView('tamper')"><span>🛡️</span> Tamper Detection</a></li>
-      <li id="nav-audit"><a href="#" onclick="switchView('audit')"><span>🔐</span> Audit Ledger</a></li>
+      <li id="nav-audit"><a href="#" onclick="switchView('audit')"><span>🔐</span> Merkle Audit Ledger</a></li>
       <li id="nav-backups"><a href="#" onclick="switchView('backups')"><span>💾</span> Backup &amp; Recovery</a></li>
       <li id="nav-standards"><a href="#" onclick="switchView('standards')"><span>📜</span> Standards Registry</a></li>
     </ul>
 
-    <div class="sidebar-section">Administration</div>
+    <div class="sidebar-section">Support &amp; Admin</div>
     <ul class="sidebar-menu">
+      <li id="nav-handbook"><a href="#" onclick="switchView('handbook')"><span>📖</span> Metrology Handbook</a></li>
+      <li id="nav-support"><a href="#" onclick="switchView('support')"><span>💼</span> SLA Support Bundle</a></li>
       <li id="nav-settings"><a href="#" onclick="switchView('settings')"><span>⚙️</span> Lab Profile &amp; Settings</a></li>
       <li id="nav-license"><a href="#" onclick="switchView('license')"><span>💎</span> Plans &amp; Licensing</a></li>
     </ul>
@@ -787,6 +804,223 @@
             </div>
             <div id="copilot-output-container" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
               <div style="font-size: 11px; color: var(--text-muted);">Enter query and click 'Execute Investigation' to run multi-agent tool execution.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8F: SCPI / VISA HARDWARE STUDIO -->
+        <section id="view-scpi" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🔌 SCPI / VISA Hardware Automation Studio</h2>
+              <span class="badge badge-enterprise">IEEE 488.2 PROTOCOL</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Live &amp; Virtual hardware communication bridge (TCP/IP socket, Serial RS-232, USB-TMC) for Keysight, Fluke, and Mitutoyo instruments.
+            </p>
+            <div class="grid-2" style="margin-bottom: 12px;">
+              <div class="form-group">
+                <label>Resource Descriptor</label>
+                <input type="text" id="scpi-resource-input" class="form-control" value="VIRTUAL::KEY34461A" placeholder="TCPIP0::192.168.1.50::5025::SOCKET or VIRTUAL::KEY34461A">
+              </div>
+              <div class="form-group">
+                <label>SCPI Command / Query</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="scpi-command-input" class="form-control" value="*IDN?" placeholder="*IDN?, MEAS:VOLT:DC?, READ?, SYST:ERR?">
+                  <button class="btn btn-primary" onclick="sendScpiCommandLive()">Send &rarr;</button>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+              <button class="btn btn-outline btn-sm" onclick="setScpiCmd('*IDN?')">*IDN? (Identify)</button>
+              <button class="btn btn-outline btn-sm" onclick="setScpiCmd('MEAS:VOLT:DC?')">MEAS:VOLT:DC?</button>
+              <button class="btn btn-outline btn-sm" onclick="setScpiCmd('MEAS:RES?')">MEAS:RES?</button>
+              <button class="btn btn-outline btn-sm" onclick="setScpiCmd('SYST:ERR?')">SYST:ERR?</button>
+              <button class="btn btn-outline btn-sm" onclick="setScpiCmd('*RST')">*RST (Reset)</button>
+            </div>
+            <div class="scpi-terminal" id="scpi-terminal-log">SCPI Industrial Terminal Ready. Loopback online.</div>
+          </div>
+        </section>
+
+        <!-- VIEW 8G: QIF 3.0 & STEP CAD -->
+        <section id="view-qif" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📐 QIF 3.0 (DMSC) &amp; STEP AP242 CAD Metrology Interchange</h2>
+              <span class="badge badge-enterprise">ANSI / DMSC QIF 3.0</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Import GD&amp;T measurement characteristics from CAD models and export compliant QIF 3.0 results.
+            </p>
+            <div class="form-group">
+              <label>QIF 3.0 Measurement Plan (JSON / XML)</label>
+              <textarea id="qif-import-textarea" class="form-control" style="font-family: var(--font-mono); font-size: 11px; height: 120px;">{
+  "MeasurementPlan": {
+    "Characteristics": [
+      { "id": "CHAR-001", "name": "Bore Diameter", "nominal": 25.0000, "tolerance_upper": 0.0020, "tolerance_lower": -0.0020, "unit": "mm" },
+      { "id": "CHAR-002", "name": "Shaft Step Length", "nominal": 50.0000, "tolerance_upper": 0.0030, "tolerance_lower": -0.0030, "unit": "mm" }
+    ]
+  }
+}</textarea>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <button class="btn btn-primary" onclick="parseQifPlanLive()">Parse QIF Characteristics</button>
+              <button class="btn btn-secondary" onclick="exportActiveCalculationQifLive()">Export Active Record as QIF 3.0</button>
+            </div>
+            <div id="qif-output-container" style="background: #f8fafc; padding: 12px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Click Parse to extract inspection characteristics.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8H: 21 CFR PART 11 SIGNATURES -->
+        <section id="view-part11" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>✍️ FDA 21 CFR Part 11 &amp; EU Annex 11 Electronic Signature Studio</h2>
+              <span class="badge badge-enterprise">REGULATORY SIGNATURE SEAL</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Dual-credential authentication ceremony, unalterable signature blocks, and tamper-evident cryptographic sealing.
+            </p>
+            <div class="grid-2" style="margin-bottom: 12px;">
+              <div>
+                <div class="form-group">
+                  <label>Signer Username</label>
+                  <select id="part11-username-select" class="form-control">
+                    <option value="chief_metrologist">chief_metrologist (Dr. Aris Thorne - Lead Signatory)</option>
+                    <option value="admin">admin (Enterprise Administrator)</option>
+                    <option value="qa_auditor">qa_auditor (Elena Vance - Quality Assurance)</option>
+                    <option value="cal_tech">cal_tech (Marcus Reid - Cal Technician)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Signer Password (Re-Authentication)</label>
+                  <input type="password" id="part11-password-input" class="form-control" value="Signatory@2026">
+                </div>
+                <div class="form-group">
+                  <label>Regulatory Reason Code</label>
+                  <select id="part11-reason-select" class="form-control">
+                    <option value="APPROVAL_RELEASE">APPROVAL_RELEASE - I approve this calibration record and authorize release.</option>
+                    <option value="TECHNICAL_REVIEW">TECHNICAL_REVIEW - I have reviewed the uncertainty budget and conformity decisions.</option>
+                    <option value="CALIBRATION_PERFORMED">CALIBRATION_PERFORMED - Performed in accordance with laboratory SOPs.</option>
+                    <option value="AUDIT_SIGN_OFF">AUDIT_SIGN_OFF - I have verified the cryptographic audit trail.</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" onclick="executePart11SignatureLive()">✍️ Sign &amp; Seal Calibration Record</button>
+              </div>
+              <div id="part11-seal-output" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+                <div style="font-size: 11px; color: var(--text-muted);">Enter credentials and execute signature ceremony to seal active record.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8I: IQ / OQ / PQ QUALIFICATION DOSSIER -->
+        <section id="view-qualification" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📜 Automated IQ / OQ / PQ Software Validation Dossier</h2>
+              <span class="badge badge-enterprise">GAMP 5 &amp; ISO 17025 QUALIFIED</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Executes 25+ mathematical reference vectors and 10,000 Monte Carlo iterations to prove exact arithmetic validity.
+            </p>
+            <div style="margin-bottom: 14px;">
+              <button class="btn btn-primary" onclick="executeQualificationProtocolLive()">⚡ Run Full Automated IQ / OQ / PQ Protocol</button>
+            </div>
+            <div id="qualification-dossier-output" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Click run to execute qualification protocol.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8J: NIST REFERENCE BENCHMARKS -->
+        <section id="view-benchmarks" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🏛️ NIST Standard Reference Data (SRD) Benchmarks &amp; Traceability</h2>
+              <span class="badge badge-enterprise">0.000% ARITHMETIC DEVIATION PROOF</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Formally compares kernel execution against published NIST SP 250 datasets and generates Statement of Unbroken Traceability to SI units.
+            </p>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+              <button class="btn btn-primary" onclick="runNistBenchmarksLive()">Run NIST Equivalence Verification</button>
+              <button class="btn btn-secondary" onclick="generateTraceabilityDossierLive()">Generate Statement of SI Traceability</button>
+            </div>
+            <div id="nist-benchmarks-output" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Click to verify mathematical equivalence against NIST reference data.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8K: ISO 17043 ILC / PT SIMULATOR -->
+        <section id="view-ilc" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🌐 ISO/IEC 17043 Interlaboratory Comparison (ILC) &amp; Proficiency Testing</h2>
+              <span class="badge badge-enterprise">En-RATIO &amp; Z-SCORE EVALUATION</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Simulates multi-laboratory round-robin calibrations and evaluates Normalized Error En-ratios (|En| &le; 1.0).
+            </p>
+            <div style="margin-bottom: 14px;">
+              <button class="btn btn-primary" onclick="simulateIlcRoundLive()">Simulate ILC Proficiency Testing Round</button>
+            </div>
+            <div id="ilc-results-output" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Click to simulate multi-lab proficiency testing round.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8L: INDUSTRY PROFILES -->
+        <section id="view-profiles" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>🏭 Pre-Configured Industry Compliance Profiles &amp; Templates</h2>
+              <span class="badge badge-enterprise">AS9100D | IATF 16949 | ISO 13485 | SEMI E10</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Select an industry sector to load specialized calibration templates, decision rules, and thermal soaking constraints.
+            </p>
+            <div id="industry-profiles-container">
+              <button class="btn btn-primary" onclick="loadIndustryProfilesLive()">Load Industry Profiles</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8M: METROLOGY HANDBOOK -->
+        <section id="view-handbook" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>📖 Interactive Metrology Engineering Handbook</h2>
+              <span class="badge badge-enterprise">GUM | Z540.3 | 21 CFR 11 | SCPI</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Official in-app engineering handbook covering uncertainty derivations, guardband curves, and accreditation guides.
+            </p>
+            <div id="handbook-articles-container">
+              <button class="btn btn-primary" onclick="loadHandbookArticlesLive()">Load Handbook</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8N: ENTERPRISE SLA SUPPORT BUNDLE -->
+        <section id="view-support" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <h2>💼 Enterprise SLA Support &amp; Diagnostic Telemetry Exporter</h2>
+              <span class="badge badge-enterprise">24x7 ENTERPRISE SLA</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Generate a cryptographically signed, sanitized diagnostic telemetry dossier for mission-critical support tickets.
+            </p>
+            <div style="margin-bottom: 14px;">
+              <button class="btn btn-primary" onclick="generateSupportBundleLive()">📦 Generate 1-Click Support Diagnostic Bundle</button>
+            </div>
+            <div id="support-bundle-output" style="background: #f8fafc; padding: 14px; border: 1px solid var(--border); border-radius: 4px;">
+              <div style="font-size: 11px; color: var(--text-muted);">Click to generate diagnostic support dossier.</div>
             </div>
           </div>
         </section>
