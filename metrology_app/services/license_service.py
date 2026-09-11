@@ -10,6 +10,8 @@ import os
 import json
 import hmac
 import hashlib
+import urllib.request
+import urllib.error
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 from typing import Dict, Any, Optional, List
@@ -291,25 +293,133 @@ class EntitlementService:
         return cls.get_current_entitlement()
 
     @classmethod
-    def apply_license_token(cls, token_json_str: str) -> Dict[str, Any]:
-        """Apply and verify an incoming signed license token."""
-        ensure_app_directories()
+    def activate_lemon_squeezy_key(cls, license_key: str, instance_name: str = "CALIBRA-Workstation") -> Dict[str, Any]:
+        """
+        Activate a commercial license key issued by Lemon Squeezy.
+        On successful activation, provisions and signs a local offline entitlement token.
+        """
+        clean_key = license_key.strip()
+        if not clean_key:
+            raise ValueError("License key cannot be empty.")
+
+        url = "https://api.lemonsqueezy.com/v1/licenses/activate"
+        payload = json.dumps({
+            "license_key": clean_key,
+            "instance_name": instance_name,
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": "CALIBRA-Metrology-Workstation/7.0.0",
+            },
+            method="POST",
+        )
+
         try:
-            token_dict = json.loads(token_json_str)
-        except Exception:
-            raise ValueError("Invalid JSON format in license token.")
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            try:
+                err_data = json.loads(e.read().decode("utf-8"))
+                msg = err_data.get("error") or err_data.get("message") or f"HTTP {e.code}"
+            except Exception:
+                msg = f"HTTP {e.code} Error from activation authority."
+            raise ValueError(f"License activation rejected: {msg}")
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise ValueError(
+                "Unable to connect to Lemon Squeezy license server. "
+                "If operating in an air-gapped lab, please enter your signed offline entitlement JSON token."
+            )
 
-        if not verify_token_signature(token_dict):
-            raise ValueError("Cryptographic signature verification failed. Token is tampered or invalid.")
+        if not data.get("activated"):
+            error_msg = data.get("error") or "License key could not be activated."
+            raise ValueError(f"Activation failed: {error_msg}")
 
+        meta = data.get("meta", {})
+        lic_info = data.get("license_key", {})
+        variant_name = str(meta.get("variant_name", "")).upper()
+        prod_name = str(meta.get("product_name", "")).upper()
+
+        # Resolve tier from Lemon Squeezy metadata
+        if "ENTERPRISE" in variant_name or "ENTERPRISE" in prod_name:
+            plan_id = PlanId.ENTERPRISE
+        elif "TEAM" in variant_name or "TEAM" in prod_name or "BUSINESS" in variant_name:
+            plan_id = PlanId.BUSINESS
+        else:
+            plan_id = PlanId.PROFESSIONAL
+
+        now_utc = datetime.now(timezone.utc)
+        expires_at = lic_info.get("expires_at")
+        customer_name = meta.get("customer_name") or meta.get("customer_email") or "Authorized Customer"
+
+        entitlement_payload = {
+            "entitlement_id": f"LS-{lic_info.get('id', 'PRO')}",
+            "customer_id": f"CUST-LS-{meta.get('customer_id', 'NOVYRAX')}",
+            "customer_name": customer_name,
+            "organization_id": meta.get("customer_email"),
+            "product_id": "MetrologyWorkstation.Commercial",
+            "plan_id": plan_id.value,
+            "status": EntitlementState.ACTIVE.value,
+            "seat_limit": lic_info.get("activation_limit") or 1,
+            "issued_at": now_utc.isoformat(),
+            "expires_at": expires_at,
+            "grace_period_days": 30,
+            "features": PLAN_FEATURES.get(plan_id, PLAN_FEATURES[PlanId.PROFESSIONAL]),
+        }
+        entitlement_payload["signature"] = compute_token_signature(entitlement_payload)
+
+        ensure_app_directories()
         with open(LICENSE_FILE, "w", encoding="utf-8") as f:
-            json.dump(token_dict, f, indent=2)
+            json.dump(entitlement_payload, f, indent=2)
 
-        record_audit_event("LICENSE_ACTIVATED", token_dict.get("entitlement_id", "UNKNOWN"), "User", {
-            "plan_id": token_dict.get("plan_id"),
-            "customer": token_dict.get("customer_name"),
-        })
+        record_audit_event(
+            "LEMON_SQUEEZY_ACTIVATED",
+            entitlement_payload["entitlement_id"],
+            customer_name,
+            {
+                "plan_id": plan_id.value,
+                "activation_id": data.get("instance", {}).get("id"),
+                "status": lic_info.get("status"),
+            },
+        )
         return cls.get_current_entitlement()
+
+    @classmethod
+    def apply_license_token(cls, token_or_key_str: str) -> Dict[str, Any]:
+        """
+        Apply and verify an incoming license.
+        Accepts either:
+        1. A signed JSON entitlement token (offline air-gapped support).
+        2. A Lemon Squeezy license key (e.g. 'ABCD-EFGH-IJKL-MNOP' or UUID).
+        """
+        ensure_app_directories()
+        trimmed = token_or_key_str.strip()
+
+        # Check if the input is a JSON string
+        if trimmed.startswith("{") and trimmed.endswith("}"):
+            try:
+                token_dict = json.loads(trimmed)
+            except Exception:
+                raise ValueError("Invalid JSON format in license token.")
+
+            if not verify_token_signature(token_dict):
+                raise ValueError("Cryptographic signature verification failed. Token is tampered or invalid.")
+
+            with open(LICENSE_FILE, "w", encoding="utf-8") as f:
+                json.dump(token_dict, f, indent=2)
+
+            record_audit_event("LICENSE_ACTIVATED", token_dict.get("entitlement_id", "UNKNOWN"), "User", {
+                "plan_id": token_dict.get("plan_id"),
+                "customer": token_dict.get("customer_name"),
+            })
+            return cls.get_current_entitlement()
+
+        # Otherwise, treat as Lemon Squeezy license key
+        return cls.activate_lemon_squeezy_key(trimmed)
 
     @classmethod
     def is_feature_authorized(cls, feature_name: str, db_path: Optional[str] = None) -> bool:
@@ -322,8 +432,8 @@ def get_license_info(db_path: Optional[str] = None) -> Dict[str, Any]:
     """Retrieve full commercial license details for API consumers."""
     ent = EntitlementService.get_current_entitlement(db_path=db_path)
     return {
-        "edition": f"Metrology Workstation ({ent['plan_name']})",
-        "version": "1.0.0",
+        "edition": f"CALIBRA Metrology Workstation ({ent['plan_name']})",
+        "version": "7.0.0",
         "entitlement_state": ent["state"],
         "plan_id": ent["plan_id"],
         "customer_name": ent.get("customer_name", "Valued User"),

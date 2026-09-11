@@ -7,11 +7,11 @@ export const AboutWorkspace: React.FC = () => {
       <div className="bg-white border border-[#c1c7ce] rounded-lg p-5">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-bold text-[#00435f] bg-[#dbe4ea] px-2 py-0.5 rounded border border-[#c1c7ce]">
-            METROLOGY WORKSTATION V6.0.42
+            CALIBRA METROLOGY WORKSTATION V7.0.0
           </span>
         </div>
         <h1 className="text-xl font-bold text-[#191c1e] font-sans tracking-tight">
-          About Metrology Workstation V6
+          About CALIBRA Metrology Workstation V7.0.0
         </h1>
         <p className="text-[#576065] text-xs mt-1">
           Engineered for ISO/IEC 17025 accredited laboratories and precision calibration facilities.
