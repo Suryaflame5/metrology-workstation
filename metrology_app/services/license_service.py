@@ -341,15 +341,40 @@ class EntitlementService:
 
         meta = data.get("meta", {})
         lic_info = data.get("license_key", {})
+
+        # Strict Lemon Squeezy License State Machine Validation
+        lic_status = str(lic_info.get("status", "")).lower()
+        if lic_status == "inactive":
+            raise ValueError("License key is inactive. Please ensure your order has been completed.")
+        elif lic_status == "expired":
+            exp_date = lic_info.get("expires_at", "an earlier date")
+            raise ValueError(f"License key has expired on {exp_date}. Please renew your subscription.")
+        elif lic_status == "disabled":
+            raise ValueError("License key has been disabled by the vendor or refunded.")
+        elif lic_status != "active":
+            raise ValueError(f"License key status is '{lic_status}'. Only 'active' licenses can be authenticated.")
+
+        # Enforce Seat / Activation Limits
+        activation_limit = lic_info.get("activation_limit")
+        instances_count = lic_info.get("instances_count") or 0
+        if activation_limit is not None and instances_count > activation_limit:
+            raise ValueError(
+                f"License key activation limit exceeded ({instances_count}/{activation_limit} seats active). "
+                "Please deactivate an unused workstation or upgrade to a Team/Enterprise license."
+            )
+
         variant_name = str(meta.get("variant_name", "")).upper()
         prod_name = str(meta.get("product_name", "")).upper()
 
-        # Resolve tier from Lemon Squeezy metadata
+        # Strict Tier Entitlement Resolution
         if "ENTERPRISE" in variant_name or "ENTERPRISE" in prod_name:
             plan_id = PlanId.ENTERPRISE
         elif "TEAM" in variant_name or "TEAM" in prod_name or "BUSINESS" in variant_name:
             plan_id = PlanId.BUSINESS
+        elif "PROFESSIONAL" in variant_name or "PRO" in variant_name or "PROFESSIONAL" in prod_name:
+            plan_id = PlanId.PROFESSIONAL
         else:
+            # Default to Professional for general commercial keys
             plan_id = PlanId.PROFESSIONAL
 
         now_utc = datetime.now(timezone.utc)
@@ -364,10 +389,11 @@ class EntitlementService:
             "product_id": "MetrologyWorkstation.Commercial",
             "plan_id": plan_id.value,
             "status": EntitlementState.ACTIVE.value,
-            "seat_limit": lic_info.get("activation_limit") or 1,
+            "seat_limit": lic_info.get("activation_limit") or (5 if plan_id == PlanId.BUSINESS else (25 if plan_id == PlanId.ENTERPRISE else 1)),
             "issued_at": now_utc.isoformat(),
             "expires_at": expires_at,
             "grace_period_days": 30,
+            "order_id": meta.get("order_id"),
             "features": PLAN_FEATURES.get(plan_id, PLAN_FEATURES[PlanId.PROFESSIONAL]),
         }
         entitlement_payload["signature"] = compute_token_signature(entitlement_payload)
@@ -383,7 +409,8 @@ class EntitlementService:
             {
                 "plan_id": plan_id.value,
                 "activation_id": data.get("instance", {}).get("id"),
-                "status": lic_info.get("status"),
+                "status": lic_status,
+                "order_id": meta.get("order_id"),
             },
         )
         return cls.get_current_entitlement()
@@ -425,6 +452,12 @@ class EntitlementService:
     def is_feature_authorized(cls, feature_name: str, db_path: Optional[str] = None) -> bool:
         """Check if a specific commercial feature is authorized under active entitlement."""
         entitlement = cls.get_current_entitlement(db_path=db_path)
+        if entitlement.get("state") in (
+            EntitlementState.EXPIRED.value,
+            EntitlementState.SUSPENDED.value,
+            EntitlementState.REVOKED.value,
+        ):
+            return feature_name in PLAN_FEATURES[PlanId.FREE]
         return feature_name in entitlement.get("features", [])
 
 

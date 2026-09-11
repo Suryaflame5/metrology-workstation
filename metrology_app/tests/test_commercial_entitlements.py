@@ -192,3 +192,78 @@ def test_clock_rollback_protection():
         ent = EntitlementService.get_current_entitlement(db_path=db_path)
         assert ent["state"] == EntitlementState.FREE.value
         assert "Clock rollback detected" in ent.get("security_alert", "")
+
+
+def test_evaluation_watermark_enforcement():
+    """Verify that certificates generated under Free tier include watermark, and Pro tier excludes it."""
+    import pypdf
+    import io
+    from metrology_app.services.enterprise_certificate_service import EnterpriseCertificateService
+    from metrology_app.models import CalculationCreateRequest
+    from metrology_app.services.calculation_service import compute_micrometer_calibration
+
+    # 1. Free Mode -> Watermark present
+    calc_res = compute_micrometer_calibration(CalculationCreateRequest())
+    cert_service = EnterpriseCertificateService()
+    pdf_free = cert_service.generate_pdf_for_calculation(calc_res.id)
+    reader_free = pypdf.PdfReader(io.BytesIO(pdf_free))
+    text_free = "\n".join(page.extract_text() for page in reader_free.pages)
+    assert "COMMUNITY EVALUATION COPY" in text_free
+    assert "NOT VALID FOR ACCREDITED CALIBRATION USE" in text_free
+
+    # 2. Professional Trial Mode -> Watermark absent
+    EntitlementService.activate_trial(duration_days=14)
+    # Force re-generation by calling generate_pdf_certificate directly
+    cert = cert_service.create_certificate(
+        calculation_id=calc_res.id,
+        template_type="ISO_17025_STANDARD",
+        customer_info={"name": "Pro Client", "address": "Lab 1"},
+    )
+    gen_res = cert_service.generate_pdf_certificate(cert["id"])
+    with open(gen_res["pdf_path"], "rb") as f:
+        pdf_pro = f.read()
+    reader_pro = pypdf.PdfReader(io.BytesIO(pdf_pro))
+    text_pro = "\n".join(page.extract_text() for page in reader_pro.pages)
+    assert "COMMUNITY EVALUATION COPY" not in text_pro
+    assert "NOT VALID FOR ACCREDITED CALIBRATION USE" not in text_pro
+
+
+def test_feature_gating_endpoints():
+    """Verify that multi-point calculations and evidence zip export are gated by entitlement tier."""
+    from fastapi.testclient import TestClient
+    from metrology_app.server import app
+    from metrology_app.models import CalculationCreateRequest
+    from metrology_app.services.calculation_service import compute_micrometer_calibration
+
+    client = TestClient(app)
+
+    # 1. Under Free tier: Multi-point returns 403
+    mp_payload = {
+        "technician": "Auditor",
+        "instrument_name": "Digital Micrometer",
+        "points": [
+            {"nominal_value": 5.0, "tolerance": 0.004, "readings": [5.0001, 5.0002, 5.0001]},
+            {"nominal_value": 10.0, "tolerance": 0.004, "readings": [10.0001, 10.0002, 10.0001]},
+        ]
+    }
+    res_mp = client.post("/api/calculations/multi-point", json=mp_payload)
+    assert res_mp.status_code == 403
+    assert "Multi-Point Calibration Studio requires" in res_mp.json()["detail"]
+
+    # Evidence ZIP returns 403
+    calc = compute_micrometer_calibration(CalculationCreateRequest())
+    res_zip = client.get(f"/api/calculations/{calc.id}/export/zip")
+    assert res_zip.status_code == 403
+    assert "Machine-verifiable evidence ZIP export requires" in res_zip.json()["detail"]
+
+    # 2. Activate Trial -> Endpoints succeed (200 OK)
+    EntitlementService.activate_trial(duration_days=14)
+
+    res_mp_pro = client.post("/api/calculations/multi-point", json=mp_payload)
+    assert res_mp_pro.status_code == 200
+    assert res_mp_pro.json()["total_points"] == 2
+
+    res_zip_pro = client.get(f"/api/calculations/{calc.id}/export/zip")
+    assert res_zip_pro.status_code == 200
+    assert res_zip_pro.headers["content-type"] == "application/zip"
+

@@ -77,6 +77,9 @@ def test_html_report_generation():
 
 
 def test_fastapi_rest_endpoints():
+    from metrology_app.services.license_service import EntitlementService
+    EntitlementService.activate_trial(duration_days=14)
+
     # 1. Stats
     resp = client.get("/api/stats")
     assert resp.status_code == 200

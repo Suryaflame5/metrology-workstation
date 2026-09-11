@@ -54,7 +54,7 @@ export const SettingsWorkspace: React.FC = () => {
       const res = await fetch('/api/license/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token_json: trimmed }),
+        body: JSON.stringify({ license_key: trimmed, token_json: trimmed }),
       });
 
       const data = await res.json();
@@ -114,6 +114,18 @@ export const SettingsWorkspace: React.FC = () => {
   };
 
   const isProOrHigher = license && (license.plan_id === 'PROFESSIONAL' || license.plan_id === 'BUSINESS' || license.plan_id === 'ENTERPRISE');
+
+  const COMMERCIAL_FEATURE_CATALOG = [
+    { id: 'EXACT_50_DIGIT_GUM', name: '50-Digit Deterministic GUM Math Engine', desc: 'JCGM 100:2008 high-precision arithmetic with zero IEEE 754 drift.' },
+    { id: 'DECISION_Z5403_METHOD6', name: 'ANSI/NCSL Z540.3 Method 6 Guard Banding', desc: 'Automatic 2.0% PFA risk guardband calculation.' },
+    { id: '12_STAGE_REPLAY', name: '12-Stage Reproducibility & Provenance', desc: 'Clause-by-clause cryptographic calculation replay.' },
+    { id: 'ALL_7_INSTRUMENT_FAMILIES', name: 'All 7 Metrology Instrument Families', desc: 'Micrometers, Calipers, Indicators, Torque, Pressure, Temp, Multimeters.' },
+    { id: 'MULTI_POINT_STUDIO', name: 'Multi-Point Calibration Studio', desc: 'Nonlinear multi-point nominal calibration runs.' },
+    { id: 'MACHINE_VERIFIABLE_EVIDENCE_ZIP', name: 'Cryptographic Evidence Bundle (ZIP)', desc: 'SHA-256 sealed audit packages for external accreditation auditors.' },
+    { id: 'UNWATERMARKED_CERTIFICATES', name: 'Official Unwatermarked ISO/IEC 17025 PDFs', desc: 'Accreditation-ready calibration certificates without evaluation stamp.' },
+    { id: 'CUSTOM_LAB_BRANDING', name: 'Custom Laboratory Branding & Logo', desc: 'Embed lab header, accreditation number, and corporate identity.' },
+    { id: 'MULTI_SEAT_ORGANIZATION', name: 'Multi-Seat Team Floating Deployment', desc: 'Centralized organization-wide seat entitlement.' },
+  ];
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto bg-[#f4f5f3] select-none p-6 space-y-6 max-w-4xl mx-auto font-mono text-xs">
@@ -183,6 +195,54 @@ export const SettingsWorkspace: React.FC = () => {
                 <ShieldCheck className="w-4 h-4 text-[#16a34a]" />
                 <span>{license.offline_operation_status}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feature Permissions Matrix */}
+        {license && (
+          <div className="border border-[#e2e5e9] rounded-lg p-3 bg-[#fdfdfd] space-y-2">
+            <h3 className="font-sans font-bold text-xs text-[#191c1e] flex items-center justify-between">
+              <span>Tier Feature Permissions &amp; Audit Capabilities</span>
+              <span className="text-[10px] text-[#656b73] font-normal">
+                {license.features.length} features active
+              </span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+              {COMMERCIAL_FEATURE_CATALOG.map((f) => {
+                const isAuthorized = license.features.includes(f.id);
+                return (
+                  <div
+                    key={f.id}
+                    className={`p-2 rounded border flex items-start justify-between gap-2 ${
+                      isAuthorized
+                        ? 'bg-[#f0f9f4] border-[#bbf7d0]'
+                        : 'bg-[#f8fafc] border-[#e2e8f0] opacity-65'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-sans font-medium text-[11px] text-[#191c1e] flex items-center gap-1.5">
+                        {isAuthorized ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#16a34a] shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-3.5 h-3.5 text-[#94a3b8] shrink-0" />
+                        )}
+                        <span>{f.name}</span>
+                      </div>
+                      <p className="text-[10px] text-[#64748b] mt-0.5 leading-tight">{f.desc}</p>
+                    </div>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide ${
+                        isAuthorized
+                          ? 'bg-[#dcfce7] text-[#15803d]'
+                          : 'bg-[#f1f5f9] text-[#64748b]'
+                      }`}
+                    >
+                      {isAuthorized ? 'Active' : 'Locked'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

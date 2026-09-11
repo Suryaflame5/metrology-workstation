@@ -121,11 +121,18 @@ def api_activate_trial():
 
 @app.post("/api/license/activate")
 def api_activate_license(payload: Dict[str, Any]):
-    """Apply and verify a signed license token JSON."""
+    """Apply and verify a signed license token JSON or Lemon Squeezy license key."""
     from .services.license_service import EntitlementService
     try:
-        raw_json = payload.get("token_json") or json.dumps(payload)
-        ent = EntitlementService.apply_license_token(raw_json)
+        raw_key_or_token = (
+            payload.get("license_key")
+            or payload.get("key")
+            or payload.get("token_json")
+            or payload.get("token")
+        )
+        if not raw_key_or_token:
+            raw_key_or_token = json.dumps(payload)
+        ent = EntitlementService.apply_license_token(str(raw_key_or_token))
         return {"status": "SUCCESS", "entitlement": ent}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -208,7 +215,7 @@ def api_get_revisions(calc_id: str):
 
 @app.post("/api/calculations", response_model=CalculationResponse)
 def api_create_calculation(request: CalculationCreateRequest):
-    """Execute a single-point calibration calculation."""
+    """Execute a single-point micrometer calibration calculation."""
     try:
         res = compute_micrometer_calibration(request)
         record_audit_event("CALIBRATION_CREATED", res.id, "Technician", {"verdict": res.conformity_verdict, "class": request.record_class})
@@ -220,6 +227,12 @@ def api_create_calculation(request: CalculationCreateRequest):
 @app.post("/api/calculations/multi-point", response_model=MultiPointCalculationResponse)
 def api_create_multi_point_calculation(request: MultiPointCalculationCreateRequest):
     """Execute a multi-point calibration calculation across multiple nominal checkpoints."""
+    from .services.license_service import EntitlementService
+    if not EntitlementService.is_feature_authorized("MULTI_POINT_STUDIO"):
+        raise HTTPException(
+            status_code=403,
+            detail="Multi-Point Calibration Studio requires an active Professional, Team, or Enterprise license. Upgrade or start a trial in Settings."
+        )
     try:
         res = compute_multi_point_calibration(request)
         record_audit_event("MULTI_POINT_CALIBRATION_CREATED", res.id, request.technician, {"points_count": res.total_points, "overall_verdict": res.overall_verdict})
@@ -301,6 +314,12 @@ def api_tamper_test(calc_id: str):
 @app.get("/api/calculations/{calc_id}/export/zip")
 def api_export_zip(calc_id: str):
     """Download machine-verifiable evidence package as a zip file."""
+    from .services.license_service import EntitlementService
+    if not EntitlementService.is_feature_authorized("MACHINE_VERIFIABLE_EVIDENCE_ZIP"):
+        raise HTTPException(
+            status_code=403,
+            detail="Machine-verifiable evidence ZIP export requires an active Professional or Enterprise license. Upgrade or activate in Settings."
+        )
     try:
         zip_bytes = export_evidence_package_zip_bytes(calc_id)
         record_audit_event("PACKAGE_EXPORTED", calc_id, "Technician", {"type": "zip"})
@@ -309,6 +328,8 @@ def api_export_zip(calc_id: str):
             media_type="application/zip",
             headers={"Content-Disposition": f"attachment; filename=evidence_{calc_id}.zip"},
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

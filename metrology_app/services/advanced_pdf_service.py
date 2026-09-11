@@ -68,6 +68,41 @@ class NumberedCanvas(canvas.Canvas):
 
         self.restoreState()
 
+        # Check entitlement for unwatermarked certificates
+        is_unwatermarked = False
+        try:
+            from .license_service import EntitlementService
+            db_path = getattr(self, "db_path", DB_PATH)
+            is_unwatermarked = EntitlementService.is_feature_authorized("UNWATERMARKED_CERTIFICATES", db_path=db_path)
+        except Exception:
+            pass
+
+        if not is_unwatermarked:
+            # Diagonal watermark across center of page
+            self.saveState()
+            self.setFont("Helvetica-Bold", 32)
+            self.setFillColor(colors.HexColor("#C0392B"), alpha=0.12)
+            self.translate(306, 396)
+            self.rotate(45)
+            self.drawCentredString(0, 30, "COMMUNITY EVALUATION COPY")
+            self.setFont("Helvetica-Bold", 14)
+            self.drawCentredString(0, 0, "NOT VALID FOR ACCREDITED CALIBRATION USE")
+            self.setFont("Helvetica", 9)
+            self.drawCentredString(0, -25, "Evaluation Only • Commercial & Accreditation Use Prohibited")
+            self.restoreState()
+
+            # Top warning banner
+            self.saveState()
+            self.setFillColor(colors.HexColor("#FDEDEC"))
+            self.rect(0, 770, 612, 22, fill=True, stroke=False)
+            self.setStrokeColor(colors.HexColor("#E74C3C"))
+            self.setLineWidth(1)
+            self.line(0, 770, 612, 770)
+            self.setFont("Helvetica-Bold", 8)
+            self.setFillColor(colors.HexColor("#C0392B"))
+            self.drawCentredString(306, 777, "COMMUNITY EVALUATION COPY — NOT VALID FOR ACCREDITED CALIBRATION USE")
+            self.restoreState()
+
 
 def generate_advanced_multi_page_pdf(job_id: str, db_path: str = DB_PATH) -> bytes:
     """Generate official multi-page ISO/IEC 17025 Calibration Certificate PDF."""

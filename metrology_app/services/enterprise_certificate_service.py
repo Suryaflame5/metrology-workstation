@@ -527,8 +527,42 @@ class EnterpriseCertificateService:
         story.append(Spacer(1, 0.1*inch))
         story.append(Paragraph(self.branding["certificate_footer"], styles["Normal"]))
         
+        # Check if unwatermarked certificates are authorized
+        from .license_service import EntitlementService
+        is_unwatermarked = EntitlementService.is_feature_authorized(
+            "UNWATERMARKED_CERTIFICATES", db_path=self.db_path
+        )
+
+        def _draw_evaluation_watermark(canvas, doc_obj):
+            canvas.saveState()
+            canvas.setFont("Helvetica-Bold", 30)
+            canvas.setFillColor(colors.HexColor("#C0392B"), alpha=0.15)
+            canvas.translate(A4[0] / 2.0, A4[1] / 2.0)
+            canvas.rotate(45)
+            canvas.drawCentredString(0, 30, "COMMUNITY EVALUATION COPY")
+            canvas.setFont("Helvetica-Bold", 13)
+            canvas.drawCentredString(0, 0, "NOT VALID FOR ACCREDITED CALIBRATION USE")
+            canvas.setFont("Helvetica", 9)
+            canvas.drawCentredString(0, -25, "Licensed for evaluation only. Commercial & accreditation use prohibited.")
+            canvas.restoreState()
+
+            # Prominent warning top banner
+            canvas.saveState()
+            canvas.setFillColor(colors.HexColor("#FDEDEC"))
+            canvas.rect(0, A4[1] - 26, A4[0], 26, fill=True, stroke=False)
+            canvas.setStrokeColor(colors.HexColor("#E74C3C"))
+            canvas.setLineWidth(1)
+            canvas.line(0, A4[1] - 26, A4[0], A4[1] - 26)
+            canvas.setFont("Helvetica-Bold", 8.5)
+            canvas.setFillColor(colors.HexColor("#C0392B"))
+            canvas.drawCentredString(A4[0] / 2.0, A4[1] - 17, "COMMUNITY EVALUATION COPY — NOT VALID FOR ACCREDITED CALIBRATION USE")
+            canvas.restoreState()
+
         # Build PDF
-        doc.build(story)
+        if not is_unwatermarked:
+            doc.build(story, onFirstPage=_draw_evaluation_watermark, onLaterPages=_draw_evaluation_watermark)
+        else:
+            doc.build(story)
         
         # Calculate PDF hash
         with open(pdf_path, 'rb') as f:
