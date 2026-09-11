@@ -2504,8 +2504,7 @@ def api_job_advanced_certificate_pdf(job_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-UI_WORKSTATION_DIR = get_resource_path(os.path.join("ui", "workstation"))
-STATIC_DIR = UI_WORKSTATION_DIR if os.path.exists(UI_WORKSTATION_DIR) else get_resource_path(os.path.join("metrology_app", "static"))
+STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 
 if os.path.exists(STATIC_DIR):
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
