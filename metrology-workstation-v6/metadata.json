@@ -1,0 +1,6 @@
+{
+  "name": "Metrology Workstation V6",
+  "description": "Professional desktop measurement engineering workstation for uncertainty analysis, Monte Carlo simulation, conformity assessment, provenance tracking, and calibration reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

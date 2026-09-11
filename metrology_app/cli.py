@@ -33,6 +33,9 @@ def main():
     # Command: demo
     subparsers.add_parser("demo", help="Run a demo micrometer calibration calculation")
 
+    # Command: demo-factory
+    subparsers.add_parser("demo-factory", help="Seed complete factory operations acceptance dataset (Machine #4 diameter drift, ₹36k exposure, Tool #17 correlation, ₹28.8k recovery)")
+
     # Command: selftest
     subparsers.add_parser("selftest", help="Run system integrity and mathematical regression self-test")
 
@@ -72,6 +75,8 @@ def main():
 
     if args.command == "demo":
         run_demo()
+    elif args.command == "demo-factory":
+        run_demo_factory()
     elif args.command == "selftest":
         run_selftest()
     elif args.command == "audit-verify":
@@ -124,6 +129,25 @@ def run_demo():
     print(f" Input SHA-256:         {res.input_sha256}")
     print(f" Calculation SHA-256:   {res.calculation_sha256}")
     print("=" * 75)
+
+
+def run_demo_factory():
+    print("=" * 75)
+    print(" SEEDING INDUSTRIAL FACTORY QUALITY OPERATIONS ACCEPTANCE SCENARIO")
+    print("=" * 75)
+    from .services.demo_factory_data import seed_demo_factory_operations
+    res = seed_demo_factory_operations()
+    print(" [OK] Sample Factory Dataset Seeded Successfully:")
+    print("   • Part A: Precision Pin Shaft (10.000 ± 0.100 mm)")
+    print("   • Machine #4 (Okuma LB3000 CNC)")
+    print("   • Baseline Job: INSP-DEMO-001 (100 parts, 12 scrap defects on Tool #17)")
+    print("   • Quantified Loss Exposure: ₹36,000 active scrap loss")
+    print("   • Root-Cause Correlation: Tool #17 Insert Flank Wear (91.2% confidence)")
+    print("   • Corrective Action: Tool #17 Sandvik Insert Replacement (ACT-DEMO-001)")
+    print("   • Post-Correction Verification Job: INSP-DEMO-002 (100 parts, 0 defects, 100% PASS)")
+    print("   • Verified Recovery ROI Proof: ₹28,800/month Recovered Value (REC-DEMO-001)")
+    print("=" * 75)
+
 
 
 def run_selftest():

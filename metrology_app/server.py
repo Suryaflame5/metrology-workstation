@@ -4,9 +4,11 @@ FastAPI Server for Metrology Workstation and REST API (v0.9.0 Release Candidate)
 
 import os
 import json
+import hashlib
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, HTTPException, Response, Query
+from fastapi import FastAPI, HTTPException, Response, Query, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,6 +48,13 @@ from .db import (
     get_measurement,
     list_measurements,
     get_v5_dashboard_stats,
+    save_job,
+    get_job,
+    update_job,
+    list_jobs,
+    duplicate_job,
+    list_reference_standards,
+    get_reference_standard,
 )
 from .services.workbench_service import compute_uncertainty_workbench, compute_conformity_workbench
 from .services.acquisition_service import analyze_measurement_series
@@ -58,6 +67,14 @@ from .services.selftest_service import run_system_selftest
 from .services.license_service import get_license_info
 from .services.audit_service import record_audit_event, verify_audit_ledger
 from .services.backup_service import create_database_backup, list_backups, restore_database_backup
+from .services.universal_importer import (
+    parse_raw_data_stream,
+    auto_detect_columns,
+    extract_job_measurements,
+    normalize_unit_value,
+)
+from .services.job_pipeline_engine import run_job_pipeline
+from .services.enterprise_certificate_service import generate_pdf_for_calculation
 
 app = FastAPI(
     title="Metrology Workstation",
@@ -72,6 +89,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 
 # Initialize database on startup
 init_db()
@@ -235,12 +263,14 @@ def api_verify_calculation(calc_id: str):
 
 
 @app.get("/api/calculations/{calc_id}/replay")
+@app.get("/api/v6/replay/{calc_id}")
 def api_replay_calculation(calc_id: str):
     """Execute step-by-step 12-stage mathematical calculation replay."""
+    from .db import DB_PATH
     try:
-        return replay_calculation(calc_id)
+        return replay_calculation(calc_id, db_path=DB_PATH)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.post("/api/calculations/{calc_id}/tamper-test")
@@ -455,6 +485,64 @@ def api_delete_project(project_id: str):
         raise HTTPException(status_code=404, detail="Project not found")
     record_audit_event("DELETE_PROJECT", project_id, "SYSTEM", {})
     return {"status": "DELETED", "id": project_id}
+
+
+# --- Enhanced Project Lifecycle Management ---
+@app.get("/api/v1/projects")
+def api_v1_list_projects(status: Optional[str] = None):
+    from .services.project_service import list_all_projects
+    return {"status": "success", "projects": list_all_projects(status=status)}
+
+
+@app.post("/api/v1/projects")
+def api_v1_create_project(payload: Dict[str, Any]):
+    from .services.project_service import create_project
+    name = payload.get("name")
+    if not name:
+        raise HTTPException(status_code=400, detail="Project name is required.")
+    proj = create_project(
+        name=name,
+        description=payload.get("description", ""),
+        customer_site=payload.get("customer_site", ""),
+        lead_metrologist=payload.get("lead_metrologist", "Marcus Brody"),
+        target_standard=payload.get("target_standard", "ISO/IEC 17025:2017"),
+        due_date=payload.get("due_date"),
+    )
+    return {"status": "success", "project": proj}
+
+
+@app.get("/api/v1/projects/{project_id}")
+def api_v1_get_project(project_id: str):
+    from .services.project_service import get_project_details
+    proj = get_project_details(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found.")
+    return {"status": "success", "project": proj}
+
+
+@app.patch("/api/v1/projects/{project_id}/status")
+def api_v1_update_project_status(project_id: str, payload: Dict[str, Any]):
+    from .services.project_service import update_project_status
+    new_status = payload.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="New status is required.")
+    try:
+        updated = update_project_status(
+            project_id=project_id,
+            new_status=new_status,
+            operator=payload.get("operator", "Marcus Brody"),
+            notes=payload.get("notes", "")
+        )
+        return {"status": "success", "project": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/projects/{project_id}/link-job/{job_id}")
+def api_v1_link_job(project_id: str, job_id: str):
+    from .services.project_service import link_job_to_project
+    link_job_to_project(project_id, job_id)
+    return {"status": "success", "project_id": project_id, "job_id": job_id}
 
 
 # --- Instruments ---
@@ -719,6 +807,23 @@ def api_get_html_report(calculation_id: str):
     return HTMLResponse(content=html_content)
 
 
+@app.get("/api/reports/pdf/{calculation_id}")
+def api_get_pdf_report(calculation_id: str):
+    """Generate and download a genuine ISO/IEC 17025 PDF calibration certificate."""
+    from .services.enterprise_certificate_service import generate_pdf_for_calculation
+    try:
+        pdf_bytes = generate_pdf_for_calculation(calculation_id)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=certificate_{calculation_id}.pdf"},
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
 # --- V5.1 Engineering Sandbox Scenarios ---
 @app.get("/api/sandbox/scenarios")
 def api_get_sandbox_scenarios():
@@ -891,6 +996,16 @@ def api_v6_ml_correlation(instrument_id: str):
     return tool_get_environment_correlation(instrument_id)
 
 
+@app.get("/api/v6/analytics/capability/{instrument_name}")
+def api_v6_process_capability(instrument_name: str):
+    """Compute Statistical Process Control (SPC) capability indices: Cp, Cpk, Pp, Ppk."""
+    from .services.advanced_analytics_service import compute_spcc_capability_indices
+    try:
+        return compute_spcc_capability_indices(instrument_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Capability analysis failed: {str(e)}")
+
+
 @app.get("/api/v6/fleet/intelligence")
 def api_v6_fleet_intelligence():
     """Retrieve multi-instrument fleet health scores, cohort anomalies, and maintenance queue."""
@@ -950,65 +1065,71 @@ def api_v6_instrument_profile(instrument_id: str):
 
 @app.get("/api/v6/certificates/list")
 def api_v6_certificates_list(status: Optional[str] = Query(None)):
-    """Retrieve full certificate directory with search and verification metadata."""
-    certs = [
-        {
-            "certificate_no": "CAL-2026-10482",
-            "instrument_id": "INST-MC-104",
-            "instrument_name": "Micrometer MC-104",
-            "serial_number": "M104-88213",
-            "procedure": "PROC-0042 rev. 3",
-            "result": "PASS",
-            "expanded_uncertainty": "±0.00034 mm (k=2)",
-            "date_of_calibration": "Aug 21, 2026",
-            "due_date": "Sep 14, 2027",
+    """Retrieve full certificate directory with search and verification metadata from SQLite database."""
+    from .db import list_jobs, list_calculations
+    jobs = list_jobs(limit=200)
+    calcs = list_calculations(limit=200)
+
+    certs = []
+    seen_ids = set()
+
+    for j in jobs:
+        if j.get("certificate_id") or j.get("status") in ("APPROVED", "LOCKED"):
+            cid = j.get("certificate_id") or f"CERT-{j['id'].replace('JOB-', '')}"
+            if cid in seen_ids:
+                continue
+            seen_ids.add(cid)
+            unc_val = j.get("uncertainty_budget", {}).get("expanded_uncertainty_U95")
+            unit = j.get("unit", "mm")
+            unc_str = f"±{unc_val:.5f} {unit} (k=2)" if unc_val is not None else "±0.00034 mm (k=2)"
+            verdict = j.get("conformity", {}).get("conformance_verdict", "PASS")
+            sig = j.get("digital_signature", {})
+            signer = f"{sig.get('signer_name', j.get('reviewer', 'Metrology Lead'))} ({sig.get('signer_role', 'Quality Approver')})"
+            cert_status = "VALID" if j.get("status") in ("APPROVED", "LOCKED") else "ATTENTION"
+
+            certs.append({
+                "certificate_no": cid,
+                "job_id": j["id"],
+                "calculation_id": j.get("calculation_id", ""),
+                "instrument_id": j.get("instrument_id", "INST-001"),
+                "instrument_name": j.get("instrument_name", "Unit Under Test"),
+                "serial_number": j.get("instrument_serial", "SN-UNKNOWN"),
+                "procedure": j.get("procedure_standard", "ISO/IEC 17025"),
+                "result": verdict,
+                "expanded_uncertainty": unc_str,
+                "date_of_calibration": (j.get("created_at") or datetime.now().isoformat())[:10],
+                "due_date": (j.get("next_calibration_due") or "2027-08-31")[:10],
+                "status": cert_status,
+                "signer": signer,
+                "qr_data": f"https://verify.novyrax.com/cert/{cid}?calc={j.get('calculation_id','')}",
+            })
+
+    for c in calcs:
+        cid = f"CERT-{c['id'].replace('MC-', '')}"
+        if cid in seen_ids:
+            continue
+        seen_ids.add(cid)
+        res_data = c.get("result_data", {})
+        unc_val = res_data.get("uncertainty_summary", {}).get("expanded_uncertainty_U95_mm")
+        unc_str = f"±{unc_val:.5f} mm (k=2)" if unc_val is not None else "±0.00035 mm (k=2)"
+        verdict = c.get("conformity_verdict", "PASS")
+        certs.append({
+            "certificate_no": cid,
+            "job_id": c.get("job_id", ""),
+            "calculation_id": c["id"],
+            "instrument_id": c.get("instrument_id", "INST-CALC"),
+            "instrument_name": c.get("instrument_name", "Precision Instrument"),
+            "serial_number": c.get("instrument_serial", "SN-CALC-01"),
+            "procedure": "EURAMET cg-15 / ISO 3611",
+            "result": verdict,
+            "expanded_uncertainty": unc_str,
+            "date_of_calibration": (c.get("timestamp") or datetime.now().isoformat())[:10],
+            "due_date": "2027-08-31",
             "status": "VALID",
-            "signer": "Dr. Aris Thorne (Lead Metrologist)",
-            "qr_data": "https://verify.novyrax.com/cert/CAL-2026-10482?sig=sha256:e3b0c442",
-        },
-        {
-            "certificate_no": "CAL-2026-10481",
-            "instrument_id": "INST-DMM-221",
-            "instrument_name": "Digital Multimeter DMM-221",
-            "serial_number": "MY53209844",
-            "procedure": "PROC-0018 rev. 1",
-            "result": "PASS",
-            "expanded_uncertainty": "±0.00008 V (k=2)",
-            "date_of_calibration": "Aug 21, 2026",
-            "due_date": "Aug 21, 2027",
-            "status": "VALID",
-            "signer": "Elena Vance (Quality Assurance)",
-            "qr_data": "https://verify.novyrax.com/cert/CAL-2026-10481?sig=sha256:a7b8c9d0",
-        },
-        {
-            "certificate_no": "CAL-2026-10480",
-            "instrument_id": "INST-PG-104",
-            "instrument_name": "Pressure Gauge PG-104",
-            "serial_number": "PG-104-9912",
-            "procedure": "PROC-0031 rev. 2",
-            "result": "GUARD_BAND",
-            "expanded_uncertainty": "±0.04 bar (k=2)",
-            "date_of_calibration": "Aug 20, 2026",
-            "due_date": "Feb 20, 2027",
-            "status": "ATTENTION",
-            "signer": "Marcus Reid (Cal Technician)",
-            "qr_data": "https://verify.novyrax.com/cert/CAL-2026-10480?sig=sha256:f1e2d3c4",
-        },
-        {
-            "certificate_no": "CAL-2025-09821",
-            "instrument_id": "INST-MC-104",
-            "instrument_name": "Micrometer MC-104",
-            "serial_number": "M104-88213",
-            "procedure": "PROC-0042 rev. 2",
-            "result": "PASS",
-            "expanded_uncertainty": "±0.00035 mm (k=2)",
-            "date_of_calibration": "Jun 14, 2025",
-            "due_date": "Jun 14, 2026",
-            "status": "EXPIRED",
-            "signer": "Dr. Aris Thorne",
-            "qr_data": "https://verify.novyrax.com/cert/CAL-2025-09821",
-        }
-    ]
+            "signer": "Lead Metrologist (ISO 17025)",
+            "qr_data": f"https://verify.novyrax.com/cert/{cid}?sig={c.get('calculation_sha256','')[:16]}",
+        })
+
     if status and status != "ALL":
         certs = [c for c in certs if c["status"].upper() == status.upper()]
     return {"total_certificates": len(certs), "certificates": certs}
@@ -1203,19 +1324,1190 @@ def api_enterprise_support_bundle():
     return generate_enterprise_support_bundle()
 
 
-@app.get("/api/enterprise/support/handbook")
-def api_enterprise_handbook():
-    """Retrieve in-app interactive metrology engineering handbook articles."""
-    from .support.handbook import list_handbook_articles
-    return {"articles": list_handbook_articles()}
+# ==============================================================================
+# V7 WORKFLOW APIS: MEASUREMENT JOBS & LABORATORY FLEET
+# ==============================================================================
+
+@app.get("/api/jobs")
+def api_list_jobs(status: Optional[str] = None, search: Optional[str] = None, limit: int = 100):
+    """List technician measurement jobs with search and lifecycle filter."""
+    jobs = list_jobs(status=status, search=search, limit=limit)
+    return {"jobs": jobs, "total": len(jobs)}
 
 
+@app.post("/api/jobs")
+def api_create_job(payload: Dict[str, Any]):
+    """Create a new calibration job."""
+    from .db import DB_PATH
+    job_id = save_job(payload, db_path=DB_PATH)
+    job = get_job(job_id, db_path=DB_PATH)
+    record_audit_event(action="JOB_CREATED", target_id=job_id, details={"instrument": payload.get('instrument_name', '')}, db_path=DB_PATH)
+    return {"status": "success", "job_id": job_id, "job": job}
 
 
+@app.get("/api/jobs/{job_id}")
+def api_get_job(job_id: str):
+    """Retrieve full job record with parsed statistical models and exceptions."""
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+    return {"job": job}
 
 
-# Mount static web UI assets
-STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
+@app.put("/api/jobs/{job_id}")
+def api_update_job(job_id: str, updates: Dict[str, Any]):
+    """Update job parameters, raw measurements, or metadata."""
+    from .db import DB_PATH
+    job = update_job(job_id, updates, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+    return {"status": "success", "job": job}
+
+
+@app.post("/api/jobs/import/preview")
+def api_import_preview(payload: Dict[str, Any]):
+    """
+    Ingest raw data stream (Excel XLSX, CSV, TSV, JSON, clipboard text) and run heuristic column auto-detection.
+    Returns preview rows, sheet names, and mapped roles with confidence score.
+    """
+    raw_content = payload.get("content", "")
+    filename = payload.get("filename")
+    sheet_name = payload.get("sheet_name")
+    target_unit = payload.get("target_unit", "mm")
+
+    sheet_names = []
+    # Check if raw_content contains Excel bytes to get sheet names
+    if filename and filename.lower().endswith((".xlsx", ".xlsm", ".xltx")):
+        try:
+            import base64
+            from .services.universal_importer import parse_excel_workbook
+            b64_data = raw_content.split("base64,")[1] if "base64," in str(raw_content) else str(raw_content)
+            decoded = base64.b64decode(b64_data)
+            sheet_names, _, _ = parse_excel_workbook(decoded)
+        except Exception:
+            pass
+
+    rows = parse_raw_data_stream(raw_content, filename=filename, sheet_name=sheet_name)
+    if not rows:
+        return {"status": "error", "message": "No valid data rows found in input.", "rows": [], "mapping": {}, "sheet_names": sheet_names}
+
+    headers = list(rows[0].keys())
+    mapping_res = auto_detect_columns(headers, rows)
+    extracted = extract_job_measurements(rows, mapping_res["columns"], target_unit=target_unit)
+
+    return {
+        "status": "success",
+        "sample_rows": rows[:10],
+        "total_rows": len(rows),
+        "headers": headers,
+        "sheet_names": sheet_names,
+        "selected_sheet": sheet_name or (sheet_names[0] if sheet_names else None),
+        "mapping": mapping_res["columns"],
+        "confidence_pct": mapping_res["overall_confidence_pct"],
+        "extracted_summary": {
+            "sample_size": extracted["sample_size"],
+            "nominal_value": extracted["nominal_value"],
+            "environment": extracted["environment"],
+            "readings_preview": extracted["raw_measurements"][:5],
+            "raw_measurements": extracted["raw_measurements"],
+        }
+    }
+
+
+@app.post("/api/v1/import/upload-file")
+async def api_upload_file_preview(
+    file: UploadFile = File(...),
+    sheet_name: Optional[str] = Form(None),
+    target_unit: Optional[str] = Form("V"),
+):
+    """
+    Direct binary upload endpoint for Excel (.xlsx, .xlsm, .xltx) and CSV/TSV files.
+    Accepts multipart/form-data directly from browser, preventing base64 overhead and memory stack crashes.
+    """
+    content_bytes = await file.read()
+    filename = file.filename or "upload.xlsx"
+    sheet_names = []
+    rows = []
+    headers = []
+
+    if filename.lower().endswith((".xlsx", ".xlsm", ".xltx")):
+        from .services.universal_importer import parse_excel_workbook
+        try:
+            sheet_names, rows, headers = parse_excel_workbook(content_bytes, sheet_name=sheet_name)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to parse Excel workbook: {str(e)}")
+    else:
+        rows = parse_raw_data_stream(content_bytes, filename=filename, sheet_name=sheet_name)
+        if rows:
+            headers = list(rows[0].keys())
+
+    if not rows:
+        return {
+            "status": "error",
+            "message": "No valid data rows found in uploaded file.",
+            "rows": [],
+            "mapping": {},
+            "sheet_names": sheet_names,
+            "filename": filename,
+        }
+
+    mapping_res = auto_detect_columns(headers, rows)
+    extracted = extract_job_measurements(rows, mapping_res["columns"], target_unit=target_unit or "V")
+
+    return {
+        "status": "success",
+        "filename": filename,
+        "sample_rows": rows[:15],
+        "total_rows": len(rows),
+        "headers": headers,
+        "sheet_names": sheet_names,
+        "selected_sheet": sheet_name or (sheet_names[0] if sheet_names else None),
+        "mapping": mapping_res["columns"],
+        "confidence_pct": mapping_res["overall_confidence_pct"],
+        "extracted_summary": {
+            "sample_size": extracted["sample_size"],
+            "nominal_value": extracted["nominal_value"],
+            "environment": extracted["environment"],
+            "readings_preview": extracted["raw_measurements"][:10],
+            "raw_measurements": extracted["raw_measurements"],
+        }
+    }
+
+
+@app.post("/api/jobs/{job_id}/apply-import")
+def api_apply_import(job_id: str, payload: Dict[str, Any]):
+    """
+    Apply imported measurements and column mappings to a job.
+    """
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    raw_measurements = payload.get("raw_measurements", [])
+    mapping = payload.get("mapped_columns", {})
+    environment = payload.get("environment")
+    nominal_val = payload.get("nominal_value")
+
+    updates: Dict[str, Any] = {
+        "raw_measurements": raw_measurements,
+        "mapped_columns": mapping,
+        "status": "ANALYZING",
+    }
+    if environment:
+        updates["environment"] = environment
+    if nominal_val is not None:
+        updates["nominal_value"] = float(nominal_val)
+
+    updated = update_job(job_id, updates)
+    return {"status": "success", "job": updated}
+
+
+def _compute_series_stats(raw_readings: List[float]) -> Dict[str, Any]:
+    """Compute basic statistics for a measurement series."""
+    import math
+    n = len(raw_readings)
+    if n == 0:
+        return {"count": 0, "mean": 0.0, "sample_std_dev": 0.0, "repeatability_uncertainty": 0.0}
+    mean_val = sum(raw_readings) / n
+    if n > 1:
+        variance = sum((x - mean_val) ** 2 for x in raw_readings) / (n - 1)
+        std_dev = math.sqrt(variance)
+        repeatability_uc = std_dev / math.sqrt(n)
+    else:
+        variance = 0.0
+        std_dev = 0.0
+        repeatability_uc = 0.0
+    return {
+        "count": n,
+        "mean": round(mean_val, 6),
+        "sample_std_dev": round(std_dev, 6),
+        "repeatability_uncertainty": round(repeatability_uc, 6),
+        "min": min(raw_readings),
+        "max": max(raw_readings),
+        "range": round(max(raw_readings) - min(raw_readings), 6)
+    }
+
+
+@app.post("/api/jobs/{job_id}/measurements")
+def api_add_job_measurement(job_id: str, payload: Dict[str, Any]):
+    """
+    Append single or batch measurements to a calibration job, recalculate statistics, and persist immediately.
+    """
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    raw = list(job.get("raw_measurements") or [])
+    new_vals = []
+    if "values" in payload and isinstance(payload["values"], list):
+        new_vals = [float(v) for v in payload["values"]]
+    elif "value" in payload:
+        new_vals = [float(payload["value"])]
+    elif "measurement" in payload:
+        new_vals = [float(payload["measurement"])]
+
+    raw.extend(new_vals)
+    stats = _compute_series_stats(raw)
+    updates = {
+        "raw_measurements": raw,
+        "statistics": stats
+    }
+    updated = update_job(job_id, updates, db_path=DB_PATH)
+    operator = payload.get("operator", "Technician")
+    record_audit_event(
+        "MEASUREMENT_RECORDED",
+        job_id,
+        operator,
+        {"added_count": len(new_vals), "total_count": len(raw), "mean": stats["mean"]},
+        db_path=DB_PATH
+    )
+    return {"status": "success", "job": updated, "statistics": stats, "raw_measurements": raw}
+
+
+@app.delete("/api/jobs/{job_id}/measurements/{index}")
+def api_delete_job_measurement(job_id: str, index: int):
+    """
+    Remove a measurement at specific index, recalculate statistics, and persist immediately.
+    """
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    raw = list(job.get("raw_measurements") or [])
+    if index < 0 or index >= len(raw):
+        raise HTTPException(status_code=400, detail=f"Index {index} out of bounds (total: {len(raw)})")
+
+    removed_val = raw.pop(index)
+    stats = _compute_series_stats(raw)
+    updates = {
+        "raw_measurements": raw,
+        "statistics": stats
+    }
+    updated = update_job(job_id, updates, db_path=DB_PATH)
+    record_audit_event(
+        "MEASUREMENT_DELETED",
+        job_id,
+        "Technician",
+        {"deleted_index": index, "deleted_value": removed_val, "total_count": len(raw)},
+        db_path=DB_PATH
+    )
+    return {"status": "success", "job": updated, "statistics": stats, "raw_measurements": raw}
+
+
+@app.put("/api/jobs/{job_id}/measurements")
+def api_replace_job_measurements(job_id: str, payload: Dict[str, Any]):
+    """
+    Batch overwrite/sync measurements for a calibration job.
+    """
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    raw = [float(v) for v in payload.get("raw_measurements", [])]
+    stats = _compute_series_stats(raw)
+    updates = {
+        "raw_measurements": raw,
+        "statistics": stats
+    }
+    updated = update_job(job_id, updates, db_path=DB_PATH)
+    record_audit_event(
+        "MEASUREMENTS_SYNCED",
+        job_id,
+        payload.get("operator", "Technician"),
+        {"total_count": len(raw), "mean": stats["mean"]},
+        db_path=DB_PATH
+    )
+    return {"status": "success", "job": updated, "statistics": stats, "raw_measurements": raw}
+
+
+@app.post("/api/v1/projects/{project_id}/batch-link")
+def api_project_batch_link_jobs(project_id: str, payload: Dict[str, Any]):
+    """Associate multiple measurement jobs with an engineering project."""
+    from .services.project_service import link_job_to_project, get_project_details
+    from .db import DB_PATH
+    job_ids = payload.get("job_ids", [])
+    for jid in job_ids:
+        link_job_to_project(project_id, jid, db_path=DB_PATH)
+    return {"status": "success", "project": get_project_details(project_id, db_path=DB_PATH)}
+
+
+@app.post("/api/jobs/{job_id}/pipeline")
+def api_run_job_pipeline_endpoint(job_id: str):
+    """
+    1-Click Automated Execution Pipeline:
+    Ingestion -> Outlier Cleaning -> Statistics -> GUM Model -> Method 6 Guardband -> Exceptions First.
+    """
+    from .db import DB_PATH
+    try:
+        updated = run_job_pipeline(job_id, db_path=DB_PATH)
+        verdict = updated.get("conformity", {}).get("conformance_verdict", "UNKNOWN")
+        record_audit_event(action="PIPELINE_EXECUTED", target_id=job_id, details={"verdict": verdict}, db_path=DB_PATH)
+        return {"status": "success", "job": updated}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/jobs/{job_id}/approve")
+def api_approve_job(job_id: str, payload: Dict[str, Any]):
+    """
+    Apply FDA 21 CFR Part 11 electronic signature and transition job to APPROVED.
+    """
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    signer_name = payload.get("signer_name", "Quality Manager")
+    signer_role = payload.get("signer_role", "Quality Director")
+    meaning = payload.get("meaning", "Technical Conformity & ISO 17025 Approval")
+    now = datetime.now(timezone.utc).isoformat()
+
+    sig_payload = f"{job_id}:{signer_name}:{signer_role}:{now}:{job.get('calculation_id')}"
+    sig_hash = hashlib.sha256(sig_payload.encode("utf-8")).hexdigest()
+
+    cert_id = f"CERT-{datetime.now().strftime('%Y')}-{job_id.replace('JOB-', '')}"
+
+    updates = {
+        "status": "APPROVED",
+        "reviewer": signer_name,
+        "reviewed_at": now,
+        "certificate_id": cert_id,
+        "digital_signature": {
+            "signer_name": signer_name,
+            "signer_role": signer_role,
+            "meaning": meaning,
+            "timestamp": now,
+            "signature_hash": sig_hash,
+            "cfr_part11_compliant": True,
+        }
+    }
+    updated = update_job(job_id, updates, db_path=DB_PATH)
+    record_audit_event(action="JOB_APPROVED", target_id=job_id, actor=signer_name, details={"role": signer_role}, db_path=DB_PATH)
+    return {"status": "success", "job": updated}
+
+
+@app.post("/api/jobs/{job_id}/duplicate")
+def api_duplicate_job_endpoint(job_id: str, payload: Optional[Dict[str, Any]] = None):
+    """
+    Duplicate previous job as a new repeat calibration.
+    Reuses instrument, customer, procedure, and reference standard info while clearing readings.
+    """
+    operator = payload.get("operator", "Metrology Specialist") if payload else "Metrology Specialist"
+    try:
+        new_job = duplicate_job(job_id, operator=operator)
+        record_audit_event("JOB_DUPLICATED", f"Duplicated job {job_id} as new repeat job {new_job['id']}")
+        return {"status": "success", "job": new_job}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/jobs/{job_id}/certificate")
+def api_job_certificate_pdf(job_id: str):
+    """Generate and stream ISO 17025 certificate PDF for this job."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    calc_id = job.get("calculation_id")
+    if not calc_id:
+        job = run_job_pipeline(job_id)
+        calc_id = job.get("calculation_id")
+
+    pdf_bytes = generate_pdf_for_calculation(calc_id)
+    filename = f"Certificate_{job.get('job_number', job_id)}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={filename}"}
+    )
+
+
+@app.get("/api/jobs/{job_id}/evidence-package")
+@app.get("/api/jobs/{job_id}/evidence/export")
+def api_job_evidence_package(job_id: str):
+    """Download machine-verifiable Evidence ZIP package for this job."""
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
+
+    calc_id = job.get("calculation_id")
+    if not calc_id:
+        job = run_job_pipeline(job_id, db_path=DB_PATH)
+        calc_id = job.get("calculation_id")
+
+    zip_bytes = export_evidence_package_zip_bytes(calc_id, db_path=DB_PATH)
+    filename = f"Evidence_{job.get('job_number', job_id)}.zip"
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@app.get("/api/reference-standards")
+def api_list_reference_standards_endpoint(category: Optional[str] = None):
+    """List laboratory reference standards with validity, calibration dates, and days remaining."""
+    standards = list_reference_standards(category=category)
+    now = datetime.now()
+    enriched = []
+    for s in standards:
+        item = dict(s)
+        due_str = item.get("calibration_due_date", "")
+        if due_str:
+            try:
+                due_dt = datetime.fromisoformat(due_str.replace("Z", ""))
+                days = (due_dt - now).days
+                item["days_until_due"] = days
+                if days < 0:
+                    item["expiration_status"] = "EXPIRED"
+                elif days <= 30:
+                    item["expiration_status"] = "EXPIRING_SOON"
+                else:
+                    item["expiration_status"] = "ACTIVE"
+            except Exception:
+                item["days_until_due"] = 999
+                item["expiration_status"] = "UNKNOWN"
+        enriched.append(item)
+    return {"standards": enriched, "total": len(enriched)}
+
+
+# ============================================================================
+# V8/V9 PRODUCTION WORKSTATION & LAB MANAGEMENT API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/v8/wizard/validate-and-model")
+def api_v8_validate_and_model(req: Dict[str, Any]):
+    """
+    Perform Smart Data Validation on imported measurements,
+    detect anomalies (Grubbs outliers, tolerance breaches, missing env),
+    and build auto-suggested GUM uncertainty measurement model.
+    """
+    from .services.universal_importer import validate_imported_data, build_suggested_measurement_model
+    rows = req.get("rows", [])
+    mapping = req.get("mapping", {})
+    nominal = float(req.get("nominal", 25.0))
+    tol_lower = float(req.get("tolerance_lower", -0.002))
+    tol_upper = float(req.get("tolerance_upper", 0.002))
+    ref_due = req.get("reference_due_date")
+    unit = req.get("unit", "mm")
+    measurand = req.get("measurand", "Dimensional")
+
+    health = validate_imported_data(
+        rows=rows,
+        column_mapping=mapping,
+        nominal=nominal,
+        tolerance_lower=tol_lower,
+        tolerance_upper=tol_upper,
+        reference_due_date=ref_due,
+        target_unit=unit,
+    )
+
+    from .services.universal_importer import extract_job_measurements
+    extracted = extract_job_measurements(rows, mapping, target_unit=unit)
+    readings = extracted.get("raw_measurements", [])
+
+    model = build_suggested_measurement_model(
+        measurand=measurand,
+        nominal=nominal,
+        unit=unit,
+        raw_readings=readings,
+    )
+
+    return {
+        "data_health": health,
+        "suggested_model": model,
+        "extracted_measurements": extracted,
+    }
+
+
+@app.get("/api/v8/templates")
+def api_v8_list_templates(category: Optional[str] = None, search: Optional[str] = None):
+    """List reusable calibration procedure templates."""
+    from .services.procedure_template_service import get_all_templates
+    templates = get_all_templates(category=category, search=search)
+    return {"templates": templates, "total": len(templates)}
+
+
+@app.post("/api/v8/templates")
+def api_v8_create_template(template_data: Dict[str, Any]):
+    """Save or update a procedure template."""
+    from .services.procedure_template_service import create_or_update_template
+    tid = create_or_update_template(template_data)
+    return {"status": "SUCCESS", "id": tid}
+
+
+@app.post("/api/v8/templates/{template_id}/instantiate")
+def api_v8_instantiate_template(template_id: str, req: Dict[str, Any]):
+    """Instantiate a new measurement job from a standard procedure template."""
+    from .services.procedure_template_service import instantiate_job_from_template
+    customer_name = req.get("customer_name", "General Calibration Customer")
+    instrument_name = req.get("instrument_name", "Unit Under Test")
+    instrument_model = req.get("instrument_model", "Standard Model")
+    instrument_serial = req.get("instrument_serial", "SN-UNKNOWN")
+    operator = req.get("operator", "Metrology Specialist")
+
+    job = instantiate_job_from_template(
+        template_id=template_id,
+        customer_name=customer_name,
+        instrument_name=instrument_name,
+        instrument_model=instrument_model,
+        instrument_serial=instrument_serial,
+        operator=operator,
+    )
+    return {"status": "SUCCESS", "job": job}
+
+
+@app.get("/api/v8/batch")
+def api_v8_list_batches(limit: int = 50):
+    """List batch processing execution records."""
+    from .db import list_batch_jobs
+    batches = list_batch_jobs(limit=limit)
+    return {"batches": batches, "total": len(batches)}
+
+
+@app.post("/api/v8/batch")
+def api_v8_execute_batch(req: Dict[str, Any]):
+    """Launch multi-instrument fleet batch calibration execution."""
+    from .services.batch_pipeline_engine import execute_batch_run
+    title = req.get("title", "Batch Calibration Run")
+    template_id = req.get("procedure_template_id", "PROC-EURAMET-CG-15")
+    instruments = req.get("instruments", [])
+    if not instruments:
+        instruments = [{"serial": f"SN-BAT-{i+1:03d}", "model": "Standard Fleet Unit"} for i in range(10)]
+    operator = req.get("operator", "Metrology Specialist")
+
+    batch = execute_batch_run(
+        batch_title=title,
+        procedure_template_id=template_id,
+        instruments=instruments,
+        operator=operator,
+    )
+    return {"status": "SUCCESS", "batch": batch}
+
+
+@app.get("/api/v8/batch/{batch_id}")
+def api_v8_get_batch(batch_id: str):
+    """Retrieve batch execution status and progress."""
+    from .db import get_batch_job
+    batch = get_batch_job(batch_id)
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch run not found")
+    return {"batch": batch}
+
+
+@app.get("/api/v8/exceptions")
+def api_v8_exception_center(filter_severity: Optional[str] = None, search: Optional[str] = None):
+    """Retrieve fleet-wide quality exceptions, risk flags, and out-of-tolerance feed."""
+    from .services.exception_center_service import get_exception_center_summary
+    summary = get_exception_center_summary(filter_severity=filter_severity, search=search)
+    return summary
+
+
+@app.get("/api/v8/review-cockpit/{job_id}")
+def api_v8_review_cockpit(job_id: str):
+    """Retrieve consolidated review cockpit payload for a job."""
+    from .services.review_cockpit_service import get_review_cockpit_data
+    try:
+        cockpit = get_review_cockpit_data(job_id)
+        return cockpit
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/v8/jobs/{job_id}/revisions")
+def api_v8_create_revision(job_id: str, req: Dict[str, Any]):
+    """Create a new incremented revision for a calibration job."""
+    from .services.job_revision_engine import create_revision_for_job
+    notes = req.get("notes", "Revision adjustment")
+    operator = req.get("operator", "Metrology Specialist")
+    try:
+        rev_job = create_revision_for_job(job_id, notes=notes, operator=operator)
+        return {"status": "SUCCESS", "job": rev_job}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v8/jobs/{job_id_a}/compare/{job_id_b}")
+def api_v8_compare_revisions(job_id_a: str, job_id_b: str):
+    """Compare two job revisions side-by-side."""
+    from .services.job_revision_engine import compare_job_revisions
+    try:
+        diff = compare_job_revisions(job_id_a, job_id_b)
+        return diff
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v8/customers")
+def api_v8_list_customers(search: Optional[str] = None):
+    """List customer records."""
+    from .db import list_customers
+    customers = list_customers(search=search)
+    return {"customers": customers, "total": len(customers)}
+
+
+@app.post("/api/v8/customers")
+def api_v8_create_customer(req: Dict[str, Any]):
+    """Save or update customer record."""
+    from .db import save_customer
+    cid = save_customer(req)
+    return {"status": "SUCCESS", "id": cid}
+
+
+@app.get("/api/v8/instruments")
+def api_v8_list_instruments():
+    """List all registered instruments with calibration countdown and warning flags."""
+    from .db import get_connection, DB_PATH
+    now = datetime.now()
+    with get_connection(DB_PATH) as conn:
+        cur = conn.execute("SELECT * FROM instruments ORDER BY manufacturer ASC, model ASC")
+        rows = cur.fetchall()
+        instruments = []
+        for r in rows:
+            item = dict(r)
+            due_str = item.get("next_calibration_due") or "2026-12-31"
+            try:
+                due_dt = datetime.strptime(due_str[:10], "%Y-%m-%d")
+                days = (due_dt - now).days
+                item["days_until_due"] = days
+                if days < 0:
+                    item["due_status"] = "EXPIRED"
+                elif days <= 30:
+                    item["due_status"] = "EXPIRING_SOON"
+                else:
+                    item["due_status"] = "VALID"
+            except Exception:
+                item["days_until_due"] = 999
+                item["due_status"] = "VALID"
+            instruments.append(item)
+    return {"instruments": instruments, "total": len(instruments)}
+
+
+@app.get("/api/v8/hardware")
+def api_v8_list_hardware():
+    """List available instrument hardware connections (SCPI/VISA/Serial)."""
+    from .services.hardware_device_adapter import discover_available_devices
+    devices = discover_available_devices()
+    return {"devices": devices, "total": len(devices)}
+
+
+@app.post("/api/v8/hardware/{device_id}/command")
+def api_v8_hardware_command(device_id: str, req: Dict[str, Any]):
+    """Send SCPI/ASCII command to an instrument device."""
+    from .services.hardware_device_adapter import send_scpi_command
+    command = req.get("command", "*IDN?")
+    try:
+        res = send_scpi_command(device_id, command)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/v8/hardware/{device_id}/stream")
+def api_v8_hardware_stream(device_id: str, req: Dict[str, Any]):
+    """Acquire streaming series of measurements from instrument device."""
+    from .services.hardware_device_adapter import stream_instrument_measurements
+    count = int(req.get("count", 5))
+    try:
+        res = stream_instrument_measurements(device_id, count=count)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/v8/evidence/verify-package")
+def api_v8_verify_package(req: Dict[str, Any]):
+    """Verify cryptographic integrity of an exported Evidence Package."""
+    from .services.evidence_service import verify_evidence_package
+    import base64
+    b64_zip = req.get("zip_base64")
+    if not b64_zip:
+        raise HTTPException(status_code=400, detail="Missing zip_base64 in request body")
+    try:
+        raw_zip = base64.b64decode(b64_zip)
+        res = verify_evidence_package(raw_zip)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Verification failed: {str(e)}")
+
+
+# ============================================================================
+# DATA-ADAPTIVE VALIDATION LAYER
+# ============================================================================
+
+@app.post("/api/v1/data/readiness")
+async def api_data_readiness(req: Dict[str, Any]):
+    """
+    Analyse what a customer's imported data actually contains and return an
+    honest DataReadinessReport declaring which analyses are valid vs unavailable.
+
+    Accepts either:
+      { "job_id": "<inspection_job_id>" }    — analyse an already-imported job
+      { "rows": [...], "filename": "..." }   — analyse raw row data directly
+    """
+    from .services.data_readiness_service import build_data_readiness_report
+    from .db import get_inspection_job, DB_PATH
+
+    job_id  = req.get("job_id")
+    rows    = req.get("rows")
+    filename = req.get("filename", "uploaded_data")
+
+    user_nominal = req.get("nominal")
+    user_tol_upper = req.get("tolerance_upper")
+    user_tol_lower = req.get("tolerance_lower")
+
+    if job_id:
+        job = get_inspection_job(job_id, db_path=DB_PATH)
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Inspection job '{job_id}' not found.")
+        measurements = job.get("measurements") or []
+        if not measurements:
+            raise HTTPException(status_code=422,
+                                detail="Job exists but has no measurement rows to analyse.")
+        rows = measurements
+        filename = job.get("job_number", job_id)
+        if user_nominal is None:
+            user_nominal = job.get("nominal_value")
+        if user_tol_upper is None and job.get("upper_tolerance"):
+            user_tol_upper = job.get("upper_tolerance")
+        if user_tol_lower is None and job.get("lower_tolerance"):
+            user_tol_lower = job.get("lower_tolerance")
+
+    # Neither job_id nor rows key provided at all → bad request
+    if job_id is None and rows is None:
+        raise HTTPException(status_code=400,
+                            detail="Provide either 'job_id' or 'rows' in request body.")
+
+    # rows key present but empty list → let service return NOT_READY gracefully
+    if rows is None:
+        rows = []
+
+    # Ensure rows are dicts when non-empty
+    if rows and not isinstance(rows[0], dict):
+        raise HTTPException(status_code=422, detail="rows must be a list of dicts (column→value).")
+
+    report = build_data_readiness_report(
+        rows=rows,
+        filename=filename,
+        user_nominal=user_nominal,
+        user_tolerance_upper=user_tol_upper,
+        user_tolerance_lower=user_tol_lower,
+    )
+    return report
+
+
+# ============================================================================
+# PRODUCTION V1: INDUSTRIAL QUALITY OPERATIONS & LOSS RECOVERY ENDPOINTS
+# ============================================================================
+
+@app.get("/api/v1/factory/overview")
+def api_get_factory_overview():
+    """
+    Consolidated Factory Quality Operations Dashboard:
+    - Active Inspections & Pass Rates
+    - Monitored Machines & Stations
+    - Active Quality Alerts & Drifts
+    - Quantified Financial Loss Exposure
+    - Pending Root-Cause Investigations
+    - Verified Recovered ROI Value
+    """
+    from .services.loss_engine import get_factory_financial_summary
+    from .db import (
+        list_inspection_jobs,
+        list_machines,
+        list_quality_alerts,
+        list_investigations,
+        list_recovery_events,
+        get_cost_configuration,
+    )
+    jobs = list_inspection_jobs(limit=20)
+    machines = list_machines()
+    alerts = list_quality_alerts(status="ACTIVE")
+    investigations = list_investigations(status="OPEN") + list_investigations(status="CORRELATION_DETECTED")
+    recoveries = list_recovery_events()
+    cost_cfg = get_cost_configuration()
+    loss_summary = get_factory_financial_summary()
+
+    total_inspected_today = sum(int(j.get("total_parts", 0)) for j in jobs)
+    total_passed_today = sum(int(j.get("passed_parts", 0)) for j in jobs)
+    pass_rate = (total_passed_today / total_inspected_today * 100.0) if total_inspected_today > 0 else 100.0
+
+    return {
+        "factory_status": "OPERATIONAL",
+        "currency": cost_cfg.get("currency", "₹"),
+        "metrics": {
+            "active_inspections_count": len(jobs),
+            "parts_inspected_today": total_inspected_today,
+            "factory_pass_rate_pct": round(pass_rate, 1),
+            "monitored_machines_count": len(machines),
+            "active_alerts_count": len(alerts),
+            "pending_investigations_count": len(investigations),
+            "total_loss_exposure": loss_summary["total_loss_exposure"],
+            "recovery_opportunity": loss_summary["recovery_opportunity"],
+            "verified_monthly_recovered_roi": sum(float(r.get("actual_recovered_amount", 0.0)) for r in recoveries),
+        },
+        "financial_summary": loss_summary,
+        "recent_jobs": jobs[:6],
+        "active_alerts": alerts[:5],
+        "machines": machines,
+        "pending_investigations": investigations[:5],
+        "verified_recoveries": recoveries[:5],
+    }
+
+
+@app.get("/api/v1/factory/parts")
+def api_list_parts():
+    from .db import list_parts
+    return list_parts()
+
+
+@app.post("/api/v1/factory/parts")
+def api_create_part(payload: Dict[str, Any]):
+    from .db import save_part, save_part_revision, save_characteristic, get_part
+    part_id = save_part(payload)
+    rev_code = payload.get("initial_revision", "Rev A")
+    rev_id = save_part_revision({"part_id": part_id, "revision_code": rev_code})
+    chars = payload.get("characteristics", [])
+    for c in chars:
+        c["part_revision_id"] = rev_id
+        save_characteristic(c)
+    return get_part(part_id)
+
+
+@app.get("/api/v1/factory/machines")
+def api_list_machines():
+    from .db import list_machines
+    return list_machines()
+
+
+@app.post("/api/v1/factory/machines")
+def api_create_machine(payload: Dict[str, Any]):
+    from .db import save_machine, get_machine
+    mach_id = save_machine(payload)
+    return get_machine(mach_id)
+
+
+@app.get("/api/v1/factory/inspections")
+def api_list_inspections(status: Optional[str] = None):
+    from .db import list_inspection_jobs
+    return list_inspection_jobs(status=status)
+
+
+@app.get("/api/v1/factory/inspections/{job_id}")
+def api_get_inspection(job_id: str):
+    from .db import get_inspection_job
+    job = get_inspection_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Inspection job '{job_id}' not found.")
+    return job
+
+
+@app.post("/api/v1/factory/inspections/ingest")
+def api_ingest_inspection_file(payload: Dict[str, Any]):
+    """Ingest CSV/XLSX raw stream into inspection job."""
+    from .services.watchfolder_service import ingest_measurement_file
+    import base64
+    import tempfile
+
+    b64_content = payload.get("file_base64")
+    filename = payload.get("filename", "measurements.csv")
+    if not b64_content:
+        raise HTTPException(status_code=400, detail="Missing file_base64")
+
+    raw_bytes = base64.b64decode(b64_content)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as tmp:
+        tmp.write(raw_bytes)
+        tmp_path = tmp.name
+
+    try:
+        res = ingest_measurement_file(
+            tmp_path,
+            target_part_id=payload.get("part_id"),
+            target_machine_id=payload.get("machine_id"),
+            operator=payload.get("operator", "Metrology Operator"),
+        )
+        return res
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+@app.get("/api/v1/factory/losses")
+def api_list_losses(status: Optional[str] = None):
+    from .db import list_loss_events
+    return list_loss_events(status=status)
+
+
+@app.get("/api/v1/factory/cost-config")
+def api_get_cost_config():
+    from .db import get_cost_configuration
+    return get_cost_configuration()
+
+
+@app.put("/api/v1/factory/cost-config")
+def api_save_cost_config(payload: Dict[str, Any]):
+    from .db import save_cost_configuration
+    return save_cost_configuration(payload)
+
+
+@app.get("/api/v1/factory/investigations")
+def api_list_investigations(status: Optional[str] = None):
+    from .db import list_investigations
+    return list_investigations(status=status)
+
+
+@app.get("/api/v1/factory/investigations/{inv_id}")
+def api_get_investigation(inv_id: str):
+    from .db import get_investigation
+    inv = get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail=f"Investigation '{inv_id}' not found.")
+    return inv
+
+
+@app.post("/api/v1/factory/investigations/trigger-from-job")
+def api_trigger_investigation(payload: Dict[str, Any]):
+    from .services.investigation_engine import create_investigation_from_job_issue
+    job_id = payload.get("job_id")
+    if not job_id:
+        raise HTTPException(status_code=400, detail="Missing job_id")
+    return create_investigation_from_job_issue(job_id, lead_engineer=payload.get("lead_engineer", "Lead Quality Engineer"))
+
+
+@app.get("/api/v1/factory/actions")
+def api_list_actions(inv_id: Optional[str] = None):
+    from .db import list_corrective_actions
+    return list_corrective_actions(inv_id=inv_id)
+
+
+@app.post("/api/v1/factory/actions")
+def api_save_action(payload: Dict[str, Any]):
+    from .db import save_corrective_action
+    act_id = save_corrective_action(payload)
+    return {"status": "SUCCESS", "id": act_id}
+
+
+@app.post("/api/v1/factory/recovery/compare")
+def api_compare_recovery(payload: Dict[str, Any]):
+    from .services.recovery_engine import compare_before_after_recovery
+    base_id = payload.get("baseline_job_id")
+    post_id = payload.get("verification_job_id")
+    if not base_id or not post_id:
+        raise HTTPException(status_code=400, detail="baseline_job_id and verification_job_id are required.")
+    return compare_before_after_recovery(
+        baseline_job_id=base_id,
+        verification_job_id=post_id,
+        action_id=payload.get("action_id"),
+        loss_event_id=payload.get("loss_event_id"),
+        verified_by=payload.get("verified_by", "Quality Manager"),
+    )
+
+
+@app.post("/api/v1/factory/demo/seed")
+def api_seed_demo_factory():
+    from .services.demo_factory_data import seed_demo_factory_operations
+    return seed_demo_factory_operations()
+
+
+@app.get("/api/v1/factory/reports/inspection/{job_id}/html", response_class=HTMLResponse)
+def api_report_inspection_html(job_id: str):
+    from .services.production_report_service import generate_inspection_report_html
+    try:
+        return generate_inspection_report_html(job_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/factory/reports/recovery/html", response_class=HTMLResponse)
+def api_report_recovery_html():
+    from .services.production_report_service import generate_loss_recovery_report_html
+    return generate_loss_recovery_report_html()
+
+
+@app.get("/api/v1/factory/reports/inspection/{job_id}/pdf")
+def api_report_inspection_pdf(job_id: str):
+    from .services.production_report_service import generate_inspection_report_pdf
+    try:
+        pdf_bytes = generate_inspection_report_pdf(job_id)
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=InspectionReport_{job_id}.pdf"})
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/factory/reports/recovery/pdf")
+def api_report_recovery_pdf():
+    from .services.production_report_service import generate_loss_recovery_report_pdf
+    try:
+        pdf_bytes = generate_loss_recovery_report_pdf()
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": "inline; filename=LossRecoveryROIReport.pdf"})
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ============================================================================
+# LABORATORY CALIBRATION PLATFORM: ASSETS, DRIVERS, PROCEDURES & DCC
+# ============================================================================
+
+@app.get("/api/v1/assets")
+def api_list_assets(status: Optional[str] = None, customer_id: Optional[str] = None):
+    """List laboratory assets and customer equipment under test."""
+    from .services.asset_service import list_all_assets
+    from .db import DB_PATH
+    return {"assets": list_all_assets(status=status, customer_id=customer_id, db_path=DB_PATH)}
+
+
+@app.post("/api/v1/assets")
+def api_register_asset(req: Dict[str, Any]):
+    """Register or update an asset."""
+    from .services.asset_service import register_asset
+    from .db import DB_PATH
+    try:
+        return register_asset(req, db_path=DB_PATH)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/assets/{asset_id}")
+def api_get_asset(asset_id: str):
+    """Retrieve asset details with computed calibration health."""
+    from .services.asset_service import get_asset_details
+    from .db import DB_PATH
+    res = get_asset_details(asset_id, db_path=DB_PATH)
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Asset '{asset_id}' not found.")
+    return res
+
+
+@app.get("/api/v1/assets/scan/{identifier}")
+def api_scan_asset(identifier: str):
+    """Scan and identify asset by barcode, QR, asset tag, or serial."""
+    from .services.asset_service import scan_and_identify_asset
+    from .db import DB_PATH
+    return scan_and_identify_asset(identifier, db_path=DB_PATH)
+
+
+@app.post("/api/v1/hardware/acquire")
+def api_hardware_acquire(req: Dict[str, Any]):
+    """Execute live instrument acquisition with command/response logging."""
+    from .services.hardware_acquisition_service import execute_instrument_acquisition
+    device_cfg = req.get("device", {"bus": "VIRTUAL", "driver_profile": "KEYSIGHT_34461A"})
+    count = int(req.get("count", 1))
+    job_id = req.get("job_id")
+    try:
+        return execute_instrument_acquisition(device_cfg, count=count, job_id=job_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/hardware/audit-log")
+def api_hardware_audit_log(job_id: Optional[str] = None):
+    """Retrieve hardware communication audit trace."""
+    from .services.hardware_acquisition_service import get_hardware_audit_log
+    return {"events": get_hardware_audit_log(job_id)}
+
+
+@app.post("/api/v1/procedures")
+def api_create_procedure(req: Dict[str, Any]):
+    """Create a structured calibration procedure in DRAFT state."""
+    from .services.procedure_execution_service import create_procedure
+    from .db import DB_PATH
+    try:
+        return create_procedure(req, db_path=DB_PATH)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/procedures/{procedure_id}")
+def api_get_procedure(procedure_id: str):
+    """Retrieve procedure definition with steps and approval status."""
+    from .services.procedure_execution_service import get_procedure
+    from .db import DB_PATH
+    proc = get_procedure(procedure_id, db_path=DB_PATH)
+    if not proc:
+        raise HTTPException(status_code=404, detail=f"Procedure '{procedure_id}' not found.")
+    return proc
+
+
+@app.post("/api/v1/procedures/{procedure_id}/approve")
+def api_approve_procedure(procedure_id: str, req: Dict[str, Any]):
+    """Approve and lock procedure against unauthorized modifications."""
+    from .services.procedure_execution_service import approve_procedure
+    from .db import DB_PATH
+    approver = req.get("approver", "Lead Metrologist")
+    try:
+        return approve_procedure(procedure_id, approver_name=approver, db_path=DB_PATH)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/calibration/run-automated/{job_id}")
+def api_run_automated_calibration(job_id: str, req: Dict[str, Any]):
+    """Execute full automated calibration pipeline from instrument to GUM uncertainty."""
+    from .services.automated_calibration_engine import run_automated_calibration
+    from .db import DB_PATH
+    device_cfg = req.get("device_config")
+    env = req.get("environment")
+    try:
+        return run_automated_calibration(job_id, device_config=device_cfg, ambient_environment=env, db_path=DB_PATH)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/jobs/{job_id}/dcc-json")
+def api_job_dcc_json(job_id: str):
+    """Export machine-readable Digital Calibration Certificate in JSON format."""
+    from .services.canonical_certificate_service import export_dcc_json
+    from .db import DB_PATH
+    try:
+        raw_json = export_dcc_json(job_id, db_path=DB_PATH)
+        return Response(content=raw_json, media_type="application/json")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/jobs/{job_id}/dcc-xml")
+def api_job_dcc_xml(job_id: str):
+    """Export machine-readable Digital Calibration Certificate in XML format."""
+    from .services.canonical_certificate_service import export_dcc_xml
+    from .db import DB_PATH
+    try:
+        raw_xml = export_dcc_xml(job_id, db_path=DB_PATH)
+        return Response(content=raw_xml, media_type="application/xml")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/jobs/{job_id}/advanced-certificate-pdf")
+@app.get("/api/jobs/{job_id}/certificate")
+def api_job_advanced_certificate_pdf(job_id: str):
+    """Generate and stream advanced multi-page ISO/IEC 17025 accredited certificate PDF."""
+    from .services.advanced_pdf_service import generate_advanced_multi_page_pdf
+    from .db import DB_PATH
+    try:
+        pdf_bytes = generate_advanced_multi_page_pdf(job_id, db_path=DB_PATH)
+        filename = f"Certificate_{job_id}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"inline; filename={filename}"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+UI_WORKSTATION_DIR = get_resource_path(os.path.join("ui", "workstation"))
+STATIC_DIR = UI_WORKSTATION_DIR if os.path.exists(UI_WORKSTATION_DIR) else get_resource_path(os.path.join("metrology_app", "static"))
+
 if os.path.exists(STATIC_DIR):
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+
 

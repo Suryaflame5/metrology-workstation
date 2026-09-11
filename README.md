@@ -45,7 +45,7 @@ Get-FileHash .\Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe -Algorithm SHA
 | Plan | Pricing | Target Audience | Key Capabilities |
 | :--- | :---: | :--- | :--- |
 | **Community** | **$0** (Free) | Evaluation & Students | Exact GUM math, Micrometer catalog, 10 records, 100% offline |
-| **Professional** | **$49/mo** or **$490/yr** | Single Workstation | All 7 instrument catalogs, Multi-point studio, Evidence ZIPs, PDF certificates, Backups |
+| **Professional** | **$599/yr** ($50/mo equiv) | Single Workstation | All 7 instrument catalogs, 8-step uncertainty, 12-stage provenance, Evidence ZIPs, PDF certificates |
 | **Business / Team**| **$1,490/yr** | Laboratory Teams | 5 seats included, Custom lab branding, Peer review audit trails, Priority 24h SLA |
 | **Enterprise** | **$4,900/yr** | Site License | 25+ seats, Air-gapped token provisioning, Custom transfer equations, 4h SLA |
 

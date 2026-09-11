@@ -7,7 +7,7 @@ and comprehensive measurement intelligence features for the $1000 premium editio
 
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional, Tuple
 from decimal import Decimal
 from scipy import stats
@@ -97,7 +97,7 @@ class AdvancedAnalyticsEngine:
             cpl = (mean - lsl) / (3 * std_dev)
             cpk = min(cpu, cpl)
         else:
-            cp = cpk = cpu = cpl = float('inf')
+            cp = cpk = cpu = cpl = 99.999
         
         # Process Performance Indices (Pp, Ppk) - uses overall standard deviation
         overall_std = np.std(measurements, ddof=0)
@@ -107,7 +107,7 @@ class AdvancedAnalyticsEngine:
             ppl = (mean - lsl) / (3 * overall_std)
             ppk = min(ppu, ppl)
         else:
-            pp = ppk = ppu = ppl = float('inf')
+            pp = ppk = ppu = ppl = 99.999
         
         # Determine capability status
         if cpk >= 1.33:

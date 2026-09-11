@@ -8,7 +8,7 @@ batch processing, custom branding, multi-language support, and high-quality PDF 
 import uuid
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from decimal import Decimal
 from enum import Enum
@@ -24,7 +24,6 @@ try:
     from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.lib.sectors import Sector
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -40,7 +39,7 @@ except ImportError:
     CRYPTOGRAPHY_AVAILABLE = False
 
 from ..db import get_calculation, DB_PATH
-from ..config import ensure_app_directories
+from ..config import ensure_app_directories, EVIDENCE_DIR, PROJECT_ROOT
 
 
 class CertificateTemplate(Enum):
@@ -382,8 +381,9 @@ class EnterpriseCertificateService:
         calculation = get_calculation(certificate["calculation_id"], db_path=self.db_path)
         
         # Generate PDF
+        ensure_app_directories()
         pdf_filename = f"{certificate['certificate_number']}.pdf"
-        pdf_path = os.path.join(ensure_app_directories()[3], pdf_filename)  # Use evidence directory
+        pdf_path = os.path.join(EVIDENCE_DIR, pdf_filename)
         
         doc = SimpleDocTemplate(pdf_path, pagesize=A4, rightMargin=72, leftMargin=72,
                                topMargin=72, bottomMargin=18)
@@ -554,6 +554,46 @@ class EnterpriseCertificateService:
             "pdf_hash": pdf_hash,
             "status": CertificateStatus.GENERATED.value
         }
+
+    def generate_pdf_for_calculation(self, calculation_id: str) -> bytes:
+        """Generate and return PDF bytes directly for a calculation record."""
+        calc = get_calculation(calculation_id, db_path=self.db_path)
+        if not calc:
+            repo_db = os.path.join(PROJECT_ROOT, "metrology_data.db")
+            if os.path.exists(repo_db):
+                calc = get_calculation(calculation_id, db_path=repo_db)
+                if calc:
+                    self.db_path = repo_db
+                    self._init_certificate_database()
+        else:
+            self._init_certificate_database()
+        if not calc:
+            raise ValueError(f"Calculation record '{calculation_id}' not found")
+
+        import sqlite3
+        conn = sqlite3.connect(self._get_cert_db_path())
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, pdf_path FROM certificates WHERE calculation_id = ?", (calculation_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row and row[1] and os.path.exists(row[1]):
+            with open(row[1], "rb") as f:
+                return f.read()
+
+        if row:
+            cert_id = row[0]
+        else:
+            cert = self.create_certificate(
+                calculation_id=calculation_id,
+                template_type=CertificateTemplate.ISO_17025_STANDARD.value,
+                customer_info={"name": "Accredited Laboratory Client", "address": "Quality Engineering Facility", "purchase_order": "PO-CAL-2026"},
+            )
+            cert_id = cert["id"]
+
+        gen_res = self.generate_pdf_certificate(cert_id)
+        with open(gen_res["pdf_path"], "rb") as f:
+            return f.read()
     
     def sign_certificate(self, certificate_id: str, digital_cert_id: str) -> Dict[str, Any]:
         """
@@ -831,3 +871,8 @@ def update_branding(branding_config: Dict[str, Any], db_path: Optional[str] = No
     """Update laboratory branding."""
     service = get_certificate_service(db_path)
     return service.update_branding(branding_config)
+
+def generate_pdf_for_calculation(calculation_id: str, db_path: Optional[str] = None) -> bytes:
+    """Generate and return PDF bytes directly for a given calculation ID."""
+    service = get_certificate_service(db_path)
+    return service.generate_pdf_for_calculation(calculation_id)

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — NovyraX Metrology Workstation</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">
+        <span class="brand-badge">NOVYRAX</span>
+        <span class="brand-sub">DOCS</span>
+      </a>
+      <nav class="nav-links">
+        <a href="metrology-workstation.html">Product</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html" style="color: var(--accent);">Documentation</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="download.html" class="btn btn-primary btn-sm">Download v1.0.0</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top: 60px;">
+    <div class="container" style="max-width: 960px;">
+      <div class="pill-badge">● ENGINEERING MANUAL</div>
+      <h1 style="font-size: 38px; font-weight: 800; margin-bottom: 16px;">Technical Documentation &amp; User Manual</h1>
+      
+      <!-- Quickstart -->
+      <div class="card" style="padding: 32px; margin-bottom: 32px;">
+        <h2 style="font-size: 22px; color: var(--accent); margin-bottom: 12px;">1. Getting Started</h2>
+        <ol style="padding-left: 20px; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
+          <li>Download and run <code>Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe</code>.</li>
+          <li>Launch <strong>Metrology Workstation</strong> from your Start Menu or Desktop.</li>
+          <li>Your default browser opens automatically to <code>http://127.0.0.1:8000</code>.</li>
+          <li>Navigate to <strong>"Calibration Studio"</strong> $\to$ select an instrument procedure (e.g. Outside Micrometer 0–25 mm).</li>
+          <li>Enter nominal values, recorded readings, and environmental conditions $\to$ Click <strong>"Calculate Uncertainty &amp; Decision"</strong>.</li>
+        </ol>
+      </div>
+
+      <!-- Uncertainty Math -->
+      <div class="card" style="padding: 32px; margin-bottom: 32px;">
+        <h2 style="font-size: 22px; color: var(--accent); margin-bottom: 12px;">2. GUM Mathematical Formulation</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Combined standard uncertainty $u_c(y)$ is evaluated under JCGM 100:2008:
+        </p>
+        <pre style="background: #060911; padding: 16px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; color: #f8fafc; border: 1px solid var(--border-color); overflow-x: auto;"><code>u_c(y) = sqrt( sum( (c_i * u(x_i))^2 ) + 2 * sum_i sum_j (c_i * c_j * u(x_i, x_j)) )</code></pre>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 16px;">
+          Effective degrees of freedom $\nu_{\text{eff}}$ are computed via the Welch-Satterthwaite relation:
+        </p>
+        <pre style="background: #060911; padding: 16px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; color: #f8fafc; border: 1px solid var(--border-color); overflow-x: auto;"><code>nu_eff = u_c(y)^4 / sum( (c_i * u(x_i))^4 / nu_i )</code></pre>
+      </div>
+
+      <!-- Decision Rules -->
+      <div class="card" style="padding: 32px;">
+        <h2 style="font-size: 22px; color: var(--accent); margin-bottom: 12px;">3. ANSI/NCSL Z540.3 Method 6 Guardbanding</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Method 6 applies dynamic root guardbanding $g$ based on the Test Uncertainty Ratio ($\text{TUR} = \frac{U_{\text{spec}}}{2 u_c}$):
+        </p>
+        <ul style="padding-left: 20px; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
+          <li>When $\text{TUR} \ge 4.0$: Guardband $g = 0$ (Binary acceptance permitted; consumer risk $\le 2\%$).</li>
+          <li>When $\text{TUR} &lt; 4.0$: Exact root guardband $g = u_c \cdot \Phi^{-1}(1 - P_{\text{CR}})$ is applied to reduce the acceptance interval: $A = [-\text{USL} + g, +\text{USL} - g]$.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <div class="footer-brand">NOVYRAX</div>
+        <p class="footer-copy">© 2026 NovyraX. All rights reserved. Sovereign engineering tools.</p>
+        <p class="footer-contact">Contact: <a href="mailto:novyrax04@gmail.com">novyrax04@gmail.com</a></p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Product</h4>
+          <a href="metrology-workstation.html">Overview</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="download.html">Download</a>
+          <a href="docs.html">Docs</a>
+        </div>
+        <div>
+          <h4>Legal &amp; Trust</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="eula.html">EULA</a>
+          <a href="refund.html">Refund Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

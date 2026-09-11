@@ -1,11 +1,11 @@
-"""
-Metrology Workstation — Native Windows Installer Engine (v1.0.0).
+﻿"""
+Metrology Workstation — Native Windows Installer Engine (v7.0.0).
 
 Handles:
-- Extraction to %LOCALAPPDATA%\\Programs\\MetrologyWorkstation
-- Start Menu and Desktop shortcut creation
+- Extraction to %LOCALAPPDATA%\Programs\MetrologyWorkstation
+- Start Menu and Desktop shortcut creation with custom icon
 - Windows Add/Remove Programs (Registry) registration
-- Clean Uninstaller generation
+- Clean Uninstaller generation preserving calibration records
 - Silent installation support (/S, --silent)
 """
 
@@ -17,9 +17,9 @@ import subprocess
 from pathlib import Path
 
 
-APP_NAME = "Metrology Workstation 6"
-APP_VERSION = "6.0.0"
-PUBLISHER = "NOVYRAX Engineering Studio"
+APP_NAME = "Metrology Workstation 7"
+APP_VERSION = "7.0.0"
+PUBLISHER = "NOVYRAX Metrology Systems"
 EXE_NAME = "MetrologyWorkstation.exe"
 REG_UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstation"
 
@@ -36,6 +36,7 @@ $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("{shortcut_path}")
 $Shortcut.TargetPath = "{target_exe}"
 $Shortcut.WorkingDirectory = "{target_exe.parent}"
+$Shortcut.IconLocation = "{target_exe},0"
 $Shortcut.Description = "{description}"
 $Shortcut.Save()
 """
@@ -136,6 +137,13 @@ def install(silent: bool = False, launch_after: bool = True):
         shortcut_path = start_menu_dir / f"{APP_NAME}.lnk"
         create_windows_shortcut(target_exe, shortcut_path, f"{APP_NAME} v{APP_VERSION}")
         print(f" [OK] Created Start Menu shortcut: {shortcut_path}")
+
+    # Create Desktop Shortcut
+    desktop_dir = Path(os.environ.get("USERPROFILE", "")) / "Desktop"
+    if desktop_dir.exists():
+        desktop_shortcut = desktop_dir / f"{APP_NAME}.lnk"
+        create_windows_shortcut(target_exe, desktop_shortcut, f"{APP_NAME} v{APP_VERSION}")
+        print(f" [OK] Created Desktop shortcut: {desktop_shortcut}")
 
     # Register in Windows Add/Remove Programs
     register_in_add_remove_programs(install_dir, target_exe, uninstaller_path)

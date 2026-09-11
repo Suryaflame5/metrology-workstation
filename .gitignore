@@ -31,3 +31,11 @@ scratch/
 *.pem
 *.key
 *.pfx
+
+# Large Binaries & Installers
+*.exe
+*.msix
+installer_files/
+node_modules/
+metrology_certificates.db
+scratch_routes.py

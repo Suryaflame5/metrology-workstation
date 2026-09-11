@@ -99,9 +99,12 @@ def restore_database_backup(backup_filename: str, db_path: str = DB_PATH) -> Dic
     Takes an emergency pre-restore snapshot of current DB before restoration.
     """
     ensure_app_directories()
-    backup_path = os.path.join(BACKUP_DIR, backup_filename)
+    clean_filename = os.path.basename(backup_filename)
+    if clean_filename != backup_filename or ".." in backup_filename or "/" in backup_filename or "\\" in backup_filename:
+        raise ValueError("Invalid backup filename: path traversal attempt detected.")
+    backup_path = os.path.join(BACKUP_DIR, clean_filename)
     if not os.path.exists(backup_path):
-        raise FileNotFoundError(f"Backup file '{backup_filename}' not found")
+        raise FileNotFoundError(f"Backup file '{clean_filename}' not found")
 
     # 1. Pre-flight integrity check on backup
     with sqlite3.connect(backup_path) as b_conn:
