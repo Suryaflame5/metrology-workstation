@@ -267,3 +267,29 @@ def test_feature_gating_endpoints():
     assert res_zip_pro.status_code == 200
     assert res_zip_pro.headers["content-type"] == "application/zip"
 
+
+def test_confidential_coupon_and_offline_license_activation():
+    """Verify that confidential 100% coupon and offline signed licenses activate immediately."""
+    # 1. Activate using confidential evaluation grant code
+    ent = EntitlementService.apply_license_token("M3TR0-9X2K-7V8P-Q4L1")
+    assert ent["state"] == EntitlementState.ACTIVE.value
+    assert ent["plan_id"] == PlanId.PROFESSIONAL.value
+    assert ent["seat_limit"] == 5
+    assert EntitlementService.is_feature_authorized("MULTI_POINT_STUDIO") is True
+    assert EntitlementService.is_feature_authorized("UNWATERMARKED_CERTIFICATES") is True
+
+    # 2. Issue and apply signed offline business license
+    ent_biz = EntitlementService.issue_signed_offline_license(
+        plan_id=PlanId.BUSINESS,
+        customer_name="Aerospace Calibration Center",
+        customer_email="qa@aerospace.mil",
+        seat_limit=10,
+        duration_days=365,
+    )
+    assert ent_biz["state"] == EntitlementState.ACTIVE.value
+    assert ent_biz["plan_id"] == PlanId.BUSINESS.value
+    assert ent_biz["customer_name"] == "Aerospace Calibration Center"
+    assert ent_biz["seat_limit"] == 10
+    assert EntitlementService.is_feature_authorized("CUSTOM_LAB_BRANDING") is True
+
+

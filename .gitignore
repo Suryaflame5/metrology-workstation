@@ -39,3 +39,5 @@ installer_files/
 node_modules/
 metrology_certificates.db
 scratch_routes.py
+coupons.txt
+coupon*.txt
