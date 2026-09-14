@@ -1,4 +1,4 @@
-﻿"""
+"""
 Native Windows Desktop Application Launcher for Metrology Workstation (v7.0.0).
 Creates a native desktop application window hosting the full workstation interface.
 """
@@ -9,6 +9,17 @@ import time
 import socket
 import threading
 import webbrowser
+
+# Safe stream redirection for Windows windowed/GUI mode (sys.stdout/stderr is None)
+class _NullWriter:
+    def write(self, s): pass
+    def flush(self): pass
+
+if sys.stdout is None:
+    sys.stdout = _NullWriter()
+if sys.stderr is None:
+    sys.stderr = _NullWriter()
+
 import uvicorn
 import webview
 
@@ -74,13 +85,23 @@ def main():
         cli_main()
         return
 
-    # 2. Initialize environment & app data directories
+    # 2. Determine Edition (Professional vs Demo)
+    edition = os.environ.get("METROLOGY_EDITION", "pro").lower()
+    if "--demo" in sys.argv:
+        edition = "demo"
+        os.environ["METROLOGY_EDITION"] = "demo"
+    elif "--pro" in sys.argv or "--commercial" in sys.argv:
+        edition = "pro"
+        os.environ["METROLOGY_EDITION"] = "pro"
+
+    # 3. Initialize environment & app data directories
     ensure_app_directories()
     init_db(DB_PATH)
     logger = get_logger()
-    logger.info("Metrology Workstation Desktop v7.0.0 initializing...")
+    edition_label = "Professional Edition" if edition == "pro" else "Demo Evaluation"
+    logger.info(f"CALIBRA Metrology Workstation Desktop v7.0.0 ({edition_label}) initializing...")
 
-    # 3. Parse port / host
+    # 4. Parse port / host
     host = "127.0.0.1"
     port = 8000
     if "--port" in sys.argv:
@@ -95,17 +116,17 @@ def main():
     server_url = f"http://{host}:{port}"
     logger.info(f"Metrology Workstation Engine running on {server_url}")
 
-    # 4. Start Uvicorn in background daemon thread
+    # 5. Start Uvicorn in background daemon thread
     def run_uvicorn():
-        uvicorn.run(app, host=host, port=port, log_level="warning")
+        uvicorn.run(app, host=host, port=port, log_level="warning", access_log=False)
 
     server_thread = threading.Thread(target=run_uvicorn, daemon=True)
     server_thread.start()
 
-    # 5. Wait for backend to be ready
+    # 6. Wait for backend to be ready
     wait_for_server(host, port)
 
-    # 6. Check for headless / server-only mode
+    # 7. Check for headless / server-only mode
     if "--headless" in sys.argv or "--server-only" in sys.argv:
         logger.info("Running in headless / server-only mode. Press Ctrl+C to exit.")
         try:
@@ -114,7 +135,7 @@ def main():
         except KeyboardInterrupt:
             return
 
-    # 7. Check for explicit browser mode fallback
+    # 8. Check for explicit browser mode fallback
     if "--browser" in sys.argv:
         logger.info(f"Opening browser at {server_url}")
         webbrowser.open(server_url)
@@ -124,11 +145,12 @@ def main():
         except KeyboardInterrupt:
             return
 
-    # 8. Launch Native Desktop Window (Primary GUI)
-    logger.info("Launching Native Windows Desktop Application Window...")
+    # 9. Launch Native Desktop Window (Primary GUI)
+    window_title = f"CALIBRA Metrology Workstation 7 — {edition_label}"
+    logger.info(f"Launching Native Windows Desktop Application Window: {window_title}")
     try:
         window = webview.create_window(
-            title="Metrology Workstation 7",
+            title=window_title,
             url=server_url,
             width=1480,
             height=940,

@@ -27,9 +27,11 @@ def get_logger() -> logging.Logger:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-        console = logging.StreamHandler()
-        console.setFormatter(formatter)
-        logger.addHandler(console)
+        import sys
+        if sys.stderr is not None:
+            console = logging.StreamHandler(sys.stderr)
+            console.setFormatter(formatter)
+            logger.addHandler(console)
 
     _LOGGER = logger
     return _LOGGER

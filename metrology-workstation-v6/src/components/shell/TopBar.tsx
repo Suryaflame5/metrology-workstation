@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Search,
   Bell,
@@ -24,6 +24,37 @@ export const TopBar: React.FC = () => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [operatorMenuOpen, setOperatorMenuOpen] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  const [labName, setLabName] = useState<string>(() => {
+    return localStorage.getItem('calibra_lab_name') || 'Standards & Calibration Facility';
+  });
+  const [operatorName, setOperatorName] = useState<string>(() => {
+    return localStorage.getItem('calibra_operator_name') || 'Lead Metrologist';
+  });
+  const [operatorRole, setOperatorRole] = useState<string>(() => {
+    return localStorage.getItem('calibra_operator_role') || 'QA / Sign-Off Authorized';
+  });
+  const [isCommercial, setIsCommercial] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    fetch('/api/license')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.is_commercial) {
+          setIsCommercial(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveProfile = (newLab: string, newOp: string) => {
+    setLabName(newLab);
+    setOperatorName(newOp);
+    localStorage.setItem('calibra_lab_name', newLab);
+    localStorage.setItem('calibra_operator_name', newOp);
+    setIsEditingProfile(false);
+  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -50,9 +81,15 @@ export const TopBar: React.FC = () => {
           <span className="font-bold text-[15px] tracking-tight text-[#00435F]">
             METROLOGY WORKSTATION
           </span>
-          <span className="text-[9.5px] uppercase font-mono px-1.5 py-0.5 bg-[#EBF3F6] text-[#00435F] font-semibold rounded border border-[#CBD5E1]">
-            ISO 17025
-          </span>
+          {isCommercial ? (
+            <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 bg-[#EBF3F6] text-[#00435F] font-semibold rounded border border-[#CBD5E1]">
+              ISO 17025 PRO
+            </span>
+          ) : (
+            <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 bg-amber-50 text-amber-800 font-semibold rounded border border-amber-300">
+              DEMO EVALUATION
+            </span>
+          )}
         </div>
       </div>
 
@@ -78,7 +115,7 @@ export const TopBar: React.FC = () => {
         <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-[#656B73] bg-[#F7F8FA] px-2.5 py-1 rounded border border-[#E2E5E9]">
           <MapPin className="w-3.5 h-3.5 text-[#00435F]" />
           <span className="font-medium text-[#17191C]">Lab:</span>
-          <span>Chennai Calibration Lab</span>
+          <span>{labName}</span>
         </div>
 
         {/* Environmental Telemetry */}
@@ -109,17 +146,32 @@ export const TopBar: React.FC = () => {
             className="flex items-center gap-1.5 text-[12px] bg-[#F7F8FA] hover:bg-[#EBF3F6] px-2.5 py-1 rounded border border-[#E2E5E9] text-[#17191C] font-medium transition-colors cursor-pointer"
           >
             <User className="w-3.5 h-3.5 text-[#00435F]" />
-            <span className="truncate max-w-[120px]">Marcus Brody</span>
+            <span className="truncate max-w-[120px]">{operatorName}</span>
             <ChevronDown className="w-3.5 h-3.5 text-[#656B73]" />
           </button>
 
           {operatorMenuOpen && (
-            <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#E2E5E9] rounded-md shadow-lg py-1 z-50 text-xs">
+            <div className="absolute right-0 mt-1.5 w-56 bg-white border border-[#E2E5E9] rounded-md shadow-lg py-1 z-50 text-xs">
               <div className="px-3 py-2 border-b border-[#E2E5E9] bg-[#F7F8FA]">
-                <div className="font-semibold text-[#17191C]">Marcus Brody</div>
-                <div className="text-[10px] text-[#656B73]">Lead Metrologist (Admin)</div>
-                <div className="text-[9.5px] font-mono text-[#00435F] mt-0.5">Role: Sign-Off Authorized</div>
+                <div className="font-semibold text-[#17191C]">{operatorName}</div>
+                <div className="text-[10px] text-[#656B73] truncate">{labName}</div>
+                <div className="text-[9.5px] font-mono text-[#00435F] mt-0.5">{operatorRole}</div>
               </div>
+              <button
+                onClick={() => {
+                  const newLab = prompt('Enter Facility / Laboratory Name:', labName);
+                  if (newLab !== null && newLab.trim()) {
+                    const newOp = prompt('Enter Lead Metrologist / Operator Name:', operatorName);
+                    if (newOp !== null && newOp.trim()) {
+                      saveProfile(newLab.trim(), newOp.trim());
+                    }
+                  }
+                  setOperatorMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#F7F8FA] text-[#00435F] font-semibold"
+              >
+                ✎ Configure Facility Profile...
+              </button>
               <button
                 onClick={() => {
                   setActiveWorkspace('customers');

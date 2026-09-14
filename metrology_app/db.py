@@ -1606,11 +1606,15 @@ def list_jobs(
         if rows:
             return [_parse_job_record(dict(r)) for r in rows]
 
-    # If empty, seed default jobs
-    seed_default_jobs_and_standards(db_path)
-    with get_connection(db_path) as conn:
-        cur = conn.execute("SELECT * FROM measurement_jobs ORDER BY created_at DESC LIMIT ?", (limit,))
-        return [_parse_job_record(dict(r)) for r in cur.fetchall()]
+    # Only seed default jobs if running in explicit Demo evaluation mode or test suite
+    is_demo = os.environ.get("METROLOGY_EDITION", "pro").lower() == "demo" or "PYTEST_CURRENT_TEST" in os.environ
+    if is_demo:
+        seed_default_jobs_and_standards(db_path, include_demo_jobs=True)
+        with get_connection(db_path) as conn:
+            cur = conn.execute("SELECT * FROM measurement_jobs ORDER BY created_at DESC LIMIT ?", (limit,))
+            return [_parse_job_record(dict(r)) for r in cur.fetchall()]
+
+    return []
 
 
 def duplicate_job(job_id: str, operator: str = "Metrology Specialist", db_path: str = DB_PATH) -> Dict[str, Any]:
@@ -1660,8 +1664,276 @@ def duplicate_job(job_id: str, operator: str = "Metrology Specialist", db_path: 
     return get_job(new_id, db_path=db_path)
 
 
-def seed_default_jobs_and_standards(db_path: str = DB_PATH) -> None:
-    """Seed production baseline reference standards and sample operational jobs."""
+def _seed_demo_sample_records(conn, db_path: str = DB_PATH) -> None:
+    """Seed sample evaluation jobs, mock customers, devices, and batch jobs for Demo mode."""
+    cur = conn.execute("SELECT COUNT(*) FROM measurement_jobs")
+    if cur.fetchone()[0] == 0:
+        sample_jobs = [
+                {
+                    "id": "JOB-2026-08142",
+                "job_number": "JOB-2026-08142",
+                "title": "Fluke 8508A 10 V DC Direct Voltage Calibration",
+                "customer_name": "Apex Aerospace Systems",
+                "instrument_id": "DMM-042",
+                "instrument_name": "Reference 8.5-Digit Multimeter",
+                "instrument_model": "Fluke 8508A",
+                "instrument_serial": "FLK-8508-9942",
+                "procedure_template_id": "EURAMET-cg-15",
+                "procedure_name": "EURAMET cg-15 Multimeter 10 V DC Calibration",
+                "reference_standard_id": "STD-ZNR-10",
+                "reference_standard_name": "Fluke 732B DC Standard (10 V)",
+                "reference_due_date": "2026-10-20",
+                "reference_uncertainty": 0.000002,
+                "status": "REVIEW_REQUIRED",
+                "unit": "V",
+                "nominal_value": 10.00000,
+                "tolerance_upper": 0.00500,
+                "tolerance_lower": -0.00500,
+                "environment": {"ambient_temperature_c": 23.1, "relative_humidity_pct": 42.0, "atmospheric_pressure_hpa": 1013.2},
+                "raw_measurements": [10.0021, 10.0019, 10.0024, 10.0022, 10.0020],
+                "statistics": {
+                    "count": 5,
+                    "mean": 10.00212,
+                    "sample_std_dev": 0.000192,
+                    "repeatability_uncertainty": 0.000086,
+                    "min": 10.0019,
+                    "max": 10.0024,
+                    "outliers": [],
+                },
+                "uncertainty_budget": {
+                    "combined_uncertainty_uc": 0.00042,
+                    "expanded_uncertainty_U95": 0.00084,
+                    "coverage_factor_k": 2.0,
+                    "effective_dof": 48.2,
+                },
+                "conformity": {
+                    "tur": 5.95,
+                    "guardband_multiplier": 1.0,
+                    "guardband_w": 0.00084,
+                    "acceptance_lower": -0.00416,
+                    "acceptance_upper": 0.00416,
+                    "conformance_verdict": "PASS",
+                },
+                "exceptions": [
+                    {
+                        "type": "REPEATABILITY",
+                        "severity": "WARNING",
+                        "message": "Sample repeatability standard deviation (0.192 mV) is 15% above nominal laboratory baseline.",
+                    }
+                ],
+                "operator": "Marcus Reid (Metrology Tech)",
+            },
+            {
+                "id": "JOB-2026-08143",
+                "job_number": "JOB-2026-08143",
+                "title": "Mitutoyo 0–25 mm Outside Micrometer Calibration",
+                "customer_name": "Lockheed Precision Fab",
+                "instrument_id": "MIC-001",
+                "instrument_name": "Outside Micrometer (0–25 mm)",
+                "instrument_model": "Mitutoyo 103-137",
+                "instrument_serial": "MIT-103-8821",
+                "procedure_template_id": "ISO-3611",
+                "procedure_name": "ISO 3611 Micrometer Calibration",
+                "reference_standard_id": "STD-GB-01",
+                "reference_standard_name": "Grade 0 Gauge Block Set (25 mm)",
+                "reference_due_date": "2026-11-15",
+                "reference_uncertainty": 0.00004,
+                "status": "APPROVED",
+                "unit": "mm",
+                "nominal_value": 25.0000,
+                "tolerance_upper": 0.0020,
+                "tolerance_lower": -0.0020,
+                "environment": {"ambient_temperature_c": 20.2, "relative_humidity_pct": 44.0, "atmospheric_pressure_hpa": 1013.25},
+                "raw_measurements": [25.0004, 25.0003, 25.0005, 25.0004, 25.0003],
+                "statistics": {
+                    "count": 5,
+                    "mean": 25.00038,
+                    "sample_std_dev": 0.000084,
+                    "repeatability_uncertainty": 0.000037,
+                    "min": 25.0003,
+                    "max": 25.0005,
+                    "outliers": [],
+                },
+                "uncertainty_budget": {
+                    "combined_uncertainty_uc": 0.00031,
+                    "expanded_uncertainty_U95": 0.00062,
+                    "coverage_factor_k": 2.0,
+                    "effective_dof": 50.0,
+                },
+                "conformity": {
+                    "tur": 6.45,
+                    "guardband_multiplier": 1.0,
+                    "guardband_w": 0.00062,
+                    "acceptance_lower": -0.00138,
+                    "acceptance_upper": 0.00138,
+                    "conformance_verdict": "PASS",
+                },
+                "exceptions": [],
+                "operator": "Alex Kumar (Senior Metrologist)",
+                "reviewer": "Dr. E. Vance (Quality Director)",
+                "reviewed_at": "2026-08-28T14:10:00Z",
+            },
+            {
+                "id": "JOB-2026-08144",
+                "job_number": "JOB-2026-08144",
+                "title": "Starrett 150 mm Digital Caliper Routine Verification",
+                "customer_name": "Northrop Grumman Aero",
+                "instrument_id": "CD-203",
+                "instrument_name": "150 mm Electronic Caliper",
+                "instrument_model": "Starrett 798A-6/150",
+                "instrument_serial": "STR-798-1102",
+                "procedure_template_id": "DIN-862",
+                "procedure_name": "DIN 862 / ISO 13385-1 Caliper Verification",
+                "reference_standard_id": "STD-GB-01",
+                "reference_standard_name": "Grade 0 Gauge Block Set (25 mm)",
+                "reference_due_date": "2026-11-15",
+                "reference_uncertainty": 0.00004,
+                "status": "NEW",
+                "unit": "mm",
+                "nominal_value": 50.000,
+                "tolerance_upper": 0.020,
+                "tolerance_lower": -0.020,
+                "environment": {"ambient_temperature_c": 20.0, "relative_humidity_pct": 45.0, "atmospheric_pressure_hpa": 1013.25},
+                "raw_measurements": [],
+                "statistics": {},
+                "uncertainty_budget": {},
+                "conformity": {},
+                "exceptions": [],
+                "operator": "Metrology Specialist",
+            },
+        ]
+        for j in sample_jobs:
+            save_job(j, db_path=db_path)
+
+    # Seed default Customers if empty
+    cur_cust = conn.execute("SELECT COUNT(*) FROM customers")
+    if cur_cust.fetchone()[0] == 0:
+        customers = [
+            {
+                "id": "CUST-APEX-01",
+                "name": "Apex Aerospace Systems",
+                "code": "APEX-AERO",
+                "contact_name": "Sarah Jenkins (Quality Manager)",
+                "email": "sjenkins@apexaero.com",
+                "phone": "+1 (555) 234-8901",
+                "address": "Bldg 4, Space Coast Technology Park, FL 32901",
+                "notes": "ISO 9001 / AS9100 certified aerospace supplier.",
+            },
+            {
+                "id": "CUST-LOCK-02",
+                "name": "Lockheed Precision Fab",
+                "code": "LOCK-PREC",
+                "contact_name": "Markus Brody (Chief Metrologist)",
+                "email": "m.brody@lockheedfab.com",
+                "phone": "+1 (555) 782-1144",
+                "address": "100 Innovation Parkway, Fort Worth, TX 76108",
+                "notes": "Primary defense contractor for precision aerostructures.",
+            },
+            {
+                "id": "CUST-NORT-03",
+                "name": "Northrop Grumman Aero",
+                "code": "NORT-GRUM",
+                "contact_name": "Elena Rostova (Compliance Director)",
+                "email": "e.rostova@ngc-defense.com",
+                "phone": "+1 (555) 901-4433",
+                "address": "1 Space Park Dr, Redondo Beach, CA 90278",
+                "notes": "Critical dimensional and sensor qualification program.",
+            },
+            {
+                "id": "CUST-TSLA-04",
+                "name": "Tesla Energy Metrology Lab",
+                "code": "TSLA-ENRG",
+                "contact_name": "David Kim (Standards Lead)",
+                "email": "dkim@tesla.com",
+                "phone": "+1 (555) 432-6789",
+                "address": "Gigafactory 1, Electric Ave, Sparks, NV 89434",
+                "notes": "High-voltage battery module test instrumentation.",
+            },
+        ]
+        for c in customers:
+            save_customer(c, db_path=db_path)
+
+
+    # Seed default Connected Hardware Devices if empty (Demo mode only)
+    cur_dev = conn.execute("SELECT COUNT(*) FROM connected_devices")
+    if cur_dev.fetchone()[0] == 0:
+        devices = [
+            {
+                "id": "DEV-FLK-8508A",
+                "name": "Fluke 8508A Reference Multimeter",
+                "device_type": "MULTIMETER",
+                "protocol": "SCPI",
+                "connection_string": "GPIB0::22::INSTR",
+                "manufacturer": "Fluke Calibration",
+                "model": "8508A",
+                "serial_number": "FLK-8508-4109",
+                "is_connected": True,
+            },
+            {
+                "id": "DEV-KEY-34461A",
+                "name": "Keysight 34461A 6.5-Digit Truevolt DMM",
+                "device_type": "MULTIMETER",
+                "protocol": "SCPI",
+                "connection_string": "USB0::0x0957::0x0607::MY53201488::INSTR",
+                "manufacturer": "Keysight Technologies",
+                "model": "34461A",
+                "serial_number": "MY53201488",
+                "is_connected": True,
+            },
+            {
+                "id": "DEV-MIT-DIGI",
+                "name": "Mitutoyo Digimatic USB Input Tool",
+                "device_type": "CALIPER_INTERFACE",
+                "protocol": "SERIAL",
+                "connection_string": "COM3:9600,8,N,1",
+                "manufacturer": "Mitutoyo",
+                "model": "IT-016U",
+                "serial_number": "MIT-IT-8812",
+                "is_connected": False,
+            },
+            {
+                "id": "DEV-DRK-104",
+                "name": "Druck DPI 104 Precision Pressure Gauge",
+                "device_type": "PRESSURE_GAUGE",
+                "protocol": "SERIAL",
+                "connection_string": "COM4:19200,8,N,1",
+                "manufacturer": "Baker Hughes / Druck",
+                "model": "DPI 104",
+                "serial_number": "DRK-104-9934",
+                "is_connected": False,
+            },
+        ]
+        for d in devices:
+            save_connected_device(d, db_path=db_path)
+
+    # Seed sample Batch Job if empty
+    cur_batch = conn.execute("SELECT COUNT(*) FROM batch_jobs")
+    if cur_batch.fetchone()[0] == 0:
+        sample_batch = {
+            "id": "BATCH-2026-001",
+            "batch_number": "BATCH-2026-001",
+            "title": "Shop Floor Fluke 87V Handheld DMM Fleet Re-Certification",
+            "procedure_template_id": "PROC-EURAMET-CG-15",
+            "procedure_name": "EURAMET cg-15 Multimeter 10 V DC Calibration",
+            "operator": "Marcus Reid (Metrology Tech)",
+            "status": "COMPLETED",
+            "total_instruments": 25,
+            "completed_count": 25,
+            "passed_count": 23,
+            "failed_count": 1,
+            "review_required_count": 1,
+            "job_ids": ["JOB-2026-08142", "JOB-2026-08143"],
+        }
+        save_batch_job(sample_batch, db_path=db_path)
+
+
+
+
+
+def seed_default_jobs_and_standards(db_path: str = DB_PATH, include_demo_jobs: Optional[bool] = None) -> None:
+    """Seed baseline reference standards, standard procedures, and optionally sample evaluation jobs for demo mode."""
+    if include_demo_jobs is None:
+        include_demo_jobs = (os.environ.get("METROLOGY_EDITION", "pro").lower() == "demo" or "PYTEST_CURRENT_TEST" in os.environ)
     init_db(db_path)
     with get_connection(db_path) as conn:
         cur = conn.execute("SELECT COUNT(*) FROM reference_standards")
@@ -1713,7 +1985,7 @@ def seed_default_jobs_and_standards(db_path: str = DB_PATH) -> None:
                     "calibration_due_date": "2026-09-10",
                     "certificate_id": "A2LA-PRESS-2025-41",
                     "accredited_lab": "Apex Calibration Standards",
-                    "status": "DUE_SOON",  # Expiring soon warning!
+                    "status": "DUE_SOON",
                 },
                 {
                     "id": "STD-RTD-01",
@@ -1734,193 +2006,6 @@ def seed_default_jobs_and_standards(db_path: str = DB_PATH) -> None:
             ]
             for s in standards:
                 save_reference_standard(s, db_path=db_path)
-
-        cur = conn.execute("SELECT COUNT(*) FROM measurement_jobs")
-        if cur.fetchone()[0] == 0:
-            sample_jobs = [
-                {
-                    "id": "JOB-2026-08142",
-                    "job_number": "JOB-2026-08142",
-                    "title": "Fluke 8508A 10 V DC Direct Voltage Calibration",
-                    "customer_name": "Apex Aerospace Systems",
-                    "instrument_id": "DMM-042",
-                    "instrument_name": "Reference 8.5-Digit Multimeter",
-                    "instrument_model": "Fluke 8508A",
-                    "instrument_serial": "FLK-8508-9942",
-                    "procedure_template_id": "EURAMET-cg-15",
-                    "procedure_name": "EURAMET cg-15 Multimeter 10 V DC Calibration",
-                    "reference_standard_id": "STD-ZNR-10",
-                    "reference_standard_name": "Fluke 732B DC Standard (10 V)",
-                    "reference_due_date": "2026-10-20",
-                    "reference_uncertainty": 0.000002,
-                    "status": "REVIEW_REQUIRED",
-                    "unit": "V",
-                    "nominal_value": 10.00000,
-                    "tolerance_upper": 0.00500,
-                    "tolerance_lower": -0.00500,
-                    "environment": {"ambient_temperature_c": 23.1, "relative_humidity_pct": 42.0, "atmospheric_pressure_hpa": 1013.2},
-                    "raw_measurements": [10.0021, 10.0019, 10.0024, 10.0022, 10.0020],
-                    "statistics": {
-                        "count": 5,
-                        "mean": 10.00212,
-                        "sample_std_dev": 0.000192,
-                        "repeatability_uncertainty": 0.000086,
-                        "min": 10.0019,
-                        "max": 10.0024,
-                        "outliers": [],
-                    },
-                    "uncertainty_budget": {
-                        "combined_uncertainty_uc": 0.00042,
-                        "expanded_uncertainty_U95": 0.00084,
-                        "coverage_factor_k": 2.0,
-                        "effective_dof": 48.2,
-                    },
-                    "conformity": {
-                        "tur": 5.95,
-                        "guardband_multiplier": 1.0,
-                        "guardband_w": 0.00084,
-                        "acceptance_lower": -0.00416,
-                        "acceptance_upper": 0.00416,
-                        "conformance_verdict": "PASS",
-                    },
-                    "exceptions": [
-                        {
-                            "type": "REPEATABILITY",
-                            "severity": "WARNING",
-                            "message": "Sample repeatability standard deviation (0.192 mV) is 15% above nominal laboratory baseline.",
-                        }
-                    ],
-                    "operator": "Marcus Reid (Metrology Tech)",
-                },
-                {
-                    "id": "JOB-2026-08143",
-                    "job_number": "JOB-2026-08143",
-                    "title": "Mitutoyo 0–25 mm Outside Micrometer Calibration",
-                    "customer_name": "Lockheed Precision Fab",
-                    "instrument_id": "MIC-001",
-                    "instrument_name": "Outside Micrometer (0–25 mm)",
-                    "instrument_model": "Mitutoyo 103-137",
-                    "instrument_serial": "MIT-103-8821",
-                    "procedure_template_id": "ISO-3611",
-                    "procedure_name": "ISO 3611 Micrometer Calibration",
-                    "reference_standard_id": "STD-GB-01",
-                    "reference_standard_name": "Grade 0 Gauge Block Set (25 mm)",
-                    "reference_due_date": "2026-11-15",
-                    "reference_uncertainty": 0.00004,
-                    "status": "APPROVED",
-                    "unit": "mm",
-                    "nominal_value": 25.0000,
-                    "tolerance_upper": 0.0020,
-                    "tolerance_lower": -0.0020,
-                    "environment": {"ambient_temperature_c": 20.2, "relative_humidity_pct": 44.0, "atmospheric_pressure_hpa": 1013.25},
-                    "raw_measurements": [25.0004, 25.0003, 25.0005, 25.0004, 25.0003],
-                    "statistics": {
-                        "count": 5,
-                        "mean": 25.00038,
-                        "sample_std_dev": 0.000084,
-                        "repeatability_uncertainty": 0.000037,
-                        "min": 25.0003,
-                        "max": 25.0005,
-                        "outliers": [],
-                    },
-                    "uncertainty_budget": {
-                        "combined_uncertainty_uc": 0.00031,
-                        "expanded_uncertainty_U95": 0.00062,
-                        "coverage_factor_k": 2.0,
-                        "effective_dof": 50.0,
-                    },
-                    "conformity": {
-                        "tur": 6.45,
-                        "guardband_multiplier": 1.0,
-                        "guardband_w": 0.00062,
-                        "acceptance_lower": -0.00138,
-                        "acceptance_upper": 0.00138,
-                        "conformance_verdict": "PASS",
-                    },
-                    "exceptions": [],
-                    "operator": "Alex Kumar (Senior Metrologist)",
-                    "reviewer": "Dr. E. Vance (Quality Director)",
-                    "reviewed_at": "2026-08-28T14:10:00Z",
-                },
-                {
-                    "id": "JOB-2026-08144",
-                    "job_number": "JOB-2026-08144",
-                    "title": "Starrett 150 mm Digital Caliper Routine Verification",
-                    "customer_name": "Northrop Grumman Aero",
-                    "instrument_id": "CD-203",
-                    "instrument_name": "150 mm Electronic Caliper",
-                    "instrument_model": "Starrett 798A-6/150",
-                    "instrument_serial": "STR-798-1102",
-                    "procedure_template_id": "DIN-862",
-                    "procedure_name": "DIN 862 / ISO 13385-1 Caliper Verification",
-                    "reference_standard_id": "STD-GB-01",
-                    "reference_standard_name": "Grade 0 Gauge Block Set (25 mm)",
-                    "reference_due_date": "2026-11-15",
-                    "reference_uncertainty": 0.00004,
-                    "status": "NEW",
-                    "unit": "mm",
-                    "nominal_value": 50.000,
-                    "tolerance_upper": 0.020,
-                    "tolerance_lower": -0.020,
-                    "environment": {"ambient_temperature_c": 20.0, "relative_humidity_pct": 45.0, "atmospheric_pressure_hpa": 1013.25},
-                    "raw_measurements": [],
-                    "statistics": {},
-                    "uncertainty_budget": {},
-                    "conformity": {},
-                    "exceptions": [],
-                    "operator": "Metrology Specialist",
-                },
-            ]
-            for j in sample_jobs:
-                save_job(j, db_path=db_path)
-
-        # Seed default Customers if empty
-        cur_cust = conn.execute("SELECT COUNT(*) FROM customers")
-        if cur_cust.fetchone()[0] == 0:
-            customers = [
-                {
-                    "id": "CUST-APEX-01",
-                    "name": "Apex Aerospace Systems",
-                    "code": "APEX-AERO",
-                    "contact_name": "Sarah Jenkins (Quality Manager)",
-                    "email": "sjenkins@apexaero.com",
-                    "phone": "+1 (555) 234-8901",
-                    "address": "Bldg 4, Space Coast Technology Park, FL 32901",
-                    "notes": "ISO 9001 / AS9100 certified aerospace supplier.",
-                },
-                {
-                    "id": "CUST-LOCK-02",
-                    "name": "Lockheed Precision Fab",
-                    "code": "LOCK-PREC",
-                    "contact_name": "Markus Brody (Chief Metrologist)",
-                    "email": "m.brody@lockheedfab.com",
-                    "phone": "+1 (555) 782-1144",
-                    "address": "100 Innovation Parkway, Fort Worth, TX 76108",
-                    "notes": "Primary defense contractor for precision aerostructures.",
-                },
-                {
-                    "id": "CUST-NORT-03",
-                    "name": "Northrop Grumman Aero",
-                    "code": "NORT-GRUM",
-                    "contact_name": "Elena Rostova (Compliance Director)",
-                    "email": "e.rostova@ngc-defense.com",
-                    "phone": "+1 (555) 901-4433",
-                    "address": "1 Space Park Dr, Redondo Beach, CA 90278",
-                    "notes": "Critical dimensional and sensor qualification program.",
-                },
-                {
-                    "id": "CUST-TSLA-04",
-                    "name": "Tesla Energy Metrology Lab",
-                    "code": "TSLA-ENRG",
-                    "contact_name": "David Kim (Standards Lead)",
-                    "email": "dkim@tesla.com",
-                    "phone": "+1 (555) 432-6789",
-                    "address": "Gigafactory 1, Electric Ave, Sparks, NV 89434",
-                    "notes": "High-voltage battery module test instrumentation.",
-                },
-            ]
-            for c in customers:
-                save_customer(c, db_path=db_path)
 
         # Seed default Procedure Templates if empty
         cur_proc = conn.execute("SELECT COUNT(*) FROM procedure_templates")
@@ -2066,77 +2151,10 @@ def seed_default_jobs_and_standards(db_path: str = DB_PATH) -> None:
             for p in procedures:
                 save_procedure_template(p, db_path=db_path)
 
-        # Seed default Connected Hardware Devices if empty
-        cur_dev = conn.execute("SELECT COUNT(*) FROM connected_devices")
-        if cur_dev.fetchone()[0] == 0:
-            devices = [
-                {
-                    "id": "DEV-FLK-8508A",
-                    "name": "Fluke 8508A Reference Multimeter",
-                    "device_type": "MULTIMETER",
-                    "protocol": "SCPI",
-                    "connection_string": "GPIB0::22::INSTR",
-                    "manufacturer": "Fluke Calibration",
-                    "model": "8508A",
-                    "serial_number": "FLK-8508-4109",
-                    "is_connected": True,
-                },
-                {
-                    "id": "DEV-KEY-34461A",
-                    "name": "Keysight 34461A 6.5-Digit Truevolt DMM",
-                    "device_type": "MULTIMETER",
-                    "protocol": "SCPI",
-                    "connection_string": "USB0::0x0957::0x0607::MY53201488::INSTR",
-                    "manufacturer": "Keysight Technologies",
-                    "model": "34461A",
-                    "serial_number": "MY53201488",
-                    "is_connected": True,
-                },
-                {
-                    "id": "DEV-MIT-DIGI",
-                    "name": "Mitutoyo Digimatic USB Input Tool",
-                    "device_type": "CALIPER_INTERFACE",
-                    "protocol": "SERIAL",
-                    "connection_string": "COM3:9600,8,N,1",
-                    "manufacturer": "Mitutoyo",
-                    "model": "IT-016U",
-                    "serial_number": "MIT-IT-8812",
-                    "is_connected": False,
-                },
-                {
-                    "id": "DEV-DRK-104",
-                    "name": "Druck DPI 104 Precision Pressure Gauge",
-                    "device_type": "PRESSURE_GAUGE",
-                    "protocol": "SERIAL",
-                    "connection_string": "COM4:19200,8,N,1",
-                    "manufacturer": "Baker Hughes / Druck",
-                    "model": "DPI 104",
-                    "serial_number": "DRK-104-9934",
-                    "is_connected": False,
-                },
-            ]
-            for d in devices:
-                save_connected_device(d, db_path=db_path)
 
-        # Seed sample Batch Job if empty
-        cur_batch = conn.execute("SELECT COUNT(*) FROM batch_jobs")
-        if cur_batch.fetchone()[0] == 0:
-            sample_batch = {
-                "id": "BATCH-2026-001",
-                "batch_number": "BATCH-2026-001",
-                "title": "Shop Floor Fluke 87V Handheld DMM Fleet Re-Certification",
-                "procedure_template_id": "PROC-EURAMET-CG-15",
-                "procedure_name": "EURAMET cg-15 Multimeter 10 V DC Calibration",
-                "operator": "Marcus Reid (Metrology Tech)",
-                "status": "COMPLETED",
-                "total_instruments": 25,
-                "completed_count": 25,
-                "passed_count": 23,
-                "failed_count": 1,
-                "review_required_count": 1,
-                "job_ids": ["JOB-2026-08142", "JOB-2026-08143"],
-            }
-            save_batch_job(sample_batch, db_path=db_path)
+        # Demo evaluation sample records
+        if include_demo_jobs:
+            _seed_demo_sample_records(conn, db_path)
 
 
 # ============================================================================
