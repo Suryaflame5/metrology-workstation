@@ -2525,6 +2525,131 @@ def api_job_advanced_certificate_pdf(job_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+# ============================================================================
+# PRODUCTION V1: METROLOGY EVIDENCE & IMPACT PLATFORM ENDPOINTS
+# ============================================================================
+
+@app.post("/api/v1/impact/trace-oot")
+def api_platform_trace_oot_impact(payload: Dict[str, Any]):
+    """Execute Out-Of-Tolerance (OOT) reverse impact tracing across jobs, batches, and assets."""
+    from .services.impact_service import trace_out_of_tolerance_impact
+    inst_id = payload.get("instrument_id")
+    if not inst_id:
+        raise HTTPException(status_code=400, detail="instrument_id is required.")
+    fail_date = payload.get("failure_date")
+    last_valid = payload.get("last_valid_date")
+    mag = float(payload.get("tolerance_breach_magnitude", 0.0))
+    unit = payload.get("unit", "mm")
+    try:
+        return trace_out_of_tolerance_impact(
+            instrument_id=inst_id,
+            failure_date=fail_date,
+            last_valid_date=last_valid,
+            tolerance_breach_magnitude=mag,
+            unit=unit,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/impact/financial-exposure")
+def api_platform_financial_exposure(payload: Dict[str, Any]):
+    """Calculate transparent financial loss exposure for measurement deviation."""
+    from .services.impact_service import calculate_financial_exposure
+    units = int(payload.get("affected_units", 250))
+    unit_cost = float(payload.get("unit_cost_usd", 45.0))
+    scrap_pct = float(payload.get("scrap_rate_pct", 12.0))
+    rework_pct = float(payload.get("rework_rate_pct", 28.0))
+    rework_cost = float(payload.get("rework_cost_usd", 14.50))
+    hours = float(payload.get("inspection_hours", 16.0))
+    labor_rate = float(payload.get("labor_rate_usd", 65.0))
+    blanket_units = payload.get("blanket_recall_units")
+    if blanket_units:
+        blanket_units = int(blanket_units)
+    try:
+        return calculate_financial_exposure(
+            affected_units=units,
+            unit_cost_usd=unit_cost,
+            scrap_rate_pct=scrap_pct,
+            rework_rate_pct=rework_pct,
+            rework_cost_usd=rework_cost,
+            inspection_hours=hours,
+            labor_rate_usd=labor_rate,
+            blanket_recall_units=blanket_units,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/evidence/audit-package/{job_id}")
+def api_platform_audit_evidence_package(job_id: str):
+    """Retrieve instant 60-Second Audit Evidence Defense Package as a ZIP archive."""
+    from .services.impact_service import build_60s_audit_defense_package
+    try:
+        zip_bytes = build_60s_audit_defense_package(job_id)
+        filename = f"Audit_Defense_Package_{job_id}.zip"
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/investigations")
+def api_platform_list_investigations(status: Optional[str] = None):
+    """List root-cause quality investigations."""
+    from .db import list_investigations
+    return list_investigations(status=status)
+
+
+@app.post("/api/v1/investigations")
+def api_platform_save_investigation(payload: Dict[str, Any]):
+    """Create or update a root-cause quality investigation."""
+    from .db import save_investigation
+    if "title" not in payload:
+        raise HTTPException(status_code=400, detail="title is required.")
+    inv_id = save_investigation(payload)
+    return {"status": "SUCCESS", "id": inv_id}
+
+
+@app.get("/api/v1/investigations/{inv_id}")
+def api_platform_get_investigation(inv_id: str):
+    """Retrieve full investigation details including corrective actions."""
+    from .db import get_investigation
+    inv = get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail=f"Investigation '{inv_id}' not found.")
+    return inv
+
+
+@app.post("/api/v1/investigations/{inv_id}/actions")
+def api_platform_save_corrective_action(inv_id: str, payload: Dict[str, Any]):
+    """Record a corrective / preventive action (CAPA) linked to an investigation."""
+    from .db import save_corrective_action
+    payload["investigation_id"] = inv_id
+    if "action_title" not in payload:
+        raise HTTPException(status_code=400, detail="action_title is required.")
+    act_id = save_corrective_action(payload)
+    return {"status": "SUCCESS", "id": act_id}
+
+
+@app.get("/api/v1/loss-events")
+def api_platform_list_loss_events(status: Optional[str] = None, limit: int = 50):
+    """List quantified financial loss events."""
+    from .db import list_loss_events
+    return list_loss_events(status=status, limit=limit)
+
+
+@app.get("/api/v1/recovery-events")
+def api_platform_list_recovery_events():
+    """List verified Before/After financial recovery proof events."""
+    from .db import list_recovery_events
+    return list_recovery_events()
+
+
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 
 if os.path.exists(STATIC_DIR):

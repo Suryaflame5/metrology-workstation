@@ -31,6 +31,8 @@ def client(tmp_path):
     import metrology_app.services.production_report_service as rep_mod
     
     old_db = db_mod.DB_PATH
+    old_env_db = os.environ.get("METROLOGY_DB_PATH")
+    os.environ["METROLOGY_DB_PATH"] = db_file
     db_mod.DB_PATH = db_file
     loss_mod.DB_PATH = db_file
     inv_mod.DB_PATH = db_file
@@ -42,6 +44,10 @@ def client(tmp_path):
     with TestClient(app) as test_client:
         yield test_client
 
+    if old_env_db is not None:
+        os.environ["METROLOGY_DB_PATH"] = old_env_db
+    else:
+        os.environ.pop("METROLOGY_DB_PATH", None)
     db_mod.DB_PATH = old_db
     loss_mod.DB_PATH = old_db
     inv_mod.DB_PATH = old_db
