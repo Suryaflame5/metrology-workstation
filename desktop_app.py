@@ -12,8 +12,30 @@ import webbrowser
 
 # Safe stream redirection for Windows windowed/GUI mode (sys.stdout/stderr is None)
 class _NullWriter:
-    def write(self, s): pass
-    def flush(self): pass
+    encoding = "utf-8"
+    errors = "ignore"
+
+    def write(self, s):
+        pass
+
+    def flush(self):
+        pass
+
+    def reconfigure(self, *args, **kwargs):
+        pass
+
+    def isatty(self):
+        return False
+
+    def readable(self):
+        return False
+
+    def writable(self):
+        return True
+
+    def seekable(self):
+        return False
+
 
 if sys.stdout is None:
     sys.stdout = _NullWriter()
@@ -70,6 +92,88 @@ def init_dpi_awareness():
                 pass
 
 
+def resolve_app_edition() -> str:
+    """Resolve active workstation edition: 'demo' (Free Evaluation) or 'pro' (Professional)."""
+    # 1. Explicit CLI argument takes precedence
+    if "--demo" in sys.argv:
+        return "demo"
+    if "--pro" in sys.argv or "--commercial" in sys.argv:
+        return "pro"
+
+    # 2. Check executable filename (e.g. if run directly from dist)
+    try:
+        from pathlib import Path
+        exe_name = Path(sys.executable).name.lower()
+        if "demo" in exe_name:
+            return "demo"
+    except Exception:
+        pass
+
+    # 3. Check local application directory edition.json (written by installer)
+    try:
+        from pathlib import Path
+        exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).parent
+        local_edition_file = exe_dir / "edition.json"
+        if local_edition_file.exists():
+            import json
+            with open(local_edition_file, "r", encoding="utf-8") as f:
+                ed = json.load(f).get("edition", "").lower()
+                if ed == "demo":
+                    # Check if user has explicitly activated a full non-trial commercial license
+                    from metrology_app.services.license_service import EntitlementService, PlanId, EntitlementState
+                    try:
+                        ent = EntitlementService.get_current_entitlement()
+                        if (
+                            ent.get("state") == EntitlementState.ACTIVE.value
+                            and not ent.get("is_trial")
+                            and ent.get("plan_id") in (PlanId.PROFESSIONAL.value, PlanId.BUSINESS.value, PlanId.ENTERPRISE.value)
+                        ):
+                            return "pro"
+                    except Exception:
+                        pass
+                    return "demo"
+                elif ed == "pro":
+                    return "pro"
+    except Exception:
+        pass
+
+    # 4. Check AppData user profile edition.json
+    try:
+        from metrology_app.config import APP_DIR
+        from pathlib import Path
+        appdata_edition_file = Path(APP_DIR) / "edition.json"
+        if appdata_edition_file.exists():
+            import json
+            with open(appdata_edition_file, "r", encoding="utf-8") as f:
+                ed = json.load(f).get("edition", "").lower()
+                if ed == "demo":
+                    return "demo"
+                elif ed == "pro":
+                    return "pro"
+    except Exception:
+        pass
+
+    # 5. Check active commercial license token (full paid non-trial)
+    try:
+        from metrology_app.services.license_service import EntitlementService, PlanId, EntitlementState
+        ent = EntitlementService.get_current_entitlement()
+        if (
+            ent.get("state") == EntitlementState.ACTIVE.value
+            and not ent.get("is_trial")
+            and ent.get("plan_id") in (PlanId.PROFESSIONAL.value, PlanId.BUSINESS.value, PlanId.ENTERPRISE.value)
+        ):
+            return "pro"
+    except Exception:
+        pass
+
+    # 6. Check environment variable
+    if "METROLOGY_EDITION" in os.environ:
+        return os.environ["METROLOGY_EDITION"].lower()
+
+    # 7. Default to demo for safety — free evaluation unless licensed
+    return "demo"
+
+
 def main():
     init_dpi_awareness()
 
@@ -86,13 +190,8 @@ def main():
         return
 
     # 2. Determine Edition (Professional vs Demo)
-    edition = os.environ.get("METROLOGY_EDITION", "pro").lower()
-    if "--demo" in sys.argv:
-        edition = "demo"
-        os.environ["METROLOGY_EDITION"] = "demo"
-    elif "--pro" in sys.argv or "--commercial" in sys.argv:
-        edition = "pro"
-        os.environ["METROLOGY_EDITION"] = "pro"
+    edition = resolve_app_edition()
+    os.environ["METROLOGY_EDITION"] = edition
 
     # 3. Initialize environment & app data directories
     ensure_app_directories()

@@ -472,17 +472,22 @@ class EntitlementService:
         ensure_app_directories()
         trimmed = token_or_key_str.strip()
 
-        # Check confidential 100% evaluation grant code
+        # Check confidential evaluation grant codes
         cleaned_key = trimmed.upper().replace("-", "")
-        eval_key = "M3TR0-9X2K-7V8P-Q4L1".replace("-", "")
-        if cleaned_key == eval_key or trimmed.startswith("NOVYRAX-EVAL-") or trimmed.startswith("NOVYRAX-PRO-"):
+        eval_keys = {
+            "M3TR0-9X2K-7V8P-Q4L1".replace("-", ""): ("100% Evaluation Grantee", PlanId.PROFESSIONAL),
+            "METR-X9K2-7V8Q-P4L1-9Z3M".replace("-", ""): ("Commercial Licensee (Special Offer Grant)", PlanId.PROFESSIONAL),
+            "M3TR-8K9X2V7P".replace("-", ""): ("Partner Licensee (Partner Offer Grant)", PlanId.PROFESSIONAL),
+        }
+        if cleaned_key in eval_keys or trimmed.startswith("NOVYRAX-EVAL-") or trimmed.startswith("NOVYRAX-PRO-"):
+            customer_name, target_plan = eval_keys.get(cleaned_key, ("Evaluation Grantee", PlanId.PROFESSIONAL))
             return cls.issue_signed_offline_license(
-                plan_id=PlanId.PROFESSIONAL,
-                customer_name="Confidential Evaluation Grantee",
+                plan_id=target_plan,
+                customer_name=customer_name,
                 customer_email="enterprise-evaluation@novyrax.com",
                 duration_days=365,
                 seat_limit=5,
-                entitlement_prefix="EVAL-100-GRANT",
+                entitlement_prefix="EVAL-GRANT",
             )
 
         # Check if base64 encoded JSON

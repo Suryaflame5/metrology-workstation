@@ -1,4 +1,4 @@
-﻿"""
+"""
 CALIBRA Metrology Workstation — Professional Windows Setup Wizard (v7.0.0).
 Native Windows GUI Installer with CALIBRA Branding & Zero Console Windows.
 """
@@ -7,27 +7,95 @@ import sys
 import os
 import shutil
 import winreg
+import json
 import subprocess
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Stream safety in GUI mode
 class _NullWriter:
-    def write(self, s): pass
-    def flush(self): pass
+    encoding = "utf-8"
+    errors = "ignore"
 
-if sys.stdout is None: sys.stdout = _NullWriter()
-if sys.stderr is None: sys.stderr = _NullWriter()
+    def write(self, s):
+        pass
 
-# Determine Edition from CLI or bundle
-IS_DEMO = "--demo" in sys.argv or os.environ.get("METROLOGY_EDITION", "").lower() == "demo"
+    def flush(self):
+        pass
+
+    def reconfigure(self, *args, **kwargs):
+        pass
+
+    def isatty(self):
+        return False
+
+    def readable(self):
+        return False
+
+    def writable(self):
+        return True
+
+    def seekable(self):
+        return False
+
+
+if sys.stdout is None:
+    sys.stdout = _NullWriter()
+if sys.stderr is None:
+    sys.stderr = _NullWriter()
+
+
+def resolve_installer_edition() -> str:
+    """Determine whether this setup wizard is for Demo or Pro."""
+    # 1. Check embedded edition.json inside PyInstaller bundle (_MEIPASS)
+    bundle_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).parent.parent))
+    bundled_edition_file = bundle_dir / "edition.json"
+    if bundled_edition_file.exists():
+        try:
+            with open(bundled_edition_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if "edition" in data:
+                    return data["edition"].lower()
+        except Exception:
+            pass
+
+    # 2. Check CLI flags
+    if "--demo" in sys.argv:
+        return "demo"
+    if "--pro" in sys.argv or "--commercial" in sys.argv:
+        return "pro"
+
+    # 3. Check environment variable
+    if "METROLOGY_EDITION" in os.environ:
+        return os.environ["METROLOGY_EDITION"].lower()
+
+    # 4. Check executable filename (e.g. Metrology-Workstation-Demo-v7.0.0-Setup.exe)
+    try:
+        exe_name = Path(sys.executable).name.lower()
+        if "demo" in exe_name:
+            return "demo"
+        if "pro" in exe_name:
+            return "pro"
+    except Exception:
+        pass
+
+    return "demo"
+
+
+INSTALLER_EDITION = resolve_installer_edition()
+IS_DEMO = (INSTALLER_EDITION == "demo")
 EDITION_NAME = "Demo Evaluation" if IS_DEMO else "Professional Edition"
 APP_NAME = f"CALIBRA Metrology Workstation 7 ({EDITION_NAME})"
-APP_SHORT_NAME = "CALIBRA Metrology Workstation"
+APP_SHORT_NAME = f"CALIBRA Metrology Workstation ({'Demo' if IS_DEMO else 'Pro'})"
 APP_VERSION = "7.0.0"
 PUBLISHER = "NOVYRAX Engineering Intelligence"
 EXE_NAME = "MetrologyWorkstation.exe"
-REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstation"
+REG_KEY = (
+    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationDemo"
+    if IS_DEMO else
+    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationPro"
+)
 
 EULA_TEXT = """CALIBRA METROLOGY WORKSTATION — SOFTWARE LICENSE AGREEMENT
 
@@ -51,11 +119,12 @@ def get_default_install_dir() -> Path:
     local_app_data = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
     return Path(local_app_data) / "Programs" / "MetrologyWorkstation"
 
-def create_shortcut(target: Path, shortcut_path: Path, description: str = ""):
+def create_shortcut(target: Path, shortcut_path: Path, description: str = "", arguments: str = ""):
     ps_cmd = f"""
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("{shortcut_path}")
 $Shortcut.TargetPath = "{target}"
+$Shortcut.Arguments = "{arguments}"
 $Shortcut.WorkingDirectory = "{target.parent}"
 $Shortcut.IconLocation = "{target},0"
 $Shortcut.Description = "{description}"
@@ -117,6 +186,25 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
     if source_exe.exists():
         shutil.copy2(source_exe, target_exe)
 
+    # Write edition manifest to installation directory
+    edition_payload = {
+        "edition": INSTALLER_EDITION,
+        "version": APP_VERSION,
+        "installed_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with open(target_dir / "edition.json", "w", encoding="utf-8") as f:
+        json.dump(edition_payload, f, indent=2)
+
+    # Also register edition manifest in user AppData so runtime always recognizes installed edition
+    try:
+        local_app_data = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
+        app_data_dir = Path(local_app_data) / "MetrologyWorkstation"
+        app_data_dir.mkdir(parents=True, exist_ok=True)
+        with open(app_data_dir / "edition.json", "w", encoding="utf-8") as f:
+            json.dump(edition_payload, f, indent=2)
+    except Exception:
+        pass
+
     if progress_callback: progress_callback(60, "Copying procedures and standards...")
     for folder in ("procedures", "standards", "static"):
         src = bundle_dir / folder
@@ -130,15 +218,17 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
     register_uninstall(target_dir, target_exe, uninstaller)
 
     if progress_callback: progress_callback(90, "Creating Windows shortcuts...")
+    shortcut_args = "--demo" if IS_DEMO else "--pro"
+    shortcut_name = f"{APP_NAME}.lnk"
     if start_shortcut:
         sm = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs"
         if sm.exists():
-            create_shortcut(target_exe, sm / f"{APP_NAME}.lnk", APP_NAME)
+            create_shortcut(target_exe, sm / shortcut_name, APP_NAME, arguments=shortcut_args)
 
     if desktop_shortcut:
         dt = Path(os.environ.get("USERPROFILE", "")) / "Desktop"
         if dt.exists():
-            create_shortcut(target_exe, dt / f"{APP_NAME}.lnk", APP_NAME)
+            create_shortcut(target_exe, dt / shortcut_name, APP_NAME, arguments=shortcut_args)
 
     if progress_callback: progress_callback(100, "Installation complete.")
     return target_exe
@@ -308,8 +398,13 @@ Click Next to continue, or Cancel to exit Setup."""
 
     def finish():
         if launch_app_var.get() and installed_exe and installed_exe.exists():
-            # Launch detached windowed executable with CREATE_NO_WINDOW
-            subprocess.Popen([str(installed_exe)], creationflags=0x08000000)
+            # Launch detached windowed executable with CREATE_NO_WINDOW and appropriate edition flag
+            launch_args = [str(installed_exe)]
+            if IS_DEMO:
+                launch_args.append("--demo")
+            else:
+                launch_args.append("--pro")
+            subprocess.Popen(launch_args, creationflags=0x08000000)
         root.destroy()
 
     def next_step(step):
@@ -336,6 +431,11 @@ if __name__ == "__main__":
         t_dir = get_default_install_dir()
         exe = perform_install(t_dir, desktop_shortcut=True, start_shortcut=True)
         if "--launch" in sys.argv and exe.exists():
-            subprocess.Popen([str(exe)], creationflags=0x08000000)
+            launch_args = [str(exe)]
+            if IS_DEMO:
+                launch_args.append("--demo")
+            else:
+                launch_args.append("--pro")
+            subprocess.Popen(launch_args, creationflags=0x08000000)
     else:
         run_gui_wizard()

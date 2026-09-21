@@ -7,7 +7,8 @@ import argparse
 from typing import Optional
 
 # Ensure UTF-8 console output on Windows
-if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+_stdout_enc = getattr(sys.stdout, "encoding", None)
+if _stdout_enc and _stdout_enc.lower() not in ("utf-8", "utf8"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:

@@ -1,4 +1,4 @@
-﻿"""
+"""
 CALIBRA Metrology Workstation — Master Dual-Edition Release Build Pipeline.
 Produces:
 1. dist/MetrologyWorkstation/MetrologyWorkstation.exe (Native Windowed Desktop App)
@@ -11,6 +11,7 @@ with ZERO visible command prompt or backend terminal windows.
 
 import os
 import sys
+import json
 import shutil
 import hashlib
 import subprocess
@@ -149,6 +150,12 @@ def build_installer_wizard(edition: str, output_name: str):
     proc_src = PROJECT_ROOT / "metrology_app" / "procedures"
     std_src = PROJECT_ROOT / "standards"
 
+    edition_dir = BUILD_DIR / edition
+    edition_dir.mkdir(parents=True, exist_ok=True)
+    edition_manifest = edition_dir / "edition.json"
+    with open(edition_manifest, "w", encoding="utf-8") as f:
+        json.dump({"edition": edition, "version": "7.0.0"}, f, indent=2)
+
     cmd = [
         sys.executable,
         "-m",
@@ -158,9 +165,10 @@ def build_installer_wizard(edition: str, output_name: str):
         "--windowed",            # GUI Setup Wizard: NO CONSOLE
         "--noconsole",
         "--noconfirm",
-        f"--workpath={BUILD_DIR / edition}",
+        f"--workpath={edition_dir}",
         f"--icon={ICON_PATH}",
         f"--add-data={target_workstation_exe};.",
+        f"--add-data={edition_manifest};.",
         f"--add-data={proc_src};procedures",
         f"--add-data={std_src};standards",
         str(installer_script),
@@ -199,7 +207,7 @@ def main():
     print("=" * 75)
     cert_script = PROJECT_ROOT / "scripts" / "create_self_signed_cert.ps1"
     for inst in [demo_installer, pro_installer, main_exe]:
-        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(cert_script), "-TargetFile", str(inst), "-TrustLocally"])
+        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(cert_script), "-TargetFile", str(inst)])
 
     # 5. Checksums
     print("\n" + "=" * 75)
