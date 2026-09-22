@@ -538,6 +538,12 @@ class EntitlementService:
 def get_license_info(db_path: Optional[str] = None) -> Dict[str, Any]:
     """Retrieve full commercial license details for API consumers."""
     ent = EntitlementService.get_current_entitlement(db_path=db_path)
+    is_comm = (
+        ent["plan_id"] in (PlanId.PROFESSIONAL.value, PlanId.BUSINESS.value, PlanId.ENTERPRISE.value)
+        and ent["state"] in (EntitlementState.ACTIVE.value, EntitlementState.TRIAL.value, EntitlementState.GRACE.value)
+    )
+    is_demo = not is_comm
+
     return {
         "edition": f"CALIBRA Metrology Workstation ({ent['plan_name']})",
         "version": "7.0.0",
@@ -546,9 +552,53 @@ def get_license_info(db_path: Optional[str] = None) -> Dict[str, Any]:
         "customer_name": ent.get("customer_name", "Valued User"),
         "seat_limit": ent.get("seat_limit", 1),
         "is_trial": ent.get("is_trial", False),
+        "is_commercial": is_comm,
+        "is_demo": is_demo,
+        "edition_badge": "ISO 17025 PRO" if is_comm else "DEMO EVALUATION",
+        "edition_name": "Commercial Professional Edition" if is_comm else "Community Demo Evaluation",
+        "upgrade_url": "https://novyrax.vercel.app/pricing",
         "expiration": ent.get("expiration"),
         "offline_operation_status": "AUTHORIZED (Local-first offline execution enabled)",
         "features": ent["features"],
+        "comparison_matrix": [
+            {
+                "category": "1. Mathematical & Uncertainty Engine",
+                "features": [
+                    {"name": "50-Digit Exact Decimal Arithmetic (Zero IEEE-754 drift)", "demo": True, "pro": True},
+                    {"name": "JCGM 100:2008 (GUM) Type A & B Uncertainty Budget", "demo": True, "pro": True},
+                    {"name": "JCGM 101:2008 Monte Carlo Distribution (100k draws)", "demo": True, "pro": True},
+                    {"name": "ANSI/NCSL Z540.3 Method 5 & 6 Guardbanding", "demo": True, "pro": True},
+                    {"name": "12-Stage Cryptographic Calculation Replay", "demo": True, "pro": True},
+                ]
+            },
+            {
+                "category": "2. Production & Instrument Workflows",
+                "features": [
+                    {"name": "Clean Database (Zero mock records, zero demo clutter)", "demo": False, "pro": True},
+                    {"name": "All 7 Precision Instrument Families (Calipers, Indicators, Torque, etc.)", "demo": False, "pro": True},
+                    {"name": "Multi-Point Nominal Calibration Studio & Curve Fitting", "demo": False, "pro": True},
+                    {"name": "Batch Calibration Pipeline & Multi-Run Ingestion", "demo": False, "pro": True},
+                ]
+            },
+            {
+                "category": "3. Accreditation & Compliance Documents",
+                "features": [
+                    {"name": "Unwatermarked Official ISO/IEC 17025 PDF Certificates", "demo": False, "pro": True},
+                    {"name": "Custom Laboratory Branding & Logo Embedding", "demo": False, "pro": True},
+                    {"name": "FDA 21 CFR Part 11 Dual Electronic Signatures", "demo": False, "pro": True},
+                    {"name": "60-Second Machine-Verifiable Audit Defense Package (ZIP)", "demo": False, "pro": True},
+                    {"name": "Out-of-Tolerance (OOT) Reverse Impact Investigation", "demo": False, "pro": True},
+                ]
+            },
+            {
+                "category": "4. Commercial Entitlement & Operation",
+                "features": [
+                    {"name": "100% Air-Gapped Offline Operation (Zero telemetry)", "demo": True, "pro": True},
+                    {"name": "Permanent Commercial License / Multi-Seat Floating", "demo": False, "pro": True},
+                    {"name": "Priority Metrology Engineering Support SLA", "demo": False, "pro": True},
+                ]
+            }
+        ],
         "compliance_disclaimer": (
             "Software calculation modules have been verified against JCGM 100:2008, "
             "JCGM 101:2008, JCGM 106:2012, and ANSI/NCSL Z540.3-2006. The operating laboratory "

@@ -81,7 +81,7 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 export const SideBar: React.FC = () => {
-  const { activeWorkspace, setActiveWorkspace } = useMetrology();
+  const { activeWorkspace, setActiveWorkspace, isCommercial, isDemo, setIsUpgradeModalOpen } = useMetrology();
 
   return (
     <aside className="bg-[#FFFFFF] w-[240px] h-full border-r border-[#E2E5E9] flex flex-col shrink-0 select-none z-20">
@@ -153,12 +153,33 @@ export const SideBar: React.FC = () => {
         ))}
       </nav>
 
+      {/* Evaluation Upgrade Teaser Card (Demo Mode Only) */}
+      {isDemo && (
+        <div className="m-2 p-2.5 bg-amber-50/90 border border-amber-200 rounded-lg text-xs space-y-1.5 font-sans shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-[10.5px] text-amber-900 font-mono flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              DEMO EVALUATION
+            </span>
+          </div>
+          <p className="text-[10px] text-amber-800 leading-tight">
+            Watermarked certificates active. Ready for accredited operations?
+          </p>
+          <button
+            onClick={() => setIsUpgradeModalOpen(true)}
+            className="w-full py-1 px-2 bg-[#00435F] hover:bg-[#003348] text-white text-[10.5px] font-semibold rounded transition-colors flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <span>Compare &amp; Unlock Pro ↗</span>
+          </button>
+        </div>
+      )}
+
       {/* Footer System Status */}
       <div className="p-2.5 border-t border-[#E2E5E9] bg-[#F7F8FA] text-[10.5px] text-[#656B73]">
         <div className="flex items-center justify-between font-mono">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span>
-            <span>SYSTEM READY</span>
+            <span>{isCommercial ? 'ACCREDITED PRO' : 'DEMO READY'}</span>
           </span>
           <span className="text-[#8C939D]">v7.0.0</span>
         </div>

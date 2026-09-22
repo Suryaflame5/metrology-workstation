@@ -11,12 +11,22 @@ import {
   Cpu,
   Inbox,
   ShieldAlert,
+  Sparkles,
+  Calculator,
+  FileBarChart,
+  ShieldCheck,
 } from 'lucide-react';
 import { useMetrology } from '../../context/MetrologyContext';
 import { fetchJobs, fetchAssets } from '../../services/jobApi';
 
 export const OverviewWorkspace: React.FC = () => {
-  const { setActiveWorkspace, setSelectedJob } = useMetrology();
+  const {
+    setActiveWorkspace,
+    setSelectedJob,
+    isCommercial,
+    isDemo,
+    setIsUpgradeModalOpen,
+  } = useMetrology();
 
   const [loading, setLoading] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -116,6 +126,104 @@ export const OverviewWorkspace: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Guided Evaluation Hub (Demo Mode Only) */}
+      {isDemo && (
+        <div className="mt-5 p-5 bg-gradient-to-br from-[#00435F]/5 via-amber-500/5 to-transparent border-2 border-[#00435F]/20 rounded-xl space-y-4 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#00435F]/15">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#00435F] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-[#0F172A] tracking-tight">
+                  Guided Evaluation Mode &mdash; How CALIBRA Works in 3 Steps
+                </h2>
+                <p className="text-[11.5px] text-[#64748B]">
+                  Explore the 50-digit arbitrary precision kernel, uncertainty propagation, and official certificate generation.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="px-3.5 py-1.5 bg-[#00435F] hover:bg-[#003348] text-white font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <span>Compare Editions &amp; Upgrade ↗</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* Step 1: Exact Math Engine */}
+            <div
+              onClick={() => setActiveWorkspace('uncertainty')}
+              className="p-3.5 bg-white border border-[#CBD5E1] hover:border-[#00435F] rounded-lg transition-all cursor-pointer group shadow-2xs hover:shadow-xs space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase text-[#00435F] bg-[#EBF3F6] px-1.5 py-0.5 rounded">
+                  STEP 1: UNCERTAINTY
+                </span>
+                <Calculator className="w-4 h-4 text-[#00435F] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-bold text-xs text-[#0F172A] group-hover:text-[#00435F]">
+                Inspect 50-Digit GUM Budget
+              </h3>
+              <p className="text-[11px] text-[#64748B] leading-relaxed">
+                Experience JCGM 100:2008 Type A repeatability and Type B sensitivity calculations with zero floating-point cancellation errors.
+              </p>
+              <div className="text-[11px] text-[#00435F] font-semibold flex items-center gap-1 pt-1">
+                <span>Open Uncertainty Budget</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Step 2: Monte Carlo Simulation */}
+            <div
+              onClick={() => setActiveWorkspace('monte-carlo')}
+              className="p-3.5 bg-white border border-[#CBD5E1] hover:border-[#00435F] rounded-lg transition-all cursor-pointer group shadow-2xs hover:shadow-xs space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase text-[#00435F] bg-[#EBF3F6] px-1.5 py-0.5 rounded">
+                  STEP 2: SIMULATION
+                </span>
+                <ShieldCheck className="w-4 h-4 text-[#00435F] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-bold text-xs text-[#0F172A] group-hover:text-[#00435F]">
+                Run Monte Carlo (100k Draws)
+              </h3>
+              <p className="text-[11px] text-[#64748B] leading-relaxed">
+                Propagate non-linear statistical distributions according to JCGM 101:2008 to compute coverage intervals.
+              </p>
+              <div className="text-[11px] text-[#00435F] font-semibold flex items-center gap-1 pt-1">
+                <span>Launch Monte Carlo Studio</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Step 3: Certificate Preview */}
+            <div
+              onClick={() => setActiveWorkspace('reports')}
+              className="p-3.5 bg-white border border-[#CBD5E1] hover:border-[#00435F] rounded-lg transition-all cursor-pointer group shadow-2xs hover:shadow-xs space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase text-[#00435F] bg-[#EBF3F6] px-1.5 py-0.5 rounded">
+                  STEP 3: CERTIFICATES
+                </span>
+                <FileBarChart className="w-4 h-4 text-[#00435F] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-bold text-xs text-[#0F172A] group-hover:text-[#00435F]">
+                Preview Watermarked Certificate
+              </h3>
+              <p className="text-[11px] text-[#64748B] leading-relaxed">
+                Inspect official 4-page ISO/IEC 17025 certificate formatting. Learn why accredited labs upgrade to remove watermarks.
+              </p>
+              <div className="text-[11px] text-[#00435F] font-semibold flex items-center gap-1 pt-1">
+                <span>Inspect Certificate Preview</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3 Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">

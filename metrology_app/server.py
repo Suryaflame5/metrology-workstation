@@ -2650,6 +2650,96 @@ def api_platform_list_recovery_events():
     return list_recovery_events()
 
 
+@app.post("/api/v1/dcc/ingest")
+async def api_platform_dcc_ingest(
+    file: Optional[UploadFile] = File(None),
+    raw_payload: Optional[Dict[str, Any]] = None,
+    register_as_standard: bool = Form(default=True),
+):
+    """Ingest, validate, and parse a machine-readable DCC (XML or JSON) document."""
+    from .services.dcc_ingestion_service import parse_dcc_xml_bytes, parse_dcc_json_string
+    if file:
+        content = await file.read()
+        filename = (file.filename or "").lower()
+        if filename.endswith(".xml") or content.strip().startswith(b"<"):
+            return parse_dcc_xml_bytes(content, register_as_standard=register_as_standard)
+        else:
+            return parse_dcc_json_string(content.decode("utf-8"), register_as_standard=register_as_standard)
+    elif raw_payload:
+        return parse_dcc_json_string(json.dumps(raw_payload), register_as_standard=register_as_standard)
+    raise HTTPException(status_code=400, detail="Must provide DCC file or raw_payload.")
+
+
+@app.get("/api/v1/evidence/verifiable-capsule/{job_id}", response_class=HTMLResponse)
+def api_platform_verifiable_capsule(job_id: str):
+    """Export self-contained 15-Year Long-Term Verifiable Evidence Capsule HTML."""
+    from .services.verifiable_capsule_service import generate_verifiable_evidence_capsule_html
+    try:
+        html = generate_verifiable_evidence_capsule_html(job_id)
+        return HTMLResponse(content=html, media_type="text/html")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/analytics/executive-roi")
+def api_platform_executive_roi(
+    active_gauges: Optional[int] = Query(default=None),
+    monthly_cals: Optional[int] = Query(default=None),
+    hourly_rate: float = Query(default=55.0),
+    software_price: float = Query(default=1490.0),
+):
+    """Compute executive economic ROI, labor preservation, and 10-year Net Value."""
+    from .services.executive_roi_service import compute_executive_economic_roi
+    return compute_executive_economic_roi(
+        active_gauge_count=active_gauges,
+        monthly_calibrations=monthly_cals,
+        technician_hourly_rate_usd=hourly_rate,
+        software_investment_cost_usd=software_price,
+    )
+
+
+@app.get("/api/v1/intelligence/interval-recommendation/{instrument_id}")
+def api_platform_interval_recommendation(
+    instrument_id: str,
+    current_interval_months: int = Query(default=12),
+):
+    """Compute evidence-based adaptive calibration interval recommendation (OIML D10)."""
+    from .services.interval_intelligence import compute_adaptive_calibration_interval
+    from .db import get_instrument, list_calculations
+    inst = get_instrument(instrument_id)
+    manufacturer = inst.get("manufacturer", "Standard OEM") if inst else "Standard OEM"
+    model = inst.get("model", "Precision Instrument") if inst else "Precision Instrument"
+    
+    # Fetch historical calibration records for instrument
+    calcs = list_calculations(limit=20)
+    history = [c for c in calcs if c.get("instrument_id") == instrument_id or instrument_id in c.get("title", "")]
+    
+    return compute_adaptive_calibration_interval(
+        instrument_id=instrument_id,
+        manufacturer=manufacturer,
+        model=model,
+        current_interval_months=current_interval_months,
+        history_records=history,
+    )
+
+
+@app.get("/api/v1/hardware/opcua-node/{device_id}")
+def api_platform_opcua_node(device_id: str):
+    """Inspect instrument as an Industry 4.0/5.0 OPC-UA node."""
+    from .services.hardware_device_adapter import format_opcua_telemetry_node
+    try:
+        return format_opcua_telemetry_node(device_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/v1/hardware/mqtt-telemetry")
+def api_platform_mqtt_telemetry(payload: Dict[str, Any]):
+    """Ingest robotic cell / automated test station telemetry via MQTT Sparkplug B."""
+    from .services.hardware_device_adapter import ingest_mqtt_smart_cell_packet
+    return ingest_mqtt_smart_cell_packet(payload)
+
+
 STATIC_DIR = get_resource_path(os.path.join("metrology_app", "static"))
 
 if os.path.exists(STATIC_DIR):

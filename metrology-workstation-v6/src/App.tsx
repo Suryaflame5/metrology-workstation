@@ -6,6 +6,7 @@ import { StatusBar } from './components/shell/StatusBar';
 import { CommandPalette } from './components/shell/CommandPalette';
 import { DiagnosticsModal } from './components/shell/DiagnosticsModal';
 import { FirstRunOnboardingModal } from './components/shell/FirstRunOnboardingModal';
+import { EditionComparisonModal } from './components/shell/EditionComparisonModal';
 
 // Workspaces
 import { OverviewWorkspace } from './components/workspaces/OverviewWorkspace';
@@ -148,6 +149,7 @@ export default function App() {
         <CommandPalette />
         <DiagnosticsModal />
         <FirstRunOnboardingModal />
+        <EditionComparisonModal />
       </div>
     </MetrologyProvider>
   );

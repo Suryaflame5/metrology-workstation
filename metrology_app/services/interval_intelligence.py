@@ -81,12 +81,12 @@ def compute_adaptive_calibration_interval(
         adjustment = "SHORTEN"
         risk_class = "MODERATE_RISK"
         reasoning = f"Observed intermediate guardband review or moderate drift ({drift_ratio*100:.1f}% of tolerance). Slight shortening recommended to assure compliance."
-    elif num_calibrations >= 3 and drift_ratio < 0.10:
+    elif num_calibrations >= 3 and drift_ratio <= 0.15:
         # Consistently excellent in-tolerance record: Safe to extend
         rec_interval = min(36, int(current_interval_months * 1.33))
         adjustment = "EXTEND"
         risk_class = "VERY_LOW_RISK"
-        reasoning = f"Outstanding historical stability across {num_calibrations} consecutive calibrations with zero OOT events and negligible drift (<10% of tolerance). Safe interval extension recommended."
+        reasoning = f"Outstanding historical stability across {num_calibrations} consecutive calibrations with zero OOT events and negligible drift (<15% of tolerance). Safe interval extension recommended."
     else:
         # Stable baseline: Maintain
         rec_interval = current_interval_months

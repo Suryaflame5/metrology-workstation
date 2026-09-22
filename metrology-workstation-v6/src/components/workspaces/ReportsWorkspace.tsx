@@ -14,7 +14,13 @@ import {
 import { useMetrology } from '../../context/MetrologyContext';
 
 export const ReportsWorkspace: React.FC = () => {
-  const { selectedJob, setActiveWorkspace } = useMetrology();
+  const {
+    selectedJob,
+    setActiveWorkspace,
+    isCommercial,
+    isDemo,
+    setIsUpgradeModalOpen,
+  } = useMetrology();
 
   if (!selectedJob) {
     return (
@@ -169,8 +175,37 @@ export const ReportsWorkspace: React.FC = () => {
         </div>
       </div>
 
+      {/* Demo Evaluation Watermark Notice */}
+      {isDemo && (
+        <div className="bg-amber-50 border border-amber-300 rounded-lg p-3.5 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
+          <div className="flex items-center gap-2.5 text-amber-900">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+            <div>
+              <span className="font-bold">Evaluation Watermark Active: </span>
+              <span>All certificates generated in Community Demo mode contain diagonal evaluation watermarks. Professional Edition delivers unwatermarked, legally accredited ISO/IEC 17025 certificates with custom lab branding and digital signatures.</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsUpgradeModalOpen(true)}
+            className="px-3 py-1 bg-[#00435F] hover:bg-[#003348] text-white font-semibold rounded shadow-xs text-[11px] shrink-0 cursor-pointer transition-colors"
+          >
+            Compare &amp; Unlock Pro ↗
+          </button>
+        </div>
+      )}
+
       {/* Document Visual Preview (Clean Paper Representation) */}
-      <div className="bg-white border border-[#E2E5E9] rounded-lg shadow-md mt-6 max-w-4xl mx-auto w-full p-8 font-sans text-xs text-[#17191C] space-y-6">
+      <div className="bg-white border border-[#E2E5E9] rounded-lg shadow-md mt-6 max-w-4xl mx-auto w-full p-8 font-sans text-xs text-[#17191C] space-y-6 relative overflow-hidden">
+        {/* Visual Watermark in Demo Mode */}
+        {isDemo && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-10 select-none">
+            <div className="text-red-500/15 font-black font-mono text-3xl sm:text-4xl tracking-widest -rotate-25 border-4 border-red-500/20 py-3 px-6 rounded-lg uppercase text-center leading-tight">
+              CALIBRA DEMO EVALUATION<br />
+              <span className="text-sm tracking-normal">COMMERCIAL &amp; ACCREDITATION USE PROHIBITED</span>
+            </div>
+          </div>
+        )}
+
         {/* Certificate Header Banner */}
         <div className="border-b-2 border-[#00435F] pb-4 flex items-center justify-between">
           <div>

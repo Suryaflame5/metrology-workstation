@@ -11,6 +11,9 @@ import {
   Thermometer,
   MapPin,
   User,
+  CheckCircle2,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { useMetrology } from '../../context/MetrologyContext';
 
@@ -20,6 +23,9 @@ export const TopBar: React.FC = () => {
     setIsDiagnosticsOpen,
     setIsOnboardingOpen,
     setActiveWorkspace,
+    isCommercial,
+    isDemo,
+    setIsUpgradeModalOpen,
   } = useMetrology();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -35,18 +41,6 @@ export const TopBar: React.FC = () => {
   const [operatorRole, setOperatorRole] = useState<string>(() => {
     return localStorage.getItem('calibra_operator_role') || 'QA / Sign-Off Authorized';
   });
-  const [isCommercial, setIsCommercial] = useState<boolean>(false);
-
-  React.useEffect(() => {
-    fetch('/api/license')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.is_commercial) {
-          setIsCommercial(true);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const saveProfile = (newLab: string, newOp: string) => {
     setLabName(newLab);
@@ -82,13 +76,26 @@ export const TopBar: React.FC = () => {
             METROLOGY WORKSTATION
           </span>
           {isCommercial ? (
-            <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 bg-[#EBF3F6] text-[#00435F] font-semibold rounded border border-[#CBD5E1]">
-              ISO 17025 PRO
-            </span>
+            <button
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-mono text-[10px] font-bold rounded border border-emerald-300 transition-colors cursor-pointer"
+              title="Commercial License Active — Click to view details"
+            >
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <span>ISO 17025 PRO</span>
+            </button>
           ) : (
-            <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 bg-amber-50 text-amber-800 font-semibold rounded border border-amber-300">
-              DEMO EVALUATION
-            </span>
+            <button
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-mono text-[10px] font-bold rounded border border-amber-300 transition-colors cursor-pointer group shadow-2xs"
+              title="Click to Compare Editions & Upgrade to Professional"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>DEMO EVALUATION</span>
+              <span className="text-amber-700 font-sans font-semibold text-[9.5px] hidden sm:inline ml-1 underline group-hover:text-amber-900">
+                Compare &amp; Upgrade ↗
+              </span>
+            </button>
           )}
         </div>
       </div>

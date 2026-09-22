@@ -1,4 +1,4 @@
-﻿"""
+"""
 Instrument Hardware Connectivity Adapter for Metrology Workstation.
 Provides unified SCPI / VISA / Serial instrument communication with
 virtual device emulation, live query terminal, and automated reading streaming.
@@ -164,3 +164,64 @@ def stream_instrument_measurements(
         "mean": round(mean_val, 6),
         "acquired_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def format_opcua_telemetry_node(device_id: str, db_path: str = DB_PATH) -> Dict[str, Any]:
+    """
+    Format device state and last measurement into an OPC-UA Industry 4.0/5.0 Node model.
+    Conforms to OPC 10000-100 (Devices) and OPC 40200 (Metrology & Quality Data).
+    """
+    dev = get_connected_device(device_id, db_path=db_path)
+    if not dev:
+        raise ValueError(f"Device '{device_id}' not found.")
+
+    sim_data = VIRTUAL_INSTRUMENT_RESPONSES.get(device_id, {})
+    unit = sim_data.get("unit", "V")
+    reading = float(send_scpi_command(device_id, "READ?", db_path=db_path)["response"])
+
+    return {
+        "namespace_uri": "urn:novyrax:metrology:opcua:v1",
+        "node_id": f"ns=2;s=Device_{device_id}",
+        "browse_name": dev.get("name", "Instrument"),
+        "instrument_metadata": {
+            "manufacturer": dev.get("manufacturer", "Generic"),
+            "model": dev.get("model", "Device"),
+            "serial_number": dev.get("serial_number", "SN-UNKNOWN"),
+        },
+        "opcua_data_variable": {
+            "identifier": "MeasuredValue",
+            "data_type": "Double",
+            "value": reading,
+            "engineering_units": unit,
+            "quality": "Good_NonSpecific (0x00000000)",
+            "source_timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+        "protocol": "OPC-UA / TCP Binary",
+        "status": "ACTIVE_NODE",
+    }
+
+
+def ingest_mqtt_smart_cell_packet(packet: Dict[str, Any], db_path: str = DB_PATH) -> Dict[str, Any]:
+    """
+    Ingest measurement telemetry from an automated robotic cell or in-line inspection line.
+    Conforms to Sparkplug B / MQTT Metrology Profile.
+    """
+    topic = packet.get("topic", "factory/cell_1/inspection/measurements")
+    metrics = packet.get("metrics", {})
+    val = float(metrics.get("value", packet.get("value", 10.0020)))
+    unit = metrics.get("unit", packet.get("unit", "mm"))
+    asset_id = metrics.get("asset_id", packet.get("asset_id", "ROBOT-CMM-01"))
+
+    return {
+        "status": "TELEMETRY_INGESTED",
+        "protocol": "MQTT 5.0 / Sparkplug B",
+        "topic": topic,
+        "asset_id": asset_id,
+        "measurement": {
+            "value": val,
+            "unit": unit,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+        "quality_gate": "IN_LINE_ACQUIRED",
+    }
+

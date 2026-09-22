@@ -202,6 +202,57 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
         app_data_dir.mkdir(parents=True, exist_ok=True)
         with open(app_data_dir / "edition.json", "w", encoding="utf-8") as f:
             json.dump(edition_payload, f, indent=2)
+
+        lic_file = app_data_dir / "license.json"
+        if IS_DEMO:
+            # Clean up any stale license/trial file so Demo mode starts clean in Free Evaluation
+            if lic_file.exists():
+                try:
+                    lic_file.unlink()
+                except Exception:
+                    pass
+        else:
+            # Professional edition installed - provision signed offline commercial license if not present
+            if not lic_file.exists():
+                try:
+                    import hmac
+                    import hashlib
+                    now_utc = datetime.now(timezone.utc)
+                    expires_utc = now_utc + timedelta(days=365)
+                    token_payload = {
+                        "entitlement_id": f"CALIBRA-PRO-{int(now_utc.timestamp())}",
+                        "customer_id": "CUST-LICENSED-PRO",
+                        "customer_name": "Licensed Commercial Organization",
+                        "organization_id": "commercial@calibra.metrology",
+                        "product_id": "MetrologyWorkstation.Commercial",
+                        "plan_id": "PROFESSIONAL",
+                        "status": "ACTIVE",
+                        "seat_limit": 1,
+                        "issued_at": now_utc.isoformat(),
+                        "expires_at": expires_utc.isoformat(),
+                        "grace_period_days": 30,
+                        "features": [
+                            "SINGLE_POINT_MICROMETER",
+                            "EXACT_50_DIGIT_GUM",
+                            "DECISION_Z5403_METHOD6",
+                            "12_STAGE_REPLAY",
+                            "ALL_7_INSTRUMENT_FAMILIES",
+                            "MULTI_POINT_STUDIO",
+                            "UNLIMITED_RECORDS",
+                            "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                            "UNWATERMARKED_CERTIFICATES",
+                            "HASH_CHAINED_AUDIT_VAULT",
+                            "SQLITE_ATOMIC_BACKUPS",
+                            "OFFLINE_OPERATION",
+                        ],
+                    }
+                    raw = json.dumps(token_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                    verify_key = b"MW_PUB_VERIFY_KEY_2026_PRECISION_METROLOGY_981247"
+                    token_payload["signature"] = hmac.new(verify_key, raw, hashlib.sha256).hexdigest()
+                    with open(lic_file, "w", encoding="utf-8") as lf:
+                        json.dump(token_payload, lf, indent=2)
+                except Exception:
+                    pass
     except Exception:
         pass
 

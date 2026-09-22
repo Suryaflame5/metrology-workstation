@@ -93,6 +93,12 @@ interface MetrologyContextType {
   setIsDiagnosticsOpen: (open: boolean) => void;
   isOnboardingOpen: boolean;
   setIsOnboardingOpen: (open: boolean) => void;
+  // Edition & Licensing State
+  isCommercial: boolean;
+  isDemo: boolean;
+  isUpgradeModalOpen: boolean;
+  setIsUpgradeModalOpen: (open: boolean) => void;
+  refreshLicense: () => Promise<void>;
   // V7 Measurement Job Workflow
   selectedJob: MeasurementJob | null;
   setSelectedJob: (job: MeasurementJob | null) => void;
@@ -211,12 +217,36 @@ export const MetrologyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [historyCycles] = useState<CalibrationHistoryCycle[]>(CALIBRATION_HISTORY_CYCLES);
   const [stabilityMatrix] = useState<StabilityTestPoint[]>(STABILITY_COMPARISON_MATRIX);
 
-  // Modals
+  // Modals & Licensing State
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
     return !localStorage.getItem('has_completed_onboarding');
   });
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isCommercial, setIsCommercial] = useState(false);
+  const [isDemo, setIsDemo] = useState(true);
+
+  const refreshLicense = async () => {
+    try {
+      const res = await fetch('/api/license');
+      if (res.ok) {
+        const data = await res.json();
+        const comm = Boolean(
+          data.is_commercial || ['PROFESSIONAL', 'BUSINESS', 'ENTERPRISE'].includes(data.plan_id)
+        );
+        setIsCommercial(comm);
+        setIsDemo(!comm);
+      }
+    } catch {
+      setIsCommercial(false);
+      setIsDemo(true);
+    }
+  };
+
+  useEffect(() => {
+    refreshLicense();
+  }, []);
 
   // Save to LocalStorage
   useEffect(() => {
@@ -699,6 +729,11 @@ export const MetrologyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsDiagnosticsOpen,
         isOnboardingOpen,
         setIsOnboardingOpen,
+        isCommercial,
+        isDemo,
+        isUpgradeModalOpen,
+        setIsUpgradeModalOpen,
+        refreshLicense,
         selectedJob,
         setSelectedJob,
         syncJobData,
