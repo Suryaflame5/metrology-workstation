@@ -266,7 +266,9 @@ class EntitlementService:
 
     @classmethod
     def activate_trial(cls, duration_days: int = 14) -> Dict[str, Any]:
-        """Activate a local 14-day Professional Trial."""
+        """Activate a local 14-day Professional Trial (Pro/Commercial editions only)."""
+        if os.environ.get("METROLOGY_EDITION", "").lower() == "demo":
+            raise ValueError("Trial activation is disabled in Community Demo edition.")
         ensure_app_directories()
         now_utc = datetime.now(timezone.utc)
         expires_utc = now_utc + timedelta(days=duration_days)

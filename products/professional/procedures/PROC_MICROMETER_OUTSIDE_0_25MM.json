@@ -1,0 +1,21 @@
+{
+  "procedure_id": "PROC_MICROMETER_OUTSIDE_0_25MM",
+  "name": "Outside Micrometer (0-25 mm)",
+  "version": "7.0.0",
+  "instrument_family": "Outside Micrometer",
+  "range_min": 0.0,
+  "range_max": 25.0,
+  "unit": "mm",
+  "resolution": 0.001,
+  "nominal_test_points": [
+    0.0,
+    5.12,
+    10.24,
+    15.36,
+    21.5,
+    25.0
+  ],
+  "tolerance_upper": 0.002,
+  "tolerance_lower": -0.002,
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+}

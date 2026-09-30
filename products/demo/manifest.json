@@ -1,0 +1,29 @@
+{
+  "product_id": "calibra-demo",
+  "product_name": "CALIBRA Metrology Workstation",
+  "edition": "Community Demo Edition",
+  "version": "7.0.0",
+  "value_of_money": {
+    "price_usd": 0,
+    "billing_cycle": "Free Perpetual Evaluation",
+    "target_audience": "Metrology students, laboratory evaluators, calibration technicians evaluating ISO/IEC 17025 workflows",
+    "economic_value": "Zero upfront capital investment. Instant self-guided evaluation of 50-digit exact decimal math and JCGM 100:2008 GUM uncertainty engines with zero credit card or network requirement."
+  },
+  "capabilities": [
+    "50-digit deterministic exact decimal arithmetic (zero IEEE 754 float drift)",
+    "JCGM 100:2008 GUM Type A & Type B uncertainty propagation",
+    "Sample dimensional calibration procedures (Outside Micrometer & Vernier Caliper)",
+    "Pre-loaded baseline reference standards (Grade 0 Ceramic Gauge Block Set)",
+    "Sample evaluation calibration datasets",
+    "Local encrypted SQLite vault (100% offline air-gap safe)",
+    "Watermarked PDF evaluation calibration reports",
+    "Dedicated native GUI Setup Wizard (.exe)",
+    "Zero console windows, zero telemetry, zero forced trial expirations"
+  ],
+  "restrictions": [
+    "Single-seat evaluation only",
+    "Reports carry evaluation watermark",
+    "Limited to Outside Micrometer and Vernier Caliper families",
+    "Multi-point studio, batch pipeline, and hardware bus require commercial edition"
+  ]
+}

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  calibra-enterprise:
+    image: novyrax/calibra-enterprise:7.0.0
+    container_name: calibra-airgap-server
+    restart: always
+    environment:
+      - METROLOGY_EDITION=enterprise
+      - METROLOGY_PLAN=ENTERPRISE
+      - OFFLINE_AIRGAP_ENFORCED=true
+    volumes:
+      - ./data:/app/data
+      - ./vault:/app/vault
+    ports:
+      - "8080:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

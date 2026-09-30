@@ -114,6 +114,11 @@ def api_get_license():
 @app.post("/api/license/trial")
 def api_activate_trial():
     """Activate 14-day Professional Trial."""
+    if os.environ.get("METROLOGY_EDITION", "").lower() == "demo":
+        raise HTTPException(
+            status_code=403,
+            detail="Trial activation of Professional Edition is disabled in Community Demo. Community Demo provides unrestricted evaluation for students and reviewers. To unlock Professional features, apply a verified commercial license."
+        )
     from .services.license_service import EntitlementService
     ent = EntitlementService.activate_trial(duration_days=14)
     return {"status": "SUCCESS", "entitlement": ent}
@@ -231,7 +236,7 @@ def api_create_multi_point_calculation(request: MultiPointCalculationCreateReque
     if not EntitlementService.is_feature_authorized("MULTI_POINT_STUDIO"):
         raise HTTPException(
             status_code=403,
-            detail="Multi-Point Calibration Studio requires an active Professional, Team, or Enterprise license. Upgrade or start a trial in Settings."
+            detail="Multi-Point Calibration Studio requires an active Professional, Team, or Enterprise license. Apply a commercial license key in Settings."
         )
     try:
         res = compute_multi_point_calibration(request)

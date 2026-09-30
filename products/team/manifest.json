@@ -1,0 +1,26 @@
+{
+  "product_id": "calibra-team",
+  "product_name": "CALIBRA Metrology Workstation",
+  "edition": "Team / Laboratory Fleet Edition",
+  "version": "7.0.0",
+  "value_of_money": {
+    "price_usd": 1890,
+    "billing_cycle": "Annual ($378 / seat / year across 5 seats)",
+    "target_audience": "Multi-bench calibration laboratories, inspection departments, quality assurance teams with multiple technicians",
+    "economic_value": "Eliminates departmental calibration bottlenecks. Saves an estimated 250+ hours per technician annually through shared procedure synchronization, automated batch processing, and peer-review sign-off workflows."
+  },
+  "capabilities": [
+    "Everything in Professional for 5 concurrent engineering workstations",
+    "Laboratory bay drift monitoring & sensor stability trending across all 5 benches",
+    "Shared air-gapped procedure and asset vault synchronization",
+    "High-throughput multi-instrument batch calibration pipeline",
+    "Dual-technician peer-review verification workflows & double-signoff authorization",
+    "Centralized offline license bundle distribution",
+    "Priority 24-hour technical support SLA"
+  ],
+  "license_terms": {
+    "seats": 5,
+    "commercial_use": "Permitted across all laboratory bays",
+    "support_sla": "Priority 24-hour response"
+  }
+}

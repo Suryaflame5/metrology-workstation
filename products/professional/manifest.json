@@ -1,0 +1,31 @@
+{
+  "product_id": "calibra-professional",
+  "product_name": "CALIBRA Metrology Workstation",
+  "edition": "Professional Commercial Edition",
+  "version": "7.0.0",
+  "value_of_money": {
+    "price_usd": 590,
+    "billing_cycle": "Annual ($49.16 / month equivalent)",
+    "target_audience": "Accredited calibration laboratories (ISO/IEC 17025:2017), aerospace/defense component manufacturers, precision inspection engineers",
+    "economic_value": "Prevents catastrophic out-of-tolerance (OOT) part rejections. An accredited calibration facility saves an estimated $14,000\u2013$45,000 annually by eliminating false accepts via ANSI Z540.3 Method 6 guardbanding and automating audit evidence preparation."
+  },
+  "capabilities": [
+    "All 7 accredited instrument families (Micrometers, Calipers, Dial Indicators, Height Gauges, Gauge Block Comparators, DMM 10V, RTD Thermometers)",
+    "ANSI/NCSL Z540.3 Method 5 & Method 6 guardband conformity decisions (P_CR <= 2.0%)",
+    "ISO 14253-1 decision rules and JCGM 106 compliance",
+    "JCGM 101:2008 Monte Carlo distribution propagation (100,000 iterations)",
+    "Clean production database with zero mock records and zero demo placeholders",
+    "Official unwatermarked PDF calibration certificates",
+    "Cryptographic SHA-256 hash-chained audit ledger",
+    "ISO/IEC 17025 Section 7.11 software qualification self-test engine",
+    "Single-click Machine-Verifiable Evidence ZIP package generator",
+    "Offline HMAC-SHA256 air-gapped commercial license token authorization",
+    "Dedicated Professional Setup Wizard with Gold livery (.exe)"
+  ],
+  "license_terms": {
+    "seats": 1,
+    "commercial_use": "Permitted (ISO/IEC 17025 accredited facilities)",
+    "offline_airgap": "100% Guaranteed",
+    "support_sla": "Standard priority calibration engineering support"
+  }
+}

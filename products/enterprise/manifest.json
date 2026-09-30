@@ -1,0 +1,26 @@
+{
+  "product_id": "calibra-enterprise",
+  "product_name": "CALIBRA Metrology Workstation",
+  "edition": "Enterprise & Industrial Platform",
+  "version": "7.0.0",
+  "value_of_money": {
+    "price_usd": 4900,
+    "billing_cycle": "Annual Site License (Unlimited Laboratory Benches)",
+    "target_audience": "Aerospace prime contractors (AS9100), defense facilities, Tier-1 automotive metrology centers, multi-facility enterprises",
+    "economic_value": "Guarantees regulatory audit immunity and automated zero-touch calibration. Replaces manual data entry with live SCPI/VISA hardware bus streaming and CAD QIF ingestion, eliminating human transposition errors and audit failure exposure."
+  },
+  "capabilities": [
+    "Unlimited facility-wide site license with air-gapped token provisioning",
+    "SCPI / VISA direct hardware instrument bus communication (live Keysight/Fluke streaming)",
+    "QIF (Quality Information Framework) & STEP-NC CAD inspection export",
+    "OPC-UA / MQTT Smart Factory Industry 4.0 data bridge",
+    "Custom mathematical transfer equations & customer-specific uncertainty budgets",
+    "Single-click 60-Second Audit Defense Package ZIP generator",
+    "Dedicated 4-hour engineering support SLA with 24/7 emergency hotline",
+    "On-premise Docker / air-gapped server deployment"
+  ],
+  "license_terms": {
+    "seats": "Unlimited facility site license",
+    "support_sla": "4-hour guaranteed SLA with dedicated engineering contact"
+  }
+}

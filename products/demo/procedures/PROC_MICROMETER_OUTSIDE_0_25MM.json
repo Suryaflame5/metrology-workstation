@@ -1,0 +1,27 @@
+{
+  "procedure_id": "PROC-MIC-001",
+  "name": "Outside Micrometer Calibration Procedure (0-25 mm)",
+  "version": "2.4.0",
+  "instrument_family": "Outside Micrometer",
+  "range_min": 0.0,
+  "range_max": 25.0,
+  "unit": "mm",
+  "resolution": 0.001,
+  "nominal_test_points": [
+    0.0,
+    5.12,
+    10.24,
+    15.36,
+    21.5,
+    25.0
+  ],
+  "tolerance_upper": 0.002,
+  "tolerance_lower": -0.002,
+  "standard_reference": "Mitutoyo Grade 0 Ceramic Gauge Block Set (STD-GB-01)",
+  "environment": {
+    "temperature_nominal_c": 20.0,
+    "temperature_tolerance_c": 1.0,
+    "humidity_max_rh": 55.0
+  },
+  "decision_rule": "JCGM 100:2008 Standard GUM Evaluation"
+}

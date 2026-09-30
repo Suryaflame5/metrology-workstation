@@ -1,0 +1,36 @@
+{
+  "organization": "Precision Calibration Services Ltd.",
+  "facility": "Central Metrology Laboratory",
+  "bays": [
+    {
+      "bay_id": "BAY-01",
+      "name": "Dimensional Measurement Bay",
+      "technician": "Lead Inspector",
+      "ip_or_host": "192.168.1.101"
+    },
+    {
+      "bay_id": "BAY-02",
+      "name": "Precision Caliper & Micrometer Bench",
+      "technician": "Technician A",
+      "ip_or_host": "192.168.1.102"
+    },
+    {
+      "bay_id": "BAY-03",
+      "name": "Dial Indicator & Height Gauge Station",
+      "technician": "Technician B",
+      "ip_or_host": "192.168.1.103"
+    },
+    {
+      "bay_id": "BAY-04",
+      "name": "Electrical Metrology Bay (DCV)",
+      "technician": "Electrical Specialist",
+      "ip_or_host": "192.168.1.104"
+    },
+    {
+      "bay_id": "BAY-05",
+      "name": "Thermal & Environmental Chamber",
+      "technician": "Thermal Analyst",
+      "ip_or_host": "192.168.1.105"
+    }
+  ]
+}

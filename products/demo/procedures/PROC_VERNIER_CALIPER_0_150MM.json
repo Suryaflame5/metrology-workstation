@@ -1,0 +1,27 @@
+{
+  "procedure_id": "PROC-CAL-002",
+  "name": "Vernier & Digital Caliper Verification Procedure (0-150 mm)",
+  "version": "1.8.0",
+  "instrument_family": "Vernier Caliper",
+  "range_min": 0.0,
+  "range_max": 150.0,
+  "unit": "mm",
+  "resolution": 0.01,
+  "nominal_test_points": [
+    0.0,
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    150.0
+  ],
+  "tolerance_upper": 0.02,
+  "tolerance_lower": -0.02,
+  "standard_reference": "Mitutoyo Grade 0 Ceramic Gauge Block Set (STD-GB-01)",
+  "environment": {
+    "temperature_nominal_c": 20.0,
+    "temperature_tolerance_c": 2.0,
+    "humidity_max_rh": 60.0
+  },
+  "decision_rule": "JCGM 100:2008 Standard GUM Evaluation"
+}

@@ -63,7 +63,7 @@ def resolve_installer_edition() -> str:
     return "demo"
 
 
-INSTALLER_EDITION = resolve_installer_edition()
+INSTALLER_EDITION = "demo"
 IS_DEMO = (INSTALLER_EDITION == "demo")
 EDITION_NAME   = "Demo Evaluation" if IS_DEMO else "Professional Edition"
 EDITION_TAG    = "Demo" if IS_DEMO else "Pro"

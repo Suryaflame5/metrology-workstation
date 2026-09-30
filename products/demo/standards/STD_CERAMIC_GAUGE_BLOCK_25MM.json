@@ -1,0 +1,12 @@
+{
+  "standard_id": "STD-GB-01",
+  "description": "Mitutoyo Grade 0 Ceramic Gauge Block Set (25 mm Nominal)",
+  "serial_number": "MIT-GB-9921",
+  "calibration_date": "2026-01-15",
+  "due_date": "2027-01-15",
+  "nominal_value": 25.0,
+  "expanded_uncertainty": 4e-05,
+  "coverage_factor_k": 2.0,
+  "unit": "mm",
+  "traceability": "NIST / PTB Primary Traceability Concordance"
+}

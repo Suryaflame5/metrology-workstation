@@ -373,16 +373,11 @@ export const SettingsWorkspace: React.FC = () => {
 
         {/* Quick Actions & Links */}
         <div className="pt-2 flex items-center justify-between flex-wrap gap-2 border-t border-[#e2e5e9]">
-          <div className="flex items-center gap-2">
             {!isProOrHigher && (
-              <button
-                onClick={handleTrial}
-                disabled={activating}
-                className="px-3 py-1.5 bg-[#f0f9f4] hover:bg-[#dcfce7] text-[#15803d] font-sans font-medium rounded border border-[#86efac] text-xs transition-colors flex items-center gap-1"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Start 14-Day Pro Trial</span>
-              </button>
+              <span className="px-3 py-1.5 bg-[#f1f5f9] text-[#475569] font-sans font-medium rounded border border-[#cbd5e1] text-xs flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16a34a]" />
+                <span>Community Evaluation Edition</span>
+              </span>
             )}
             {isProOrHigher && (
               <button

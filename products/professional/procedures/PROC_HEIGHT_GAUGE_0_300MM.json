@@ -1,0 +1,21 @@
+{
+  "procedure_id": "PROC_HEIGHT_GAUGE_0_300MM",
+  "name": "Digital Height Gauge Calibration (0-300 mm)",
+  "version": "7.0.0",
+  "instrument_family": "Height Gauge",
+  "range_min": 0.0,
+  "range_max": 300.0,
+  "unit": "mm",
+  "resolution": 0.005,
+  "nominal_test_points": [
+    0.0,
+    50.0,
+    100.0,
+    150.0,
+    200.0,
+    300.0
+  ],
+  "tolerance_upper": 0.015,
+  "tolerance_lower": -0.015,
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+}

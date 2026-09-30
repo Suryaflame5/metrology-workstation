@@ -1,16 +1,29 @@
-# METROLOGY WORKSTATION
+# CALIBRA METROLOGY WORKSTATION
 
 **Commercial Precision Metrology, Measurement Uncertainty, and Conformity Assessment Platform.**  
-**Studio / Company**: NovyraX  
+**Studio / Company**: NOVYRAX Engineering Intelligence  
 **Official Website**: [https://novyrax.vercel.app](https://novyrax.vercel.app)  
 **Support Contact**: `novyrax04@gmail.com`  
-**Current Release**: `v1.0.0` (Windows x64)  
+**Current Release**: `v7.0.0` (Windows x64 Native Desktop Workstation)  
 
 ---
 
-## 1. Overview
+## 1. Product Portfolio & Separated Edition Folders
 
-**Metrology Workstation** is a sovereign, local-first Windows desktop platform engineered for accredited calibration laboratories (ISO/IEC 17025), aerospace/defense quality teams, and precision manufacturing inspectors.
+CALIBRA is modularized into four dedicated product editions, each packaged in its own folder with self-contained manifests, procedures, standards, setup wizards, and automation scripts tailored to its specific **Value of Money**:
+
+| Product Edition | Folder Link | Value of Money | Target Audience | Primary Deliverables |
+| :--- | :--- | :---: | :--- | :--- |
+| **Community Demo** | [`products/demo/`](products/demo/) | **$0.00** (Free Perpetual) | Students, researchers, ISO 17025 reviewers | Standalone GUI Setup Wizard, 50-digit GUM math, Micrometer/Caliper procedures, sample datasets, local encrypted vault |
+| **Professional** | [`products/professional/`](products/professional/) | **$590.00 / yr** ($49.16/mo) | Accredited calibration laboratories (1 seat) | All 7 instrument families, ANSI Z540.3 Method 5 & 6 guardbanding, unwatermarked certificates, ISO 17025 Sec 7.11 qualification |
+| **Team Fleet** | [`products/team/`](products/team/) | **$1,890.00 / yr** ($378/seat) | Multi-technician calibration facilities (5 seats) | Multi-bay deployment scripts, shared air-gapped procedure vault sync, multi-instrument batch pipeline, peer-review sign-offs |
+| **Enterprise Platform** | [`products/enterprise/`](products/enterprise/) | **$4,900.00 / yr** (Site License) | Aerospace, defense & Tier-1 manufacturing | Live SCPI/VISA hardware instrument streaming, QIF 3.0 CAD blueprints, Docker air-gap cluster, 60-second audit package |
+
+---
+
+## 2. Overview & Metrological Kernel
+
+**CALIBRA Metrology Workstation** is a sovereign, local-first Windows desktop platform engineered for accredited calibration laboratories (ISO/IEC 17025), aerospace/defense quality teams, and precision manufacturing inspectors.
 
 ### Key Capabilities
 - **Exact 50-Digit Decimal Mathematics**: JCGM 100:2008 (GUM) uncertainty propagation, Welch-Satterthwaite effective degrees of freedom, and t-distribution coverage factors ($k$).
@@ -21,64 +34,70 @@
 
 ---
 
-## 2. Download & Installation
+## 3. Product Folder Breakdown
 
-### Windows 10 / 11 (64-bit) Installer:
-Download the latest verified setup executable from [GitHub Releases](https://github.com/novyrax/metrology-workstation/releases/latest) or the [NovyraX Download Page](https://novyrax.vercel.app/download):
-- **Installer**: `Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe`
-- **SHA-256 Checksum**: `5275c1b26accdda867e1e9aa1222e7a45901d4b09a2231c508a6afd1758d8c67`
+### A. [`products/demo/`](products/demo/) — Free Community Evaluation ($0)
+- **Manifest**: [`products/demo/manifest.json`](products/demo/manifest.json)
+- **Setup Wizard**: Native Tkinter & Inno Setup wizard (`products/demo/setup_wizard/`)
+- **Procedures**: Outside Micrometer (0–25 mm), Vernier Caliper (0–150 mm)
+- **Standards**: Grade 0 Ceramic Gauge Block Set (STD-GB-01)
+- **Zero Trial Nags**: Standalone perpetual evaluation with zero forced trial countdowns.
+
+### B. [`products/professional/`](products/professional/) — Accredited Lab Workstation ($590/yr)
+- **Manifest**: [`products/professional/manifest.json`](products/professional/manifest.json)
+- **Setup Wizard**: Gold Commercial Inno Setup installer (`products/professional/setup_wizard/setup_pro.iss`)
+- **Procedures**: Complete accredited 7-instrument procedure suite
+- **Licensing**: Standalone HMAC-SHA256 offline license token generator & validator
+- **Qualification**: Automated ISO/IEC 17025 Section 7.11 mathematical conformity runner
+
+### C. [`products/team/`](products/team/) — Multi-Seat Laboratory Fleet ($1,890/yr)
+- **Manifest**: [`products/team/manifest.json`](products/team/manifest.json)
+- **Deployment**: 5-bench automated PowerShell provisioning script (`deploy_team_bays.ps1`)
+- **Fleet Sync**: Air-gapped procedure and asset vault synchronizer (`shared_vault_sync.py`)
+- **Batch Processing**: Multi-instrument batch calibration pipeline (`run_batch_calibration.py`)
+- **Licensing**: Multi-seat team bundle generator (`generate_team_bundle.py`)
+
+### D. [`products/enterprise/`](products/enterprise/) — Industrial Platform & Site License ($4,900/yr)
+- **Manifest**: [`products/enterprise/manifest.json`](products/enterprise/manifest.json)
+- **Hardware SCPI / VISA**: Live hardware instrument bus communication (`scpi_bus_bridge.py`)
+- **CAD QIF Engine**: ANSI/DMSC QIF 3.0 / STEP AP242 blueprint extraction (`qif_plan_parser.py`)
+- **Air-Gap Server**: Containerized on-premise Docker deployment (`docker-compose.enterprise.yml`)
+- **Audit Defense**: Single-click ISO/IEC 17025 & AS9100 Evidence ZIP package generator
+
+---
+
+## 4. Download & Installation
+
+### Windows 10 / 11 (64-bit) Installers:
+Download verified binaries from [GitHub Releases](https://github.com/Suryaflame5/metrology-releases/releases/latest) or the [NovyraX Storefront](https://novyrax.vercel.app/products/metrology-workstation/download):
+
+| Installer | Target Edition | SHA-256 Checksum |
+| :--- | :--- | :--- |
+| `Metrology-Workstation-Demo-v7.0.0-Setup.exe` | Community Demo ($0) | `b9dc3a75e84d4af9458af8a24c09db4af169b86233581542e118f1e20ac3843e` |
+| `Metrology-Workstation-Pro-v7.0.0-Setup.exe` | Professional ($590) | `b7c4d613cd08235ccdce00759002923869fef1100375cf209dd6bf0f823d06da` |
 
 ### Checksum Verification in PowerShell:
 ```powershell
-Get-FileHash .\Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe -Algorithm SHA256
-```
-
-### Silent Laboratory IT Deployment:
-```powershell
-.\Metrology-Workstation-v1.0.0-Windows-x64-Setup.exe --silent --no-launch
+Get-FileHash .\Metrology-Workstation-Demo-v7.0.0-Setup.exe -Algorithm SHA256
+Get-FileHash .\Metrology-Workstation-Pro-v7.0.0-Setup.exe -Algorithm SHA256
 ```
 
 ---
 
-## 3. Commercial Plans & Licensing
-
-| Plan | Pricing | Target Audience | Key Capabilities |
-| :--- | :---: | :--- | :--- |
-| **Community** | **$0** (Free) | Evaluation & Students | Exact GUM math, Micrometer catalog, 10 records, 100% offline |
-| **Professional** | **$599/yr** ($50/mo equiv) | Single Workstation | All 7 instrument catalogs, 8-step uncertainty, 12-stage provenance, Evidence ZIPs, PDF certificates |
-| **Business / Team**| **$1,490/yr** | Laboratory Teams | 5 seats included, Custom lab branding, Peer review audit trails, Priority 24h SLA |
-| **Enterprise** | **$4,900/yr** | Site License | 25+ seats, Air-gapped token provisioning, Custom transfer equations, 4h SLA |
-
-*Includes a 14-day Professional trial with no credit card required.*
-
----
-
-## 4. Development & Testing
+## 5. Development & Testing
 
 ```powershell
-# Clone repository
-git clone https://github.com/novyrax/metrology-workstation.git
-cd metrology-workstation
-
-# Run the 74-test regression suite
+# Run the complete test suite
 python -m pytest -q
 
-# Run mathematical self-test
-python -m metrology_app.cli selftest
+# Run mathematical ISO/IEC 17025 qualification self-test
+python products/professional/qualification/run_iso17025_qualification.py
 ```
 
 ---
 
-## 5. Security & Privacy Policy
+## 6. Security, Offline Privacy & Support
 
-- **Zero Telemetry**: We do not collect, transmit, or monitor telemetry or analytics data.
-- **Local Data Storage**: All databases and evidence packages reside exclusively on your local machine.
-- **PCI-DSS Compliance**: Hosted checkout managed by PCI-DSS Level 1 compliant Merchant of Record partners. NovyraX never stores payment card data.
-
----
-
-## 6. Support & Contact
-
-- **Email**: [novyrax04@gmail.com](mailto:novyrax04@gmail.com)
-- **Website**: [https://novyrax.vercel.app](https://novyrax.vercel.app)
-- **Documentation**: [https://novyrax.vercel.app/docs](https://novyrax.vercel.app/docs)
+- **Zero Cloud Telemetry**: Runtime data strictly isolated in `%LOCALAPPDATA%\MetrologyWorkstation\`.
+- **Air-Gap Concordance**: All cryptographic signatures and audit ledgers calculate locally without network dependency.
+- **Support**: `novyrax04@gmail.com` | Official Portal: [https://novyrax.vercel.app](https://novyrax.vercel.app)
