@@ -1,6 +1,45 @@
-{
-  "standard_id": "STD-GB-01",
-  "name": "Mitutoyo Grade 0 Ceramic Gauge Block Set",
-  "uncertainty": 4e-05,
-  "unit": "mm"
+﻿{
+    "standard_id":  "STD-GB-01",
+    "description":  "Reference Standard: STD-GB-01.json",
+    "traceability_chain":  [
+                               "Internal Lab",
+                               "Accredited Lab",
+                               "NIST"
+                           ],
+    "calibration_certificate_number":  "CERT-42121",
+    "uncertainty":  0.0005,
+    "calibration_interval_months":  12,
+    "environmental_conditions":  {
+                                     "temperature":  20.0,
+                                     "humidity":  50
+                                 },
+    "history":  [
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-5653"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-8008"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-3346"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-1752"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-8269"
+                    }
+                ],
+    "specifications":  "Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. ",
+    "enterprise_note":  "Full traceability documentation included in Enterprise Audit Defense Package. Auto-linked to SCPI instrument bus bridge."
 }

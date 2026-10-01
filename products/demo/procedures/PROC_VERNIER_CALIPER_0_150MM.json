@@ -7,12 +7,15 @@
   "range_max": 150.0,
   "unit": "mm",
   "resolution": 0.01,
+  "demo_restrictions": {
+    "report_watermark": "EVALUATION COPY - NOT FOR COMMERCIAL USE",
+    "max_test_points_active": 3,
+    "locked_fields": ["uncertainty_type_b", "guardband_z5403", "monte_carlo"],
+    "upgrade_notice": "Upgrade to Professional to unlock 15-point procedures, Z540.3 guardbanding, and clean certificates"
+  },
   "nominal_test_points": [
     0.0,
-    25.0,
-    50.0,
     75.0,
-    100.0,
     150.0
   ],
   "tolerance_upper": 0.02,
@@ -23,5 +26,5 @@
     "temperature_tolerance_c": 2.0,
     "humidity_max_rh": 60.0
   },
-  "decision_rule": "JCGM 100:2008 Standard GUM Evaluation"
+  "decision_rule": "JCGM 100:2008 Basic GUM (Type A only - Type B locked in Demo)"
 }

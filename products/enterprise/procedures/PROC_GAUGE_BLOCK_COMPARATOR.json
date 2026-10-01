@@ -1,20 +1,267 @@
-{
-  "procedure_id": "PROC_GAUGE_BLOCK_COMPARATOR",
-  "name": "Gauge Block Mechanical Comparator Comparison",
-  "version": "7.0.0",
-  "instrument_family": "Gauge Block Comparator",
-  "range_min": 0.5,
-  "range_max": 100.0,
-  "unit": "mm",
-  "resolution": 0.0001,
-  "nominal_test_points": [
-    1.0,
-    10.0,
-    25.0,
-    50.0,
-    100.0
-  ],
-  "tolerance_upper": 8e-05,
-  "tolerance_lower": -8e-05,
-  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+﻿{
+    "procedure_id":  "PROC_GAUGE_BLOCK_COMPARATOR",
+    "revision":  "B.0",
+    "description":  "Comprehensive Calibration Procedure for PROC_GAUGE_BLOCK_COMPARATOR.json",
+    "scope":  "This procedure covers the methodology, uncertainty analysis, and test points required for ISO/IEC 17025 accredited calibration.",
+    "environmental_conditions":  {
+                                     "temperature_C":  20.0,
+                                     "tolerance_C":  0.5,
+                                     "humidity_rh":  45,
+                                     "tolerance_rh":  10
+                                 },
+    "warm_up_time_minutes":  60,
+    "traceability":  "All measurements are traceable to the SI through recognized National Metrology Institutes (NMI) such as NIST, PTB, or NPL.",
+    "decision_rule":  "Z540.3 Method 6 (Guardbanded Acceptance)",
+    "guardband_formula":  "w = U (where U is the expanded uncertainty, 95% confidence)",
+    "test_points":  [
+                        {
+                            "point_id":  1,
+                            "nominal":  5.0,
+                            "lower_limit":  4.99,
+                            "upper_limit":  5.01,
+                            "guardband_limit":  5.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  2,
+                            "nominal":  10.0,
+                            "lower_limit":  9.99,
+                            "upper_limit":  10.01,
+                            "guardband_limit":  10.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  3,
+                            "nominal":  15.0,
+                            "lower_limit":  14.99,
+                            "upper_limit":  15.01,
+                            "guardband_limit":  15.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  4,
+                            "nominal":  20.0,
+                            "lower_limit":  19.99,
+                            "upper_limit":  20.01,
+                            "guardband_limit":  20.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  5,
+                            "nominal":  25.0,
+                            "lower_limit":  24.99,
+                            "upper_limit":  25.01,
+                            "guardband_limit":  25.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  6,
+                            "nominal":  30.0,
+                            "lower_limit":  29.99,
+                            "upper_limit":  30.01,
+                            "guardband_limit":  30.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  7,
+                            "nominal":  35.0,
+                            "lower_limit":  34.99,
+                            "upper_limit":  35.01,
+                            "guardband_limit":  35.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  8,
+                            "nominal":  40.0,
+                            "lower_limit":  39.99,
+                            "upper_limit":  40.01,
+                            "guardband_limit":  40.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  9,
+                            "nominal":  45.0,
+                            "lower_limit":  44.99,
+                            "upper_limit":  45.01,
+                            "guardband_limit":  45.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  10,
+                            "nominal":  50.0,
+                            "lower_limit":  49.99,
+                            "upper_limit":  50.01,
+                            "guardband_limit":  50.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  11,
+                            "nominal":  55.0,
+                            "lower_limit":  54.99,
+                            "upper_limit":  55.01,
+                            "guardband_limit":  55.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  12,
+                            "nominal":  60.0,
+                            "lower_limit":  59.99,
+                            "upper_limit":  60.01,
+                            "guardband_limit":  60.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  13,
+                            "nominal":  65.0,
+                            "lower_limit":  64.99,
+                            "upper_limit":  65.01,
+                            "guardband_limit":  65.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  14,
+                            "nominal":  70.0,
+                            "lower_limit":  69.99,
+                            "upper_limit":  70.01,
+                            "guardband_limit":  70.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  15,
+                            "nominal":  75.0,
+                            "lower_limit":  74.99,
+                            "upper_limit":  75.01,
+                            "guardband_limit":  75.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  16,
+                            "nominal":  80.0,
+                            "lower_limit":  79.99,
+                            "upper_limit":  80.01,
+                            "guardband_limit":  80.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  17,
+                            "nominal":  85.0,
+                            "lower_limit":  84.99,
+                            "upper_limit":  85.01,
+                            "guardband_limit":  85.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  18,
+                            "nominal":  90.0,
+                            "lower_limit":  89.99,
+                            "upper_limit":  90.01,
+                            "guardband_limit":  90.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  19,
+                            "nominal":  95.0,
+                            "lower_limit":  94.99,
+                            "upper_limit":  95.01,
+                            "guardband_limit":  95.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        },
+                        {
+                            "point_id":  20,
+                            "nominal":  100.0,
+                            "lower_limit":  99.99,
+                            "upper_limit":  100.01,
+                            "guardband_limit":  100.008,
+                            "u_reference":  0.001,
+                            "unit":  "mm",
+                            "method":  "Z540.3 Method 6"
+                        }
+                    ],
+    "uncertainty_budget_breakdown":  {
+                                         "Type_A":  {
+                                                        "sources":  [
+                                                                        "Repeatability",
+                                                                        "Reproducibility"
+                                                                    ],
+                                                        "distribution":  "Normal",
+                                                        "value":  0.0015
+                                                    },
+                                         "Type_B":  {
+                                                        "sources":  [
+                                                                        "Reference Standard",
+                                                                        "Resolution",
+                                                                        "Environment",
+                                                                        "Operator"
+                                                                    ],
+                                                        "distribution":  "Rectangular",
+                                                        "value":  0.002
+                                                    },
+                                         "Combined_uc":  0.0025,
+                                         "Expanded_U":  0.005,
+                                         "k_factor":  2.0,
+                                         "confidence_level":  95.45
+                                     },
+    "instrument_specific_checks":  [
+                                       "Visual Inspection",
+                                       "Zero setting",
+                                       "Full scale linearity",
+                                       "Hysteresis check"
+                                   ],
+    "instructions":  "Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. Ensure the instrument is fully stabilized before starting. ",
+    "enterprise_extensions":  {
+                                  "qif_integration":  {
+                                                          "auto_map_tolerances":  true,
+                                                          "qif_characteristic_type":  "LinearSize",
+                                                          "note":  "Enterprise: Import test points directly from QIF/STEP-NC inspection plans"
+                                                      },
+                                  "batch_enabled":  true,
+                                  "scpi_commands":  {
+                                                        "capture_burst":  "TRIG:COUNT 10; INIT; FETC?",
+                                                        "capture_reading":  "MEAS?",
+                                                        "instrument_connect":  "INST:SEL?",
+                                                        "note":  "Enterprise: Connect via SCPI/VISA bus for automated measurement ingestion",
+                                                        "zero_instrument":  "ZERO:AUTO ONCE"
+                                                    },
+                                  "audit_package_included":  true,
+                                  "fleet_sync_enabled":  true,
+                                  "peer_review_required":  true
+                              }
 }

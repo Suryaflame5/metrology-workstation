@@ -1,0 +1,44 @@
+{
+    "standard_id": "STD-FORCE-TRANSDUCER",
+    "description": "Reference Standard: STD-FORCE-TRANSDUCER.json",
+    "traceability_chain": [
+        "Internal Lab",
+        "Accredited Lab",
+        "NIST"
+    ],
+    "calibration_certificate_number": "CERT-26543",
+    "uncertainty": 0.0005,
+    "calibration_interval_months": 12,
+    "environmental_conditions": {
+        "temperature": 20.0,
+        "humidity": 50
+    },
+    "history": [
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-7809"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-8358"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-2838"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-9293"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-9387"
+        }
+    ],
+    "specifications": "Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. "
+}

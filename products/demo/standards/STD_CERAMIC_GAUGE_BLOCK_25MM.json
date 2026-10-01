@@ -1,6 +1,7 @@
 {
   "standard_id": "STD-GB-01",
   "description": "Mitutoyo Grade 0 Ceramic Gauge Block Set (25 mm Nominal)",
+  "demo_note": "This is the only reference standard available in Demo. Professional includes 5 traceable reference standards.",
   "serial_number": "MIT-GB-9921",
   "calibration_date": "2026-01-15",
   "due_date": "2027-01-15",
@@ -8,5 +9,7 @@
   "expanded_uncertainty": 4e-05,
   "coverage_factor_k": 2.0,
   "unit": "mm",
-  "traceability": "NIST / PTB Primary Traceability Concordance"
+  "traceability": "NIST / PTB Primary Traceability Concordance",
+  "material": "Ceramic",
+  "coefficient_of_thermal_expansion": "9.3e-6 /°C"
 }

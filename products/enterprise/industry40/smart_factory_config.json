@@ -1,0 +1,101 @@
+﻿{
+    "version":  "7.0.0",
+    "organization":  "NOVYRAX Enterprise Client",
+    "facility_id":  "FAC-001",
+    "industry40_integration":  {
+                                   "mqtt":  {
+                                                "port":  1883,
+                                                "broker":  "localhost",
+                                                "client_id":  "calibra-enterprise-001",
+                                                "retain":  false,
+                                                "topics":  {
+                                                               "oot_alert":  "calibra/alerts/oot",
+                                                               "system_heartbeat":  "calibra/system/heartbeat",
+                                                               "instrument_status":  "calibra/instruments/{id}/status",
+                                                               "certificate_issued":  "calibra/certificates/{id}/issued",
+                                                               "batch_complete":  "calibra/batch/complete"
+                                                           },
+                                                "publish_interval_seconds":  30,
+                                                "qos":  1
+                                            },
+                                   "opcua":  {
+                                                 "endpoint":  "opc.tcp://localhost:4840/calibra",
+                                                 "namespace":  "ns=2",
+                                                 "publish_interval_ms":  1000,
+                                                 "nodes":  [
+                                                               {
+                                                                   "description":  "Overall system status",
+                                                                   "id":  "ns=2;s=Calibra.System.Status",
+                                                                   "type":  "String"
+                                                               },
+                                                               {
+                                                                   "description":  "Total instruments managed",
+                                                                   "id":  "ns=2;s=Calibra.Instruments.Count",
+                                                                   "type":  "Int32"
+                                                               },
+                                                               {
+                                                                   "description":  "Any active OOT alert",
+                                                                   "id":  "ns=2;s=Calibra.Alerts.OOT.Active",
+                                                                   "type":  "Boolean"
+                                                               },
+                                                               {
+                                                                   "description":  "Number of active OOT instruments",
+                                                                   "id":  "ns=2;s=Calibra.Alerts.OOT.Count",
+                                                                   "type":  "Int32"
+                                                               },
+                                                               {
+                                                                   "description":  "Calibrations completed today",
+                                                                   "id":  "ns=2;s=Calibra.Calibrations.Today",
+                                                                   "type":  "Int32"
+                                                               },
+                                                               {
+                                                                   "description":  "Calibrations due in next 7 days",
+                                                                   "id":  "ns=2;s=Calibra.Calibrations.DueNext7Days",
+                                                                   "type":  "Int32"
+                                                               }
+                                                           ]
+                                             },
+                                   "enabled":  true
+                               },
+    "scpi_bus":  {
+                     "instruments":  [
+                                         {
+                                             "gpib_address":  22,
+                                             "brand":  "Keysight",
+                                             "family":  "DMM",
+                                             "model":  "34465A",
+                                             "visa_resource":  "GPIB0::22::INSTR"
+                                         },
+                                         {
+                                             "gpib_address":  4,
+                                             "brand":  "Fluke",
+                                             "family":  "Multifunction Calibrator",
+                                             "model":  "5522A",
+                                             "visa_resource":  "GPIB0::4::INSTR"
+                                         },
+                                         {
+                                             "gpib_address":  27,
+                                             "brand":  "Keithley",
+                                             "family":  "Electrometer",
+                                             "model":  "6517B",
+                                             "visa_resource":  "GPIB0::27::INSTR"
+                                         },
+                                         {
+                                             "brand":  "Rohde_Schwarz",
+                                             "family":  "DMM",
+                                             "model":  "HMC8012",
+                                             "usb_resource":  "USB0::0x0AAD::0x011E::12345::INSTR"
+                                         }
+                                     ],
+                     "retry_count":  3,
+                     "retry_delay_ms":  500,
+                     "scan_timeout_ms":  5000,
+                     "enabled":  true
+                 },
+    "audit_package":  {
+                          "sign_with_hmac":  true,
+                          "include_last_n_calibrations":  100,
+                          "auto_generate_on_oot":  true,
+                          "output_directory":  "audit_packages"
+                      }
+}

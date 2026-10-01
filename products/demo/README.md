@@ -4,45 +4,50 @@
 **Version**: `v7.0.0` (Windows x64)  
 **Value of Money**: **$0.00 — Free Perpetual Community Evaluation**  
 **Publisher**: NOVYRAX Engineering Intelligence  
-**License**: Free for evaluation, research, and ISO/IEC 17025 verification  
-**Telemetry**: 100% Offline · Air-Gap Safe · Zero Cloud Telemetry  
+**License**: Free for evaluation, research, and educational use. Not for commercial production.
 
 ---
 
-## 1. Value of Money & Economic Model
+## 1. Genuine Evaluation Software
 
-The **Community Demo Edition** is provided completely free of charge ($0.00) to precision metrologists, quality engineers, and students worldwide.
+The **Community Demo Edition** is a genuine evaluation version of the CALIBRA Metrology Workstation. It is intentionally restricted to allow precision metrologists, quality engineers, and students to evaluate the core math engine and workflow before committing to a commercial purchase. It is not "crippleware," but it does have specific limitations to protect the commercial value of the Professional edition.
 
-### Why It's Built:
-- **Zero Risk / Zero Barrier**: Evaluate 50-digit exact decimal arithmetic and JCGM 100:2008 GUM uncertainty engines before procuring commercial lab seat licenses.
-- **Permanent Availability**: No time bombs, no forced 14-day trial countdowns, no credit card required, and no license nags.
-- **Genuine Offline Privacy**: Runs 100% locally in `%LOCALAPPDATA%\MetrologyWorkstation\`. It never transmits data to any server.
+### What is unlocked in the Demo:
+- **50-Digit Exact Decimal Arithmetic**: Evaluate the exact GUM math engine without rounding errors.
+- **JCGM 100:2008 GUM Type A**: Full Type A uncertainty calculation.
+- **2 Instrument Families**: Outside Micrometer (0-25mm) and Vernier Caliper (0-150mm).
+- **Local Encrypted SQLite Audit Vault**: Full offline privacy, air-gap safe.
+
+### Demo Restrictions:
+- **Limited Test Points**: Procedures are restricted to a maximum of 3 test points.
+- **Locked Advanced Math**: Type B uncertainty, Z540.3 Method 6 Guardbanding, and Monte Carlo simulations are locked.
+- **Watermarked Reports**: All generated calibration certificates and reports feature a prominent "EVALUATION COPY - NOT FOR COMMERCIAL USE" watermark.
+- **Single Standard**: Only 1 reference standard is included.
 
 ---
 
-## 2. Included Capabilities
+## 2. Upgrade Path & Comparison
 
-| Capability | Community Demo | Professional & Premium |
-| :--- | :---: | :---: |
-| **50-Digit Exact Decimal Arithmetic** | **Included** (Exact GUM math) | Included |
-| **JCGM 100:2008 GUM Type A & B** | **Included** | Full 12-Component Budget |
-| **Outside Micrometer & Caliper Families** | **Included** | All 7 Instrument Families |
-| **Local Encrypted SQLite Audit Vault** | **Included** | Included |
-| **GUI Setup Wizard (.exe)** | **Dedicated Native Wizard** | Dedicated Pro Wizard |
-| **ISO 14253 / Z540.3 Method 6 Guardband** | — | **Included** (P_CR <= 2%) |
-| **Unwatermarked Calibration Certificates** | — | **Included** |
-| **Multi-Point Calibration Studio** | — | **Included** |
-| **Hardware Bus (SCPI/VISA)** | — | Enterprise Only |
+| Feature | Community Demo (Free) | Professional ($590) | Team ($1,890) | Enterprise ($4,900) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Instrument Families** | 2 | All 7 | All 7 | All 7 |
+| **Max Test Points** | 3 | 15+ | 15+ | 15+ |
+| **GUM Uncertainty** | Type A only | Type A & B | Type A & B | Type A & B |
+| **Z540.3 Guardbanding** | ❌ | ✅ | ✅ | ✅ |
+| **Monte Carlo (JCGM 101)** | ❌ | ✅ | ✅ | ✅ |
+| **Clean Certificates** | Watermarked | ✅ | ✅ | ✅ |
+| **Concurrent Seats** | 1 | 1 | 5 | Unlimited |
+| **Hardware Bus (SCPI)** | ❌ | ❌ | ❌ | ✅ |
+
+To unlock the full potential of CALIBRA and use it for commercial production, please purchase a license from the Novyrax storefront:
+**[Upgrade Now at store.novyrax.com](https://store.novyrax.com/calibra)**
 
 ---
 
 ## 3. Dedicated Native Setup Wizard
 
 The Community Demo comes with a clean, standalone native Windows Setup Wizard:
-- **Teal / Slate Clean Palette**
-- **Zero Background Console Windows** (Subsystem: Windows)
 - **Automatic Prerequisite Checks & Disk Space Validation**
-- **Desktop & Start Menu Shortcuts Creation**
 - **Clean One-Click Uninstaller**
 
 ### Quick Launch:

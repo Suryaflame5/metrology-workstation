@@ -1,0 +1,46 @@
+********************************************************************************
+*                                                                              *
+*                 EVALUATION COPY - NOT FOR COMMERCIAL USE                     *
+*                                                                              *
+********************************************************************************
+
+CALIBRATION CERTIFICATE - EVALUATION MODE
+
+Certificate Number: DEMO-CERT-0001
+Date of Calibration: 2026-10-01
+Instrument: Outside Micrometer (0-25 mm)
+Procedure: PROC-MIC-001 (DEMO EDITION - LIMITED TO 3 POINTS)
+Standard Used: STD-GB-01 (Demo Reference Standard)
+
+================================================================================
+TEST RESULTS (LIMITED POINTS)
+================================================================================
+
+Nominal (mm) | Indicated (mm) | Error (mm) | Tolerance (mm) | Pass/Fail
+--------------------------------------------------------------------------------
+0.000        | 0.000          | 0.000      | ±0.002         | PASS
+12.500       | 12.501         | 0.001      | ±0.002         | PASS
+25.000       | 24.999         | -0.001     | ±0.002         | PASS
+
+================================================================================
+UNCERTAINTY EVALUATION (JCGM 100:2008 Basic GUM)
+================================================================================
+Type A Uncertainty: 0.0005 mm
+Type B Uncertainty: [LOCKED IN DEMO EDITION]
+Expanded Uncertainty (k=2): [LOCKED IN DEMO EDITION]
+
+Guardbanding (Z540.3 Method 6): [LOCKED IN DEMO EDITION]
+Decision Rule: Basic GUM (Type A only)
+
+********************************************************************************
+*                                                                              *
+*                 EVALUATION COPY - NOT FOR COMMERCIAL USE                     *
+*                                                                              *
+* Upgrade to Professional Edition to unlock:                                   *
+* - 15+ test points per procedure                                              *
+* - Full Type B uncertainty budgets                                            *
+* - Z540.3 Guardbanding                                                        *
+* - Clean, unwatermarked certificates                                          *
+*                                                                              *
+* Visit: https://store.novyrax.com/calibra                                     *
+********************************************************************************

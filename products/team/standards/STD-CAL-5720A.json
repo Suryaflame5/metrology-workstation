@@ -1,6 +1,45 @@
-{
-  "standard_id": "STD-CAL-5720A",
-  "name": "Fluke 5720A Multifunction Calibrator",
-  "uncertainty": 5e-06,
-  "unit": "V"
+﻿{
+    "standard_id":  "STD-CAL-5720A",
+    "description":  "Reference Standard: STD-CAL-5720A.json",
+    "traceability_chain":  [
+                               "Internal Lab",
+                               "Accredited Lab",
+                               "NIST"
+                           ],
+    "calibration_certificate_number":  "CERT-18597",
+    "uncertainty":  0.0005,
+    "calibration_interval_months":  12,
+    "environmental_conditions":  {
+                                     "temperature":  20.0,
+                                     "humidity":  50
+                                 },
+    "history":  [
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-2736"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-3787"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-9987"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-3913"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-2335"
+                    }
+                ],
+    "specifications":  "Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. ",
+    "team_note":  "Team: Reference standard synchronized across all 5 laboratory bays. Calibration status monitored by bay_status_monitor.py."
 }

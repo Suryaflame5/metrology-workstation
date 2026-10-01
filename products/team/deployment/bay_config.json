@@ -1,36 +1,61 @@
 {
-  "organization": "Precision Calibration Services Ltd.",
-  "facility": "Central Metrology Laboratory",
-  "bays": [
-    {
-      "bay_id": "BAY-01",
-      "name": "Dimensional Measurement Bay",
-      "technician": "Lead Inspector",
-      "ip_or_host": "192.168.1.101"
-    },
-    {
-      "bay_id": "BAY-02",
-      "name": "Precision Caliper & Micrometer Bench",
-      "technician": "Technician A",
-      "ip_or_host": "192.168.1.102"
-    },
-    {
-      "bay_id": "BAY-03",
-      "name": "Dial Indicator & Height Gauge Station",
-      "technician": "Technician B",
-      "ip_or_host": "192.168.1.103"
-    },
-    {
-      "bay_id": "BAY-04",
-      "name": "Electrical Metrology Bay (DCV)",
-      "technician": "Electrical Specialist",
-      "ip_or_host": "192.168.1.104"
-    },
-    {
-      "bay_id": "BAY-05",
-      "name": "Thermal & Environmental Chamber",
-      "technician": "Thermal Analyst",
-      "ip_or_host": "192.168.1.105"
-    }
-  ]
+    "fleet_id": "FLEET-US-EAST",
+    "manager": "Dr. Sarah Jenkins",
+    "bays": [
+        {
+            "bay_id": "BAY-01",
+            "bay_name": "Dimensional Metrology",
+            "instrument_families": ["CALIPER", "MICROMETER", "HEIGHT_GAUGE"],
+            "workstation_hostname": "DIM-WS-01",
+            "operator_name": "John Doe",
+            "schedule": "08:00-16:00",
+            "last_calibration_date": "2026-09-30",
+            "connected_standards": ["STD-GB-01"],
+            "pending_calibrations": 12
+        },
+        {
+            "bay_id": "BAY-02",
+            "bay_name": "Electrical Metrology",
+            "instrument_families": ["DIGITAL_MULTIMETER", "OSCILLOSCOPE"],
+            "workstation_hostname": "ELEC-WS-01",
+            "operator_name": "Jane Smith",
+            "schedule": "08:00-16:00",
+            "last_calibration_date": "2026-10-01",
+            "connected_standards": ["STD-CAL-5720A"],
+            "pending_calibrations": 5
+        },
+        {
+            "bay_id": "BAY-03",
+            "bay_name": "Temperature & Pressure",
+            "instrument_families": ["RTD_PROBE", "PRESSURE_GAUGE"],
+            "workstation_hostname": "TEMP-WS-01",
+            "operator_name": "Bob Vance",
+            "schedule": "09:00-17:00",
+            "last_calibration_date": "2026-09-28",
+            "connected_standards": ["STD-TEMP-HART"],
+            "pending_calibrations": 18
+        },
+        {
+            "bay_id": "BAY-04",
+            "bay_name": "Force & Torque",
+            "instrument_families": ["FORCE_GAUGE", "TORQUE_WRENCH"],
+            "workstation_hostname": "FORCE-WS-01",
+            "operator_name": "Alice Wonderland",
+            "schedule": "10:00-18:00",
+            "last_calibration_date": "2026-10-01",
+            "connected_standards": ["STD-FORCE-01"],
+            "pending_calibrations": 3
+        },
+        {
+            "bay_id": "BAY-05",
+            "bay_name": "Advanced CMM",
+            "instrument_families": ["CMM"],
+            "workstation_hostname": "CMM-WS-01",
+            "operator_name": "Charlie Brown",
+            "schedule": "08:00-16:00",
+            "last_calibration_date": "2026-09-25",
+            "connected_standards": ["STD-CMM-SPHERE"],
+            "pending_calibrations": 1
+        }
+    ]
 }

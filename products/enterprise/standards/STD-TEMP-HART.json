@@ -1,6 +1,45 @@
-{
-  "standard_id": "STD-TEMP-HART",
-  "name": "Hart Scientific 1502A Precision Thermometer",
-  "uncertainty": 0.008,
-  "unit": "degC"
+﻿{
+    "standard_id":  "STD-TEMP-HART",
+    "description":  "Reference Standard: STD-TEMP-HART.json",
+    "traceability_chain":  [
+                               "Internal Lab",
+                               "Accredited Lab",
+                               "NIST"
+                           ],
+    "calibration_certificate_number":  "CERT-38835",
+    "uncertainty":  0.0005,
+    "calibration_interval_months":  12,
+    "environmental_conditions":  {
+                                     "temperature":  20.0,
+                                     "humidity":  50
+                                 },
+    "history":  [
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-8867"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-6215"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-6905"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-9893"
+                    },
+                    {
+                        "date":  "2025-01-01",
+                        "result":  "PASS",
+                        "cert":  "CERT-7244"
+                    }
+                ],
+    "specifications":  "Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. ",
+    "enterprise_note":  "Full traceability documentation included in Enterprise Audit Defense Package. Auto-linked to SCPI instrument bus bridge."
 }

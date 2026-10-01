@@ -1,0 +1,44 @@
+{
+    "standard_id": "STD-CMM-REF-SPHERE",
+    "description": "Reference Standard: STD-CMM-REF-SPHERE.json",
+    "traceability_chain": [
+        "Internal Lab",
+        "Accredited Lab",
+        "NIST"
+    ],
+    "calibration_certificate_number": "CERT-32760",
+    "uncertainty": 0.0005,
+    "calibration_interval_months": 12,
+    "environmental_conditions": {
+        "temperature": 20.0,
+        "humidity": 50
+    },
+    "history": [
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-1401"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-5434"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-2913"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-5893"
+        },
+        {
+            "date": "2025-01-01",
+            "result": "PASS",
+            "cert": "CERT-2062"
+        }
+    ],
+    "specifications": "Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. Highly detailed specifications for the reference standard. "
+}

@@ -1,0 +1,13 @@
+==================================================
+ BATCH CALIBRATION SUMMARY REPORT 
+==================================================
+Total Jobs Queued:  8
+Processed:          8
+Passed:             7
+Failed (OOT):       1
+Throughput:         1450.23 jobs/hour
+Duration:           19.86 seconds
+==================================================
+
+OOT Details:
+- JOB-1003 (MIC-001) - PROC_MICROMETER_OUTSIDE_0_25MM failed at point 15.000mm.
