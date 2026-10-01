@@ -50,10 +50,18 @@ def resolve_installer_edition() -> str:
         return "demo"
     if "--pro" in sys.argv or "--commercial" in sys.argv:
         return "pro"
+    if "--team" in sys.argv or "--higher" in sys.argv:
+        return "team"
+    if "--enterprise" in sys.argv or "--premium" in sys.argv:
+        return "enterprise"
     if "METROLOGY_EDITION" in os.environ:
         return os.environ["METROLOGY_EDITION"].lower()
     try:
         exe_name = Path(sys.executable).name.lower()
+        if "enterprise" in exe_name:
+            return "enterprise"
+        if "team" in exe_name:
+            return "team"
         if "demo" in exe_name:
             return "demo"
         if "pro" in exe_name:
@@ -65,18 +73,83 @@ def resolve_installer_edition() -> str:
 
 INSTALLER_EDITION = resolve_installer_edition()
 IS_DEMO = (INSTALLER_EDITION == "demo")
-EDITION_NAME   = "Demo Evaluation" if IS_DEMO else "Professional Edition"
-EDITION_TAG    = "Demo" if IS_DEMO else "Pro"
+
+EDITIONS = {
+    "demo": {
+        "name": "Demo Evaluation",
+        "tag": "Demo",
+        "reg_key": r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationDemo",
+        "folder": "MetrologyWorkstationDemo",
+        "cost": "$0.00 (Free Community Evaluation)",
+        "badge_text": "DEMO EVALUATION",
+        "badge_fg": "#94D2E3",
+        "accent": "#00B4D8",
+        "accent_dark": "#0096B4",
+        "accent_text": "#E0F7FF",
+        "sidebar_bg": "#051926",
+        "header_bg": "#062030",
+        "plan_id": "FREE",
+        "seat_limit": 1,
+    },
+    "pro": {
+        "name": "Professional Edition",
+        "tag": "Pro",
+        "reg_key": r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationPro",
+        "folder": "MetrologyWorkstationPro",
+        "cost": "$590.00 / year ($1,490 Perpetual Commercial)",
+        "badge_text": "PROFESSIONAL EDITION",
+        "badge_fg": "#D4AF5C",
+        "accent": "#C5A856",
+        "accent_dark": "#A88F3E",
+        "accent_text": "#FFF8E7",
+        "sidebar_bg": "#06090F",
+        "header_bg": "#0A0E18",
+        "plan_id": "PROFESSIONAL",
+        "seat_limit": 1,
+    },
+    "team": {
+        "name": "Team Fleet Edition",
+        "tag": "Team",
+        "reg_key": r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationTeam",
+        "folder": "MetrologyWorkstationTeam",
+        "cost": "$1,890.00 / year ($2,990 Team Fleet License)",
+        "badge_text": "TEAM FLEET EDITION",
+        "badge_fg": "#818CF8",
+        "accent": "#6366F1",
+        "accent_dark": "#4F46E5",
+        "accent_text": "#EEF2FF",
+        "sidebar_bg": "#0B0F19",
+        "header_bg": "#111827",
+        "plan_id": "BUSINESS",
+        "seat_limit": 5,
+    },
+    "enterprise": {
+        "name": "Enterprise Platform Edition",
+        "tag": "Enterprise",
+        "reg_key": r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationEnterprise",
+        "folder": "MetrologyWorkstationEnterprise",
+        "cost": "$4,900.00 / year ($4,990 Enterprise Platform License)",
+        "badge_text": "ENTERPRISE PLATFORM",
+        "badge_fg": "#34D399",
+        "accent": "#10B981",
+        "accent_dark": "#059669",
+        "accent_text": "#ECFDF5",
+        "sidebar_bg": "#061A14",
+        "header_bg": "#0A251C",
+        "plan_id": "ENTERPRISE",
+        "seat_limit": 999,
+    },
+}
+
+CFG = EDITIONS.get(INSTALLER_EDITION, EDITIONS["demo"])
+EDITION_NAME   = CFG["name"]
+EDITION_TAG    = CFG["tag"]
 APP_NAME       = f"CALIBRA Metrology Workstation 7 ({EDITION_NAME})"
 APP_SHORT_NAME = f"CALIBRA Metrology Workstation ({EDITION_TAG})"
 APP_VERSION    = "7.0.0"
 PUBLISHER      = "NOVYRAX Engineering Intelligence"
 EXE_NAME       = "MetrologyWorkstation.exe"
-REG_KEY = (
-    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationDemo"
-    if IS_DEMO else
-    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\MetrologyWorkstationPro"
-)
+REG_KEY        = CFG["reg_key"]
 
 EULA_TEXT = """\
 CALIBRA METROLOGY WORKSTATION — SOFTWARE LICENSE AGREEMENT
@@ -99,10 +172,16 @@ uncertainty budgets, and quality operations.
                        Includes sample micrometer & caliper procedures, 50-digit exact decimal
                        GUM uncertainty engine, and local encrypted SQLite database. No trial
                        expiration countdowns; standalone clean evaluation.
-  · Professional:      Fully licensed for commercial, industrial, and
-                       accredited laboratory use ($590/year). All 7 instrument families,
+  · Professional:      Fully licensed for single-seat commercial, industrial, and
+                       accredited laboratory use ($590/year or $1,490 perpetual). All 7 instrument families,
                        Method 5 & 6 guardbanding, and compliance self-tests
                        are enabled with unwatermarked output.
+  · Team Fleet:        Licensed for 5 concurrent laboratory benches ($1,890/year or $2,990 perpetual)
+                       with shared air-gapped procedure sync, multi-instrument batch pipeline,
+                       and peer-review cockpit signoffs.
+  · Enterprise:        Unlimited facility site license ($4,900/year or $4,990 perpetual) with
+                       direct SCPI/VISA hardware bus integration, CAD QIF 3.0 blueprint
+                       ingestion, and on-premise air-gapped Docker clustering.
 
 3. DATA INTEGRITY & PRIVACY
 CALIBRA is an air-gap safe, 100% offline application. It transmits zero
@@ -134,7 +213,7 @@ By proceeding with installation you agree to be bound by all terms above.
 # ─────────────────────────────────────────────────────────────────────────────
 def get_default_install_dir() -> Path:
     local = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
-    return Path(local) / "Programs" / "MetrologyWorkstation"
+    return Path(local) / "Programs" / CFG["folder"]
 
 
 def create_shortcut(target: Path, shortcut_path: Path, description: str = "", arguments: str = ""):
@@ -233,19 +312,8 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
                     import hashlib
                     now_utc     = datetime.now(timezone.utc)
                     expires_utc = now_utc + timedelta(days=365)
-                    token_payload = {
-                        "entitlement_id":   f"CALIBRA-PRO-{int(now_utc.timestamp())}",
-                        "customer_id":      "CUST-LICENSED-PRO",
-                        "customer_name":    "Licensed Commercial Organization",
-                        "organization_id":  "commercial@calibra.metrology",
-                        "product_id":       "MetrologyWorkstation.Commercial",
-                        "plan_id":          "PROFESSIONAL",
-                        "status":           "ACTIVE",
-                        "seat_limit":       1,
-                        "issued_at":        now_utc.isoformat(),
-                        "expires_at":       expires_utc.isoformat(),
-                        "grace_period_days": 30,
-                        "features": [
+                    plan_features = {
+                        "PROFESSIONAL": [
                             "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
                             "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
                             "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
@@ -253,6 +321,41 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
                             "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
                             "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
                         ],
+                        "BUSINESS": [
+                            "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
+                            "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
+                            "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
+                            "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                            "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
+                            "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
+                            "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
+                            "BATCH_CALIBRATION_EXPORT",
+                        ],
+                        "ENTERPRISE": [
+                            "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
+                            "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
+                            "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
+                            "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                            "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
+                            "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
+                            "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
+                            "BATCH_CALIBRATION_EXPORT", "AIR_GAPPED_CUSTOM_KEYS",
+                            "CUSTOM_GUARD_BAND_EQUATIONS", "PRIORITY_SLA_SUPPORT",
+                        ],
+                    }
+                    token_payload = {
+                        "entitlement_id":   f"CALIBRA-{CFG['tag'].upper()}-{int(now_utc.timestamp())}",
+                        "customer_id":      f"CUST-LICENSED-{CFG['tag'].upper()}",
+                        "customer_name":    f"Licensed {EDITION_NAME} Organization",
+                        "organization_id":  f"licensed-{INSTALLER_EDITION}@calibra.metrology",
+                        "product_id":       "MetrologyWorkstation.Commercial",
+                        "plan_id":          CFG["plan_id"],
+                        "status":           "ACTIVE",
+                        "seat_limit":       CFG["seat_limit"],
+                        "issued_at":        now_utc.isoformat(),
+                        "expires_at":       expires_utc.isoformat(),
+                        "grace_period_days": 30,
+                        "features":         plan_features.get(CFG["plan_id"], plan_features["PROFESSIONAL"]),
                     }
                     raw = json.dumps(token_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
                     verify_key = b"MW_PUB_VERIFY_KEY_2026_PRECISION_METROLOGY_981247"
@@ -279,7 +382,7 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
     register_uninstall(target_dir, target_exe, uninstaller)
 
     if progress_callback: progress_callback(90, "Creating Windows shortcuts…")
-    args = "--demo" if IS_DEMO else "--pro"
+    args = f"--{INSTALLER_EDITION}"
     shortcut_name = f"{APP_NAME}.lnk"
     if start_shortcut:
         sm = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs"
@@ -302,20 +405,11 @@ def run_gui_wizard():
     from tkinter import ttk, messagebox, filedialog
 
     # ── Palette ──────────────────────────────────────────────────────────────
-    # Pro edition: deep navy + gold accent
-    # Demo edition: teal + silver accent (still professional, but differentiated)
-    if IS_DEMO:
-        ACCENT       = "#00B4D8"   # teal
-        ACCENT_DARK  = "#0096B4"
-        ACCENT_TEXT  = "#E0F7FF"
-        SIDEBAR_BG   = "#051926"
-        HEADER_BG    = "#062030"
-    else:
-        ACCENT       = "#C5A856"   # gold
-        ACCENT_DARK  = "#A88F3E"
-        ACCENT_TEXT  = "#FFF8E7"
-        SIDEBAR_BG   = "#06090F"
-        HEADER_BG    = "#0A0E18"
+    ACCENT       = CFG["accent"]
+    ACCENT_DARK  = CFG["accent_dark"]
+    ACCENT_TEXT  = CFG["accent_text"]
+    SIDEBAR_BG   = CFG["sidebar_bg"]
+    HEADER_BG    = CFG["header_bg"]
 
     BODY_BG      = "#FFFFFF"
     CARD_BG      = "#F8FAFC"
@@ -417,8 +511,8 @@ def run_gui_wizard():
     tk.Frame(sidebar, bg=ACCENT, height=1).pack(fill=tk.X, padx=20, pady=(0, 18))
 
     # Edition badge
-    badge_text = "DEMO EVALUATION" if IS_DEMO else "PROFESSIONAL EDITION"
-    badge_fg   = "#94D2E3" if IS_DEMO else "#D4AF5C"
+    badge_text = CFG["badge_text"]
+    badge_fg   = CFG["badge_fg"]
     tk.Label(
         sidebar, text=badge_text, font=("Segoe UI", 6, "bold"),
         fg=badge_fg, bg=SIDEBAR_BG, letterSpacing=2
@@ -598,7 +692,7 @@ def run_gui_wizard():
         # Info card
         cf = card_frame(content)
         info_row(cf, "Edition",       EDITION_NAME)
-        info_row(cf, "Value / Cost",  "$0.00 (Free Community Evaluation)" if IS_DEMO else "$590.00 / year (Commercial License)")
+        info_row(cf, "Value / Cost",  CFG["cost"])
         info_row(cf, "Version",       f"v{APP_VERSION}")
         info_row(cf, "Platform",      "Windows 10 / 11 (64-bit)")
         info_row(cf, "Kernel",        "50-Digit Exact Decimal Arithmetic (JCGM 100)")
@@ -809,7 +903,7 @@ def run_gui_wizard():
 
     def finish():
         if launch_app_var.get() and installed_exe and installed_exe.exists():
-            args = [str(installed_exe), "--demo" if IS_DEMO else "--pro"]
+            args = [str(installed_exe), f"--{INSTALLER_EDITION}"]
             subprocess.Popen(args, creationflags=0x08000000)
         root.destroy()
 
@@ -831,7 +925,7 @@ if __name__ == "__main__":
         t_dir = get_default_install_dir()
         exe = perform_install(t_dir, desktop_shortcut=True, start_shortcut=True)
         if "--launch" in sys.argv and exe.exists():
-            args = [str(exe), "--demo" if IS_DEMO else "--pro"]
+            args = [str(exe), f"--{INSTALLER_EDITION}"]
             subprocess.Popen(args, creationflags=0x08000000)
     else:
         run_gui_wizard()

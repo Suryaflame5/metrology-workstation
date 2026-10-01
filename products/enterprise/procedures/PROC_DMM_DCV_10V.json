@@ -1,0 +1,20 @@
+{
+  "procedure_id": "PROC_DMM_DCV_10V",
+  "name": "Digital Multimeter DC Voltage (10V Range)",
+  "version": "7.0.0",
+  "instrument_family": "Digital Multimeter",
+  "range_min": -10.0,
+  "range_max": 10.0,
+  "unit": "V",
+  "resolution": 1e-05,
+  "nominal_test_points": [
+    -10.0,
+    -5.0,
+    0.0,
+    5.0,
+    10.0
+  ],
+  "tolerance_upper": 5e-05,
+  "tolerance_lower": -5e-05,
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+}

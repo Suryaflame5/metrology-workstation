@@ -1,0 +1,22 @@
+{
+  "procedure_id": "PROC_RTD_TEMPERATURE_PROBE",
+  "name": "Precision Pt100 RTD Temperature (-50C to 250C)",
+  "version": "7.0.0",
+  "instrument_family": "RTD Thermometer",
+  "range_min": -50.0,
+  "range_max": 250.0,
+  "unit": "degC",
+  "resolution": 0.01,
+  "nominal_test_points": [
+    -50.0,
+    0.0,
+    50.0,
+    100.0,
+    150.0,
+    200.0,
+    250.0
+  ],
+  "tolerance_upper": 0.05,
+  "tolerance_lower": -0.05,
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+}

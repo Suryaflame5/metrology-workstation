@@ -1,0 +1,21 @@
+{
+  "procedure_id": "PROC_DIAL_INDICATOR_0_10MM",
+  "name": "Dial Indicator Accuracy (0-10 mm)",
+  "version": "7.0.0",
+  "instrument_family": "Dial Indicator",
+  "range_min": 0.0,
+  "range_max": 10.0,
+  "unit": "mm",
+  "resolution": 0.001,
+  "nominal_test_points": [
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0
+  ],
+  "tolerance_upper": 0.003,
+  "tolerance_lower": -0.003,
+  "decision_rule": "ANSI/NCSL Z540.3 Method 6 Guard Banding (P_CR <= 2.0%)"
+}

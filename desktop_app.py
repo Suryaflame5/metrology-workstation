@@ -93,19 +93,29 @@ def init_dpi_awareness():
 
 
 def resolve_app_edition() -> str:
-    """Resolve active workstation edition: 'demo' (Free Evaluation) or 'pro' (Professional)."""
+    """Resolve active workstation edition: 'demo', 'pro', 'team', or 'enterprise'."""
     # 1. Explicit CLI argument takes precedence
     if "--demo" in sys.argv:
         return "demo"
     if "--pro" in sys.argv or "--commercial" in sys.argv:
         return "pro"
+    if "--team" in sys.argv or "--higher" in sys.argv:
+        return "team"
+    if "--enterprise" in sys.argv or "--premium" in sys.argv:
+        return "enterprise"
 
     # 2. Check executable filename (e.g. if run directly from dist)
     try:
         from pathlib import Path
         exe_name = Path(sys.executable).name.lower()
+        if "enterprise" in exe_name:
+            return "enterprise"
+        if "team" in exe_name:
+            return "team"
         if "demo" in exe_name:
             return "demo"
+        if "pro" in exe_name:
+            return "pro"
     except Exception:
         pass
 
@@ -118,22 +128,8 @@ def resolve_app_edition() -> str:
             import json
             with open(local_edition_file, "r", encoding="utf-8") as f:
                 ed = json.load(f).get("edition", "").lower()
-                if ed == "demo":
-                    # Check if user has explicitly activated a full non-trial commercial license
-                    from metrology_app.services.license_service import EntitlementService, PlanId, EntitlementState
-                    try:
-                        ent = EntitlementService.get_current_entitlement()
-                        if (
-                            ent.get("state") == EntitlementState.ACTIVE.value
-                            and not ent.get("is_trial")
-                            and ent.get("plan_id") in (PlanId.PROFESSIONAL.value, PlanId.BUSINESS.value, PlanId.ENTERPRISE.value)
-                        ):
-                            return "pro"
-                    except Exception:
-                        pass
-                    return "demo"
-                elif ed == "pro":
-                    return "pro"
+                if ed in ("enterprise", "team", "pro", "demo"):
+                    return ed
     except Exception:
         pass
 
@@ -146,10 +142,8 @@ def resolve_app_edition() -> str:
             import json
             with open(appdata_edition_file, "r", encoding="utf-8") as f:
                 ed = json.load(f).get("edition", "").lower()
-                if ed == "demo":
-                    return "demo"
-                elif ed == "pro":
-                    return "pro"
+                if ed in ("enterprise", "team", "pro", "demo"):
+                    return ed
     except Exception:
         pass
 
@@ -160,15 +154,22 @@ def resolve_app_edition() -> str:
         if (
             ent.get("state") == EntitlementState.ACTIVE.value
             and not ent.get("is_trial")
-            and ent.get("plan_id") in (PlanId.PROFESSIONAL.value, PlanId.BUSINESS.value, PlanId.ENTERPRISE.value)
         ):
-            return "pro"
+            plan = ent.get("plan_id")
+            if plan == PlanId.ENTERPRISE.value:
+                return "enterprise"
+            elif plan == PlanId.BUSINESS.value:
+                return "team"
+            elif plan == PlanId.PROFESSIONAL.value:
+                return "pro"
     except Exception:
         pass
 
     # 6. Check environment variable
     if "METROLOGY_EDITION" in os.environ:
-        return os.environ["METROLOGY_EDITION"].lower()
+        ed = os.environ["METROLOGY_EDITION"].lower()
+        if ed in ("enterprise", "team", "pro", "demo"):
+            return ed
 
     # 7. Default to demo for safety — free evaluation unless licensed
     return "demo"
@@ -189,7 +190,7 @@ def main():
         cli_main()
         return
 
-    # 2. Determine Edition (Professional vs Demo)
+    # 2. Determine Edition (Professional vs Demo vs Team vs Enterprise)
     edition = resolve_app_edition()
     os.environ["METROLOGY_EDITION"] = edition
 
@@ -197,7 +198,13 @@ def main():
     ensure_app_directories()
     init_db(DB_PATH)
     logger = get_logger()
-    edition_label = "Professional Edition" if edition == "pro" else "Demo Evaluation"
+    edition_label_map = {
+        "enterprise": "Enterprise Platform Edition",
+        "team": "Team Fleet Edition",
+        "pro": "Professional Edition",
+        "demo": "Demo Evaluation",
+    }
+    edition_label = edition_label_map.get(edition, "Demo Evaluation")
     logger.info(f"CALIBRA Metrology Workstation Desktop v7.0.0 ({edition_label}) initializing...")
 
     # 4. Parse port / host

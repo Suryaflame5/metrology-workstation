@@ -1,0 +1,6 @@
+{
+  "standard_id": "STD-TEMP-HART",
+  "name": "Hart Scientific 1502A Precision Thermometer",
+  "uncertainty": 0.008,
+  "unit": "degC"
+}

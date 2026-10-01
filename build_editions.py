@@ -143,16 +143,23 @@ def build_main_workstation():
     return target_exe
 
 
-def build_installer_wizard(edition: str, output_name: str):
+def build_installer_wizard(edition: str, output_name: str, folder_name: str):
     print("\n" + "=" * 75)
     print(f" STEP: COMPILING {edition.upper()} GUI SETUP WIZARD")
-    print(f" Output Artifact: dist/{output_name}")
+    print(f" Output Artifact: dist/{output_name} -> dist/{folder_name}/{output_name}")
     print("=" * 75)
 
     installer_script = PROJECT_ROOT / "scripts" / "installer_gui.py"
     target_workstation_exe = DIST_DIR / "MetrologyWorkstation" / "MetrologyWorkstation.exe"
-    proc_src = PROJECT_ROOT / "metrology_app" / "procedures"
-    std_src = PROJECT_ROOT / "standards"
+    if not target_workstation_exe.exists():
+        if (DIST_DIR / "MetrologyWorkstation.exe").exists():
+            (DIST_DIR / "MetrologyWorkstation").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(DIST_DIR / "MetrologyWorkstation.exe", target_workstation_exe)
+
+    # Use edition-specific procedures & standards if available in products/<folder_name>/
+    product_dir = PROJECT_ROOT / "products" / folder_name
+    proc_src = product_dir / "procedures" if (product_dir / "procedures").exists() else PROJECT_ROOT / "metrology_app" / "procedures"
+    std_src = product_dir / "standards" if (product_dir / "standards").exists() else PROJECT_ROOT / "standards"
 
     edition_dir = BUILD_DIR / edition
     edition_dir.mkdir(parents=True, exist_ok=True)
@@ -187,47 +194,77 @@ def build_installer_wizard(edition: str, output_name: str):
         sys.exit(res.returncode)
 
     out_file = DIST_DIR / output_name
+    edition_dist_dir = DIST_DIR / folder_name
+    edition_dist_dir.mkdir(parents=True, exist_ok=True)
+    edition_out_file = edition_dist_dir / output_name
+    shutil.copy2(out_file, edition_out_file)
+
     print(f" [OK] Setup Wizard Ready: {out_file} ({os.path.getsize(out_file):,} bytes)")
-    return out_file
+    print(f" [OK] Copied to edition distribution directory: {edition_out_file}")
+    return out_file, edition_out_file
 
 
 def main():
     print("=" * 75)
-    print(" CALIBRA METROLOGY WORKSTATION v7.0.0 — DUAL-EDITION RELEASE BUILD")
+    print(" CALIBRA METROLOGY WORKSTATION v7.0.0 — 4-EDITION RELEASE BUILD PIPELINE")
     print("=" * 75)
 
-    # 1. Main executable
-    main_exe = build_main_workstation()
+    target_workstation_exe = DIST_DIR / "MetrologyWorkstation" / "MetrologyWorkstation.exe"
+    if target_workstation_exe.exists():
+        print(f"Found existing compiled workstation executable: {target_workstation_exe}")
+        main_exe = target_workstation_exe
+    else:
+        # 1. Main executable
+        main_exe = build_main_workstation()
 
-    # 2. Demo edition setup wizard
-    demo_installer = build_installer_wizard("demo", "Metrology-Workstation-Demo-v7.0.0-Setup.exe")
+    # 2. Demo edition setup wizard ($0)
+    demo_inst, demo_edition_inst = build_installer_wizard("demo", "Metrology-Workstation-Demo-v7.0.0-Setup.exe", "demo")
 
-    # 3. Professional edition setup wizard
-    pro_installer = build_installer_wizard("pro", "Metrology-Workstation-Pro-v7.0.0-Setup.exe")
+    # 3. Professional edition setup wizard ($590 / $1,490)
+    pro_inst, pro_edition_inst = build_installer_wizard("pro", "Metrology-Workstation-Pro-v7.0.0-Setup.exe", "professional")
 
-    # 4. Sign both with local test certificate
+    # 4. Team Fleet edition setup wizard ($1,890 / $2,990)
+    team_inst, team_edition_inst = build_installer_wizard("team", "Metrology-Workstation-Team-v7.0.0-Setup.exe", "team")
+
+    # 5. Enterprise Platform edition setup wizard ($4,900 / $4,990)
+    enterprise_inst, enterprise_edition_inst = build_installer_wizard("enterprise", "Metrology-Workstation-Enterprise-v7.0.0-Setup.exe", "enterprise")
+
+    all_installers = [demo_inst, pro_inst, team_inst, enterprise_inst]
+    all_edition_installers = [demo_edition_inst, pro_edition_inst, team_edition_inst, enterprise_edition_inst]
+
+    # 6. Sign with local Authenticode test certificate
     print("\n" + "=" * 75)
     print(" STEP: SIGNING ARTIFACTS WITH AUTHENTICODE CERTIFICATE")
     print("=" * 75)
     cert_script = PROJECT_ROOT / "scripts" / "create_self_signed_cert.ps1"
-    for inst in [demo_installer, pro_installer, main_exe]:
-        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(cert_script), "-TargetFile", str(inst)])
+    for inst in all_installers + all_edition_installers + [main_exe]:
+        if inst.exists():
+            subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(cert_script), "-TargetFile", str(inst)])
 
-    # 5. Checksums
+    # 7. Checksums
     print("\n" + "=" * 75)
     print(" RELEASE INTEGRITY CHECKSUMS (SHA-256)")
     print("=" * 75)
     sums_file = DIST_DIR / "SHA256SUMS.txt"
     lines = []
-    for inst in [demo_installer, pro_installer, main_exe]:
-        sha = calculate_sha256(inst)
-        line = f"{sha}  {inst.name}"
-        print(line)
-        lines.append(line)
+    for inst in all_installers + [main_exe]:
+        if inst.exists():
+            sha = calculate_sha256(inst)
+            line = f"{sha}  {inst.name}"
+            print(line)
+            lines.append(line)
     
     with open(sums_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
-    print(f"\nWrote checksums to {sums_file}")
+    print(f"\nWrote master checksums to {sums_file}")
+
+    for inst in all_edition_installers:
+        if inst.exists():
+            ed_sums_file = inst.parent / "SHA256SUMS.txt"
+            sha = calculate_sha256(inst)
+            with open(ed_sums_file, "w", encoding="utf-8") as f:
+                f.write(f"{sha}  {inst.name}\n")
+            print(f"Wrote edition checksum to {ed_sums_file}")
 
 if __name__ == "__main__":
     main()
