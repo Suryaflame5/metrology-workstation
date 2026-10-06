@@ -608,6 +608,77 @@ def api_delete_instrument(instrument_id: str):
     return {"status": "DELETED", "id": instrument_id}
 
 
+@app.post("/api/instruments/import")
+def api_import_instruments(payload: Dict[str, Any]):
+    """Bulk import instruments from CSV or structured JSON."""
+    import io
+    import csv
+    csv_text = payload.get("csv_text", "")
+    instruments_list = payload.get("instruments", [])
+    imported = []
+    
+    if csv_text:
+        reader = csv.DictReader(io.StringIO(csv_text.strip()))
+        for r in reader:
+            if r.get("model") or r.get("manufacturer") or r.get("name") or r.get("serial_number"):
+                saved = save_instrument(r)
+                imported.append(saved)
+    elif instruments_list:
+        for inst in instruments_list:
+            saved = save_instrument(inst)
+            imported.append(saved)
+    else:
+        raise HTTPException(status_code=400, detail="Provide 'csv_text' or 'instruments' array.")
+        
+    record_audit_event("INSTRUMENTS_BULK_IMPORTED", "ASSET_REGISTRY", "SYSTEM", {"count": len(imported)})
+    return {"status": "SUCCESS", "imported_count": len(imported), "instruments": imported}
+
+
+@app.get("/api/instruments/stats/due")
+def api_instruments_due_stats():
+    """Retrieve categorized instrument calibration due-date analytics."""
+    from .db import get_connection, DB_PATH
+    now = datetime.now()
+    with get_connection(DB_PATH) as conn:
+        cur = conn.execute("SELECT * FROM instruments ORDER BY next_calibration_due ASC")
+        rows = cur.fetchall()
+        
+    expired = []
+    due_soon = []
+    valid = []
+    
+    for r in rows:
+        item = dict(r)
+        due_str = item.get("next_calibration_due") or "2027-12-31"
+        try:
+            due_dt = datetime.strptime(due_str[:10], "%Y-%m-%d")
+            days = (due_dt - now).days
+            item["days_until_due"] = days
+            if days < 0:
+                item["due_category"] = "EXPIRED"
+                expired.append(item)
+            elif days <= 30:
+                item["due_category"] = "DUE_SOON"
+                due_soon.append(item)
+            else:
+                item["due_category"] = "COMPLIANT"
+                valid.append(item)
+        except Exception:
+            item["days_until_due"] = 999
+            item["due_category"] = "COMPLIANT"
+            valid.append(item)
+            
+    return {
+        "total": len(rows),
+        "expired_count": len(expired),
+        "due_soon_count": len(due_soon),
+        "compliant_count": len(valid),
+        "expired": expired,
+        "due_soon": due_soon,
+        "compliant": valid[:10]
+    }
+
+
 # --- Measurement Plans ---
 @app.post("/api/plans")
 def api_create_measurement_plan(req: MeasurementPlanCreateRequest):
@@ -1734,16 +1805,30 @@ def api_duplicate_job_endpoint(job_id: str, payload: Optional[Dict[str, Any]] = 
 @app.get("/api/jobs/{job_id}/certificate")
 def api_job_certificate_pdf(job_id: str):
     """Generate and stream ISO 17025 certificate PDF for this job."""
-    job = get_job(job_id)
+    from .services.advanced_pdf_service import generate_advanced_multi_page_pdf
+    from .db import DB_PATH
+    job = get_job(job_id, db_path=DB_PATH)
     if not job:
         raise HTTPException(status_code=404, detail=f"Measurement job '{job_id}' not found.")
 
+    raw = job.get("raw_measurements") or []
     calc_id = job.get("calculation_id")
-    if not calc_id:
-        job = run_job_pipeline(job_id)
-        calc_id = job.get("calculation_id")
+    if not calc_id and raw:
+        try:
+            job = run_job_pipeline(job_id, db_path=DB_PATH)
+        except Exception:
+            pass
 
-    pdf_bytes = generate_pdf_for_calculation(calc_id)
+    try:
+        pdf_bytes = generate_advanced_multi_page_pdf(job_id, db_path=DB_PATH)
+    except Exception:
+        # Fallback to simple calculation PDF if available
+        calc_id = job.get("calculation_id")
+        if calc_id:
+            pdf_bytes = generate_pdf_for_calculation(calc_id)
+        else:
+            raise HTTPException(status_code=400, detail="Cannot generate certificate: Job has no measurement data or calculated results.")
+            
     filename = f"Certificate_{job.get('job_number', job_id)}.pdf"
     return Response(
         content=pdf_bytes,
