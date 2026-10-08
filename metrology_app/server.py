@@ -113,11 +113,11 @@ def api_get_license():
 
 @app.post("/api/license/trial")
 def api_activate_trial():
-    """Activate 14-day Professional Trial."""
+    """Activate 14-day Professional Trial (Disabled in Demo; Community Demo provides 100% free perpetual evaluation)."""
     if os.environ.get("METROLOGY_EDITION", "").lower() == "demo":
         raise HTTPException(
             status_code=403,
-            detail="Trial activation of Professional Edition is disabled in Community Demo. Community Demo provides unrestricted evaluation for students and reviewers. To unlock Professional features, apply a verified commercial license."
+            detail="Free trials have been discontinued in CALIBRA v7.0. Community Demo provides 100% free perpetual evaluation with zero expiration timers. To unlock Professional features, apply a verified commercial license."
         )
     from .services.license_service import EntitlementService
     ent = EntitlementService.activate_trial(duration_days=14)

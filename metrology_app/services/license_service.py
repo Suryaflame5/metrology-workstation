@@ -81,6 +81,10 @@ PLAN_FEATURES = {
         "CUSTOM_LAB_BRANDING",
         "MULTI_SEAT_ORGANIZATION",
         "BATCH_CALIBRATION_EXPORT",
+        "FLEET_DRIFT_MONITORING",
+        "PEER_REVIEW_COCKPIT",
+        "SHARED_VAULT_SYNC",
+        "BATCH_CALIBRATION_PIPELINE",
     ],
     PlanId.ENTERPRISE: [
         "SINGLE_POINT_MICROMETER",
@@ -101,6 +105,15 @@ PLAN_FEATURES = {
         "AIR_GAPPED_CUSTOM_KEYS",
         "CUSTOM_GUARD_BAND_EQUATIONS",
         "PRIORITY_SLA_SUPPORT",
+        "FLEET_DRIFT_MONITORING",
+        "PEER_REVIEW_COCKPIT",
+        "SHARED_VAULT_SYNC",
+        "BATCH_CALIBRATION_PIPELINE",
+        "SCPI_VISA_HARDWARE_BUS",
+        "CAD_QIF_INGESTION",
+        "OPCUA_MQTT_BRIDGE",
+        "AUDIT_DEFENSE_PACKAGE",
+        "DOCKER_AIRGAP_CLUSTER",
     ],
 }
 
@@ -184,6 +197,57 @@ class EntitlementService:
         """
         ensure_app_directories()
 
+        # 1. Environment-level explicit runtime edition check
+        edition_env = os.environ.get("METROLOGY_EDITION", "").lower()
+        if edition_env == "demo":
+            return {
+                "state": EntitlementState.FREE.value,
+                "plan_id": PlanId.FREE.value,
+                "plan_name": "Community Demo Edition",
+                "customer_name": "Community Evaluation User",
+                "seat_limit": 1,
+                "is_trial": False,
+                "is_offline_authorized": True,
+                "expiration": None,
+                "features": PLAN_FEATURES[PlanId.FREE],
+            }
+        elif edition_env == "enterprise":
+            return {
+                "state": EntitlementState.ACTIVE.value,
+                "plan_id": PlanId.ENTERPRISE.value,
+                "plan_name": "Enterprise & Industrial Platform",
+                "customer_name": "Licensed Enterprise Organization",
+                "seat_limit": 999,
+                "is_trial": False,
+                "is_offline_authorized": True,
+                "expiration": None,
+                "features": PLAN_FEATURES[PlanId.ENTERPRISE],
+            }
+        elif edition_env in ("team", "business"):
+            return {
+                "state": EntitlementState.ACTIVE.value,
+                "plan_id": PlanId.BUSINESS.value,
+                "plan_name": "Team Fleet Edition",
+                "customer_name": "Licensed Team Fleet Organization",
+                "seat_limit": 5,
+                "is_trial": False,
+                "is_offline_authorized": True,
+                "expiration": None,
+                "features": PLAN_FEATURES[PlanId.BUSINESS],
+            }
+        elif edition_env in ("pro", "professional"):
+            return {
+                "state": EntitlementState.ACTIVE.value,
+                "plan_id": PlanId.PROFESSIONAL.value,
+                "plan_name": "Professional Commercial Edition",
+                "customer_name": "Licensed Professional Organization",
+                "seat_limit": 1,
+                "is_trial": False,
+                "is_offline_authorized": True,
+                "expiration": None,
+                "features": PLAN_FEATURES[PlanId.PROFESSIONAL],
+            }
+
         # Check for system clock tampering
         if detect_clock_rollback(db_path):
             return {
@@ -255,7 +319,7 @@ class EntitlementService:
         return {
             "state": EntitlementState.FREE.value,
             "plan_id": PlanId.FREE.value,
-            "plan_name": "Free / Community Evaluation",
+            "plan_name": "Community Demo Edition",
             "customer_name": "Community User",
             "seat_limit": 1,
             "is_trial": False,
@@ -266,9 +330,9 @@ class EntitlementService:
 
     @classmethod
     def activate_trial(cls, duration_days: int = 14) -> Dict[str, Any]:
-        """Activate a local 14-day Professional Trial (Pro/Commercial editions only)."""
+        """Activate a local Professional Trial (Discontinued in Demo; retained for testing)."""
         if os.environ.get("METROLOGY_EDITION", "").lower() == "demo":
-            raise ValueError("Trial activation is disabled in Community Demo edition.")
+            raise ValueError("Trial activation is discontinued. Community Demo provides 100% free perpetual evaluation with zero expiration timers.")
         ensure_app_directories()
         now_utc = datetime.now(timezone.utc)
         expires_utc = now_utc + timedelta(days=duration_days)
@@ -546,6 +610,18 @@ def get_license_info(db_path: Optional[str] = None) -> Dict[str, Any]:
     )
     is_demo = not is_comm
 
+    plan_badge = "COMMUNITY DEMO"
+    plan_name = "Community Demo Evaluation"
+    if ent["plan_id"] == PlanId.ENTERPRISE.value and is_comm:
+        plan_badge = "ENTERPRISE INDUSTRIAL"
+        plan_name = "Enterprise & Industrial Platform"
+    elif ent["plan_id"] == PlanId.BUSINESS.value and is_comm:
+        plan_badge = "TEAM FLEET"
+        plan_name = "Team Fleet Edition"
+    elif is_comm:
+        plan_badge = "ISO 17025 PRO"
+        plan_name = "Commercial Professional Edition"
+
     return {
         "edition": f"CALIBRA Metrology Workstation ({ent['plan_name']})",
         "version": "7.0.0",
@@ -553,13 +629,13 @@ def get_license_info(db_path: Optional[str] = None) -> Dict[str, Any]:
         "plan_id": ent["plan_id"],
         "customer_name": ent.get("customer_name", "Valued User"),
         "seat_limit": ent.get("seat_limit", 1),
-        "is_trial": ent.get("is_trial", False),
+        "is_trial": False if (is_demo or (is_comm and os.environ.get("METROLOGY_EDITION"))) else ent.get("is_trial", False),
         "is_commercial": is_comm,
         "is_demo": is_demo,
-        "edition_badge": "ISO 17025 PRO" if is_comm else "DEMO EVALUATION",
-        "edition_name": "Commercial Professional Edition" if is_comm else "Community Demo Evaluation",
+        "edition_badge": plan_badge,
+        "edition_name": plan_name,
         "upgrade_url": "https://novyrax.vercel.app/pricing",
-        "expiration": ent.get("expiration"),
+        "expiration": None if is_demo else ent.get("expiration"),
         "offline_operation_status": "AUTHORIZED (Local-first offline execution enabled)",
         "features": ent["features"],
         "comparison_matrix": [

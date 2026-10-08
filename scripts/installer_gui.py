@@ -306,63 +306,69 @@ def perform_install(target_dir: Path, desktop_shortcut: bool, start_shortcut: bo
                 except Exception:
                     pass
         else:
-            if not lic_file.exists():
-                try:
-                    import hmac
-                    import hashlib
-                    now_utc     = datetime.now(timezone.utc)
-                    expires_utc = now_utc + timedelta(days=365)
-                    plan_features = {
-                        "PROFESSIONAL": [
-                            "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
-                            "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
-                            "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
-                            "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
-                            "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
-                            "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
-                        ],
-                        "BUSINESS": [
-                            "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
-                            "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
-                            "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
-                            "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
-                            "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
-                            "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
-                            "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
-                            "BATCH_CALIBRATION_EXPORT",
-                        ],
-                        "ENTERPRISE": [
-                            "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
-                            "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
-                            "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
-                            "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
-                            "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
-                            "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
-                            "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
-                            "BATCH_CALIBRATION_EXPORT", "AIR_GAPPED_CUSTOM_KEYS",
-                            "CUSTOM_GUARD_BAND_EQUATIONS", "PRIORITY_SLA_SUPPORT",
-                        ],
-                    }
-                    token_payload = {
-                        "entitlement_id":   f"CALIBRA-{CFG['tag'].upper()}-{int(now_utc.timestamp())}",
-                        "customer_id":      f"CUST-LICENSED-{CFG['tag'].upper()}",
-                        "customer_name":    f"Licensed {EDITION_NAME} Organization",
-                        "organization_id":  f"licensed-{INSTALLER_EDITION}@calibra.metrology",
-                        "product_id":       "MetrologyWorkstation.Commercial",
-                        "plan_id":          CFG["plan_id"],
-                        "status":           "ACTIVE",
-                        "seat_limit":       CFG["seat_limit"],
-                        "issued_at":        now_utc.isoformat(),
-                        "expires_at":       expires_utc.isoformat(),
-                        "grace_period_days": 30,
-                        "features":         plan_features.get(CFG["plan_id"], plan_features["PROFESSIONAL"]),
-                    }
-                    raw = json.dumps(token_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-                    verify_key = b"MW_PUB_VERIFY_KEY_2026_PRECISION_METROLOGY_981247"
-                    token_payload["signature"] = hmac.new(verify_key, raw, hashlib.sha256).hexdigest()
-                    lic_file.write_text(json.dumps(token_payload, indent=2), encoding="utf-8")
-                except Exception:
-                    pass
+            try:
+                import hmac
+                import hashlib
+                now_utc     = datetime.now(timezone.utc)
+                expires_utc = now_utc + timedelta(days=3650)  # 10-year perpetual commercial offline license
+                plan_features = {
+                    "PROFESSIONAL": [
+                        "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
+                        "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
+                        "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
+                        "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                        "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
+                        "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
+                    ],
+                    "BUSINESS": [
+                        "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
+                        "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
+                        "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
+                        "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                        "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
+                        "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
+                        "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
+                        "BATCH_CALIBRATION_EXPORT", "FLEET_DRIFT_MONITORING",
+                        "PEER_REVIEW_COCKPIT", "SHARED_VAULT_SYNC",
+                        "BATCH_CALIBRATION_PIPELINE",
+                    ],
+                    "ENTERPRISE": [
+                        "SINGLE_POINT_MICROMETER", "EXACT_50_DIGIT_GUM",
+                        "DECISION_Z5403_METHOD6", "12_STAGE_REPLAY",
+                        "ALL_7_INSTRUMENT_FAMILIES", "MULTI_POINT_STUDIO",
+                        "UNLIMITED_RECORDS", "MACHINE_VERIFIABLE_EVIDENCE_ZIP",
+                        "UNWATERMARKED_CERTIFICATES", "HASH_CHAINED_AUDIT_VAULT",
+                        "SQLITE_ATOMIC_BACKUPS", "OFFLINE_OPERATION",
+                        "CUSTOM_LAB_BRANDING", "MULTI_SEAT_ORGANIZATION",
+                        "BATCH_CALIBRATION_EXPORT", "AIR_GAPPED_CUSTOM_KEYS",
+                        "CUSTOM_GUARD_BAND_EQUATIONS", "PRIORITY_SLA_SUPPORT",
+                        "FLEET_DRIFT_MONITORING", "PEER_REVIEW_COCKPIT",
+                        "SHARED_VAULT_SYNC", "BATCH_CALIBRATION_PIPELINE",
+                        "SCPI_VISA_HARDWARE_BUS", "CAD_QIF_INGESTION",
+                        "OPCUA_MQTT_BRIDGE", "AUDIT_DEFENSE_PACKAGE",
+                        "DOCKER_AIRGAP_CLUSTER",
+                    ],
+                }
+                token_payload = {
+                    "entitlement_id":   f"CALIBRA-{CFG['tag'].upper()}-{int(now_utc.timestamp())}",
+                    "customer_id":      f"CUST-LICENSED-{CFG['tag'].upper()}",
+                    "customer_name":    f"Licensed {EDITION_NAME} Organization",
+                    "organization_id":  f"licensed-{INSTALLER_EDITION}@calibra.metrology",
+                    "product_id":       "MetrologyWorkstation.Commercial",
+                    "plan_id":          CFG["plan_id"],
+                    "status":           "ACTIVE",
+                    "seat_limit":       CFG["seat_limit"],
+                    "issued_at":        now_utc.isoformat(),
+                    "expires_at":       expires_utc.isoformat(),
+                    "grace_period_days": 30,
+                    "features":         plan_features.get(CFG["plan_id"], plan_features["PROFESSIONAL"]),
+                }
+                raw = json.dumps(token_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                verify_key = b"MW_PUB_VERIFY_KEY_2026_PRECISION_METROLOGY_981247"
+                token_payload["signature"] = hmac.new(verify_key, raw, hashlib.sha256).hexdigest()
+                lic_file.write_text(json.dumps(token_payload, indent=2), encoding="utf-8")
+            except Exception:
+                pass
     except Exception:
         pass
 

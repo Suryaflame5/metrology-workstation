@@ -194,7 +194,38 @@ def main():
     edition = resolve_app_edition()
     os.environ["METROLOGY_EDITION"] = edition
 
-    # 3. Initialize environment & app data directories
+    # 3. Synchronize license state based on edition:
+    # Demo removes any trial leftovers; Commercial editions guarantee active perpetual offline token.
+    try:
+        from metrology_app.services.license_service import LICENSE_FILE, EntitlementService, PlanId
+        if edition == "demo":
+            if os.path.exists(LICENSE_FILE):
+                try:
+                    with open(LICENSE_FILE, "r", encoding="utf-8") as f:
+                        t = json.load(f)
+                    if t.get("status") == "TRIAL" or t.get("is_trial"):
+                        os.remove(LICENSE_FILE)
+                except Exception:
+                    pass
+        elif edition in ("pro", "team", "enterprise"):
+            plan_map = {
+                "pro": (PlanId.PROFESSIONAL, 1, "Licensed Professional Organization"),
+                "team": (PlanId.BUSINESS, 5, "Licensed Team Fleet Organization"),
+                "enterprise": (PlanId.ENTERPRISE, 999, "Licensed Enterprise Organization"),
+            }
+            target_plan, target_seats, target_name = plan_map[edition]
+            EntitlementService.issue_signed_offline_license(
+                plan_id=target_plan,
+                customer_name=target_name,
+                customer_email=f"licensee-{edition}@calibra.metrology",
+                duration_days=3650,
+                seat_limit=target_seats,
+                entitlement_prefix=f"CALIBRA-{edition.upper()}",
+            )
+    except Exception:
+        pass
+
+    # 4. Initialize environment & app data directories
     ensure_app_directories()
     init_db(DB_PATH)
     logger = get_logger()
